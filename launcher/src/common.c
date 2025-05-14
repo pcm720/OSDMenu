@@ -217,6 +217,7 @@ char *normalizePath(char *path, DeviceType type) {
 
     strcpy(pathbuffer, BDM_MOUNTPOINT);
     strncat(pathbuffer, path, PATH_MAX - sizeof(BDM_MOUNTPOINT));
+    break;
   default:
     return NULL;
   }
