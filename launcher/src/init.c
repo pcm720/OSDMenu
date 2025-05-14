@@ -122,7 +122,7 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(iomanX, NULL, Device_Basic),
     INT_MODULE(fileXio, NULL, Device_Basic),
 #ifdef SIO2MAN
-    INT_MODULE(sio2man, NULL, Device_MemoryCard | Device_MMCE | Device_UDPBD | Device_CDROM),
+    INT_MODULE(sio2man, NULL, Device_MemoryCard | Device_MMCE | Device_MX4SIO | Device_UDPBD | Device_CDROM),
 #else
     EXT_MODULE(sio2man, "rom0:SIO2MAN", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM),
 #endif
