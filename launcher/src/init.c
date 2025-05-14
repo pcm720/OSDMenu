@@ -221,14 +221,14 @@ int initModules(DeviceType device) {
     if (iopret == 1)
       ret = iopret;
 
+    // Clean up arguments
+    if (moduleList[i].argStr != NULL)
+      free(moduleList[i].argStr);
+
     if (ret) {
       msg("ERROR: Failed to initialize module %s: %d\n", moduleList[i].name, ret);
       return ret;
     }
-
-    // Clean up arguments
-    if (moduleList[i].argStr != NULL)
-      free(moduleList[i].argStr);
   }
 
   currentDevice = device;
