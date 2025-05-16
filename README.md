@@ -75,7 +75,7 @@ Patches not supported/limited on protokernel systems:
 - PAL video mode
 
 **OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` and patches the `rom0:OSDSYS` binary.  
-**HOSDMenu** version reads settings from `hdd0:__sysconf/OSDMENU/OSDMENU.CNF` and patches the `hdd0:__system/osd100/hosdsys.elf`
+**HOSDMenu** version reads settings from `hdd0:__sysconf/OSDMENU/OSDMENU.CNF` and patches the `hdd0:__system/osd100/OSDSYS_A.XLF`
 
 ### Configuration
 
