@@ -301,6 +301,7 @@ char *initSMAPArguments(uint32_t *argLength) {
     // Advance index until we read a whitespace character
     count++;
   }
+  ipAddr[count] = '\0';
 
   char ipArg[19]; // 15 bytes for IP string + 3 bytes for 'ip='
   *argLength = 19;

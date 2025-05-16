@@ -39,6 +39,8 @@ int handlePFS(int argc, char *argv[]) {
   if ((path = strstr(argv[0], ":pfs:"))) {
     path[0] = '\0';
     path += 5;
+    if (path[0] == '/')
+      path++;
   } else if ((path = strchr(argv[0], '/'))) {
     path[0] = '\0';
     path++;
