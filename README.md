@@ -22,7 +22,9 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
 2. Copy `hosdmenu.elf` and `launcher.elf` to `hdd0:__system/osdmenu/`  
    Copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` _(optional)_ 
 3. Edit `hdd0:__sysconf/OSDMENU/OSDMENU.CNF` [as you see fit](#osdmenucnf)
-4. Configure your bootloader to launch `hdd0:__system/osdmenu/hosdmenu.elf` or launch it manually from anywhere
+4. Configure your bootloader to launch `hdd0:__system/osdmenu/hosdmenu.elf` or launch it manually from anywhere  
+   You can also install HOSDMenu as `__mbr` payload to get quicker boot times, see [installer](utils/installer/README.md) for details.  
+   **Do not** install HOSDMenu as `__mbr` if you don't have a way to recover from bad installation (e.g. FMCB/PS2BBL memory card)
 
 ## Key differences from FMCB 1.8:
 - All initialization code is removed in favor of using a separate bootloader to start the patcher (e.g. [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader))
