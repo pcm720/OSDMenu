@@ -10,7 +10,8 @@ obj/
 *.CNF
 *.ini
 *.cnf
-!examples/*.yaml
+*.bin
+kelftool/
 # Created by https://www.toptal.com/developers/gitignore/api/macos,windows,linux
 
 ### Linux ###

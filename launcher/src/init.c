@@ -221,14 +221,14 @@ int initModules(DeviceType device) {
     if (iopret == 1)
       ret = iopret;
 
+    // Clean up arguments
+    if (moduleList[i].argStr != NULL)
+      free(moduleList[i].argStr);
+
     if (ret) {
       msg("ERROR: Failed to initialize module %s: %d\n", moduleList[i].name, ret);
       return ret;
     }
-
-    // Clean up arguments
-    if (moduleList[i].argStr != NULL)
-      free(moduleList[i].argStr);
   }
 
   currentDevice = device;
@@ -301,6 +301,7 @@ char *initSMAPArguments(uint32_t *argLength) {
     // Advance index until we read a whitespace character
     count++;
   }
+  ipAddr[count] = '\0';
 
   char ipArg[19]; // 15 bytes for IP string + 3 bytes for 'ip='
   *argLength = 19;
