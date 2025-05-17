@@ -1,12 +1,11 @@
+PAYLOAD ?= patcher.elf
+
 EE_BIN = mbr.elf
 EE_BIN_RAW = payload.bin
 
 EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include
-
-EE_LIBS = -lpatches -ldma -ldebug
-
+EE_LIBS = -lpatches -ldma
 EE_OBJS = main.o crt0.o
-ELF_FILES = hosdmenu.elf
 
 # C compiler flags
 EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
@@ -22,7 +21,11 @@ EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
 
 EE_OBJS += $(IRX_FILES:.irx=_irx.o)
-EE_OBJS += $(ELF_FILES:.elf=_elf.o)
+ifneq (,$(findstring ELF,$(PAYLOAD)))
+	EE_OBJS += $(PAYLOAD:.ELF=_ELF.o)
+else
+	EE_OBJS += $(PAYLOAD:.elf=_elf.o)
+endif
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
 
 .PHONY: all clean
@@ -33,12 +36,18 @@ clean:
 	$(MAKE) -C ../../patcher clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_RAW)
 
-%patcher.elf:
-	$(MAKE) -C ../../patcher HOSD=1
-
 # HOSDMenu payload
-%hosdmenu_elf.c: ../../patcher.elf
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=../../patcher/%)patcher.elf $@ $(*:$(EE_SRC_DIR)%=%)hosdmenu_elf
+%patcher_elf.c:
+	$(MAKE) -C ../../patcher clean
+	$(MAKE) -C ../../patcher HOSD=1
+	$(BIN2C) ../../patcher/patcher.elf $@ payload_elf
+
+# Custom payload
+%_elf.c:
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=%).elf $@ payload_elf
+
+%_ELF.c:
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=%).ELF $@ payload_elf
 
 BIN2C = $(PS2SDK)/bin/bin2c
 

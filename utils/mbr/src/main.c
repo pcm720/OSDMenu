@@ -16,8 +16,8 @@ DISABLE_EXTRA_TIMERS_FUNCTIONS();
 PS2_DISABLE_AUTOSTART_PTHREAD();
 
 // Loader ELF variables
-extern uint8_t hosdmenu_elf[];
-extern int size_hosdmenu_elf;
+extern uint8_t payload_elf[];
+extern int size_payload_elf;
 
 //
 // All the following code is modified version of elf.c from PS2SDK with unneeded bits removed
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
   void *pdata;
   int i;
 
-  boot_elf = (uint8_t *)hosdmenu_elf;
+  boot_elf = (uint8_t *)payload_elf;
   eh = (elf_header_t *)boot_elf;
   if (_lw((uint32_t)&eh->ident) != ELF_MAGIC)
     __builtin_trap();
