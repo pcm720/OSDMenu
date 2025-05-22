@@ -3,6 +3,6 @@
 #include "gs.h"
 
 // Initializes GS and displays FMCB splash screen
-void gsDisplaySplash();
+void gsDisplaySplash(GSVideoMode mode);
 
 #endif
