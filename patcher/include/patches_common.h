@@ -2,6 +2,13 @@
 #define _PATCHES_COMMON_H_
 #include <stdint.h>
 
+typedef struct {
+  uint16_t sceGsInterMode; // Interlace/non-interlace value
+  uint16_t sceGsOutMode;   // NTSC/PAL value
+  uint16_t sceGsFFMode;    // FIELD/FRAME value
+  uint16_t sceGsVersion;   // GS version
+} sceGsGParam;
+
 // Loads OSDSYS from ROM and handles the patching
 void launchOSDSYS();
 

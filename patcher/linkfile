@@ -9,7 +9,7 @@
 #
 # Linkfile script for ee-ld
 #
-# Modified for this launcher to make sure the ELF loads into unused BIOS memory
+# Modified for OSDMenu to make sure the ELF loads into the unused kernel memory
 #
 */
 
@@ -25,7 +25,7 @@ SECTIONS {
 	/*.text 0x000a8000: {*/
 	/* .text 0x000b0000: { */
 	/*.text 0x00090000: {*/
-	.text 0x000db000: {
+	.text 0x000a8000: {
 		_ftext = . ;
 		*(.text)
 		*(.text.*)

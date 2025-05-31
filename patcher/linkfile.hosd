@@ -9,7 +9,9 @@
 #
 # Linkfile script for ee-ld
 #
-# Modified for this launcher to make sure the ELF loads into unused BIOS memory
+# Modified for HOSDMenu to:
+# 1. Load into the unused kernel memory
+# 2. Relocate the embedded launcher to a region of user memory unused by HDD OSD unpacker and uncompressed binary
 #
 */
 
@@ -25,7 +27,7 @@ SECTIONS {
 	/*.text 0x000a8000: {*/
 	/* .text 0x000b0000: { */
 	/*.text 0x00090000: {*/
-	.text 0x000ae000: {
+	.text 0x000a8000: {
 		_ftext = . ;
 		*(.text)
 		*(.text.*)
@@ -104,6 +106,10 @@ SECTIONS {
 
 	_end = . ;
 	PROVIDE(end = .);
+
+	.data 0x1000000 : {
+		*(._launcher)
+	}
 
 	.spad 0x70000000: {
 		*(.spad)

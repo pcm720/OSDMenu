@@ -11,7 +11,6 @@ PatcherSettings settings;
 // Defined in common/defaults.h
 #ifndef HOSD
 char cnfPath[] = CONF_PATH;
-char launcherPath[] = LAUNCHER_PATH;
 #else
 char cnfPath[] = "pfs0:" HOSD_CONF_PATH;
 #endif
@@ -199,18 +198,26 @@ int loadConfig(void) {
       continue;
     }
 #ifndef HOSD
-    if (!strcmp(name, "path_LAUNCHER_ELF")) {
-      if (strlen(value) < 4 || strncmp(value, "mc", 2))
-        continue; // Accept only memory card paths
-
-      strncpy(settings.launcherPath, value, (sizeof(settings.launcherPath) / sizeof(char)) - 1);
-      continue;
-    }
     if (!strcmp(name, "path_DKWDRV_ELF")) {
       if (strlen(value) < 4 || strncmp(value, "mc", 2))
         continue; // Accept only memory card paths
 
       strncpy(settings.dkwdrvPath, value, (sizeof(settings.dkwdrvPath) / sizeof(char)) - 1);
+      continue;
+    }
+#else
+    if (!strcmp(name, "path_custom_payload")) {
+      if (strlen(value) < 13 || strncmp(value, "hdd0:__system", 13))
+        continue; // Accept only HDD paths on __system partition
+
+      strncpy(settings.customPayload, value, (sizeof(settings.customPayload) / sizeof(char)) - 1);
+      continue;
+    }
+    if (!strcmp(name, "boot_custom_payload")) {
+      if (atoi(value))
+        settings.patcherFlags |= FLAG_BOOT_PAYLOAD;
+      else
+        settings.patcherFlags &= ~(FLAG_BOOT_PAYLOAD);
       continue;
     }
 #endif
@@ -291,6 +298,20 @@ int loadConfig(void) {
         settings.patcherFlags &= ~(FLAG_USE_DKWDRV);
       continue;
     }
+    if (!strcmp(name, "ps1drv_enable_fast")) {
+      if (atoi(value))
+        settings.patcherFlags |= FLAG_PS1DRV_FAST;
+      else
+        settings.patcherFlags &= ~(FLAG_PS1DRV_FAST);
+      continue;
+    }
+    if (!strcmp(name, "ps1drv_enable_smooth")) {
+      if (atoi(value))
+        settings.patcherFlags |= FLAG_PS1DRV_SMOOTH;
+      else
+        settings.patcherFlags &= ~(FLAG_PS1DRV_SMOOTH);
+      continue;
+    }
   }
 
   if (pCNF != NULL)
@@ -312,7 +333,6 @@ void initVariables() {
 
 // Loads defaults
 void initConfig(void) {
-  settings.mcSlot = 0;
   settings.patcherFlags = FLAG_CUSTOM_MENU | FLAG_SCROLL_MENU | FLAG_SKIP_SCE_LOGO | FLAG_SKIP_DISC | FLAG_BROWSER_LAUNCHER;
   settings.videoMode = 0;
   settings.menuX = 320;
@@ -343,8 +363,10 @@ void initConfig(void) {
   settings.menuItemCount = 0;
   settings.romver[0] = '\0';
 #ifndef HOSD
-  strcpy(settings.launcherPath, launcherPath);
   settings.dkwdrvPath[0] = '\0'; // Can be null
+  settings.mcSlot = 0;
+#else
+  settings.customPayload[0] = '\0';
 #endif
 
   initVariables();

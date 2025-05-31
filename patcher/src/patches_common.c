@@ -67,6 +67,10 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
   // Apply version menu patch
   patchVersionInfo((uint8_t *)epc);
 
+  if ((settings.patcherFlags & FLAG_PS1DRV_FAST) || (settings.patcherFlags & FLAG_PS1DRV_SMOOTH))
+    // Patch PS1DRV config
+    patchPS1DRVConfig((uint8_t *)epc);
+
   switch (settings.videoMode) {
   case GS_MODE_PAL:
     patchVideoMode((uint8_t *)epc, settings.videoMode);
@@ -128,6 +132,10 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
   ptr = findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternSCEUmount, (uint8_t *)patternSCEUmount_mask, sizeof(patternSCEUmount));
   if (ptr)
     sceUmount = (void *)ptr;
+
+  // Relocate the embedded launcher to avoid HDD OSD overwriting it
+  memcpy((void *)USER_MEM_START_ADDR, launcher_elf, size_launcher_elf);
+  launcher_elf_addr = (uint8_t *)USER_MEM_START_ADDR;
 #else
   // Replace function calls with no-ops?
   // Not sure what it does, but leaving it here just in case
@@ -215,6 +223,10 @@ void applyProtokernelPatches() {
 
   // Apply version menu patch
   patchVersionInfoProtokernel((uint8_t *)protoEPC);
+
+  if ((settings.patcherFlags & FLAG_PS1DRV_FAST) || (settings.patcherFlags & FLAG_PS1DRV_SMOOTH))
+    // Patch PS1DRV config
+    patchPS1DRVConfigProtokernel();
 
   // Patch the video mode if required
   switch (settings.videoMode) {

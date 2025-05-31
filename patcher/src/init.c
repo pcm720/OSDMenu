@@ -8,25 +8,10 @@
 #define NEWLIB_PORT_AWARE
 #include <fileio.h>
 
-// Wipes user memory
-void wipeUserMem(void) {
-  for (int i = 0x100000; i < 0x02000000; i += 64) {
-    asm("\tsq $0, 0(%0) \n"
-        "\tsq $0, 16(%0) \n"
-        "\tsq $0, 32(%0) \n"
-        "\tsq $0, 48(%0) \n" ::"r"(i));
-  }
-}
-
 // Resets IOP before loading OSDSYS
 void resetModules(void) {
-#ifndef HOSD
-  while (!SifIopReset("rom0:UDNL rom0:EELOADCNF", 0)) {
-  };
-#else
   while (!SifIopReset("", 0)) {
   };
-#endif
   while (!SifIopSync()) {
   };
 
@@ -146,6 +131,11 @@ int initModules(void) {
   IRX_LOAD(ps2atad, 0, NULL)
   IRX_LOAD(ps2hdd, sizeof(ps2hddArguments), ps2hddArguments)
   IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments)
+
+  if ((ret = SifLoadModule("rom0:SIO2MAN", 0, NULL)) < 0)
+    return ret;
+  if ((ret = SifLoadModule("rom0:PADMAN", 0, NULL)) < 0)
+    return ret;
 
   // Wait for IOP to initialize device drivers
   for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {

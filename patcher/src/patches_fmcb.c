@@ -24,6 +24,7 @@ struct OSDMenuInfo {
 
 static struct OSDMenuInfo *menuInfo = NULL;
 #define OSD_MAGIC 0x39390000 // arbitrary number to identify added menu items
+char item[10] = {0};
 
 // Handles custom menu entries
 int handleMenuEntry(int selected) {
@@ -37,12 +38,15 @@ int handleMenuEntry(int selected) {
     // Build 'fmcb<mc slot>:<idx>' string for the launcher
     int idx = settings.menuItemIdx[selected - 2];
 
-    char *item = malloc(10 * sizeof(char));
     item[0] = 'f';
     item[1] = 'm';
     item[2] = 'c';
     item[3] = 'b';
+#ifndef HOSD
     item[4] = '0' + settings.mcSlot;
+#else
+    item[4] = '9';
+#endif
     item[5] = ':';
 
     if (idx < 10) {

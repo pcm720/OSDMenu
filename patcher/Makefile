@@ -18,7 +18,9 @@ EE_INCS = -I../common -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2S
 EE_LINKFILE = linkfile
 EE_LIBS = -lpatches -ldma
 
-EE_OBJS = main.o settings.o init.o loader.o patches_common.o patches_fmcb.o patches_osdmenu.o gs.o
+EE_OBJS = main.o settings.o init.o loader.o patches_common.o patches_fmcb.o gs.o
+EE_OBJS += patches_browser.o patches_gs.o patches_version.o patches_ps1drv.o
+ELF_FILES += launcher.elf
 
 # C compiler flags
 EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS) -DGIT_VERSION="\"${GIT_VERSION}\""
@@ -32,7 +34,7 @@ NEWLIB_NANO = 1
 ifeq ($(HOSD), 1)
  EE_CFLAGS += -DHOSD
  EE_LINKFILE = linkfile.hosd
- EE_LIBS += -lfileXio
+ EE_LIBS += -lfileXio -lpad
  IRX_FILES += iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd.irx ps2fs.irx legacy_ps2atad.irx
 endif
 
@@ -68,6 +70,7 @@ $(EE_BIN_PKD): $(EE_BIN)
 	ps2-packer $< $@
 
 clean:
+	$(MAKE) -C ../launcher clean
 	$(MAKE) -C iop/atad clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD)
 
@@ -84,6 +87,14 @@ iop/atad/ps2atad.irx: iop/atad
 %legacy_ps2atad_irx.c: iop/atad/ps2atad.irx
 	$(BIN2C) iop/atad/$(*:$(EE_SRC_DIR)%=%)ps2atad.irx $@ $(*:$(EE_SRC_DIR)%=%)legacy_ps2atad_irx
 
+# Launcher
+launcher.elf:
+	$(MAKE) -C ../launcher/$<
+
+%launcher_elf.c: launcher.elf
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=../launcher/%)launcher.elf $@ $(*:$(EE_SRC_DIR)%=%)launcher_elf
+# Patch bin2c output to force launcher_elf section
+	sed -i 's/= {/__attribute__((section("._launcher"))) = {/' $@
 
 $(EE_ASM_DIR):
 	@mkdir -p $@

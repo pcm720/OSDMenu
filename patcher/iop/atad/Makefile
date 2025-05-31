@@ -22,7 +22,7 @@ IOP_LDFLAGS += -s
 all:: $(IOP_BIN)
 
 clean::
-	rm -f -r $(IOP_BIN) $(IOP_OBJS_DIR)
+	rm -f -r $(IOP_BIN) $(IOP_OBJS_DIR) *.elf
 
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.iopglobal
