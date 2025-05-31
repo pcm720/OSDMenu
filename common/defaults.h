@@ -12,10 +12,6 @@
 #define CONF_PATH "mc0:/SYS-CONF/OSDMENU.CNF"
 #endif
 
-#ifndef LAUNCHER_PATH
-#define LAUNCHER_PATH "mc0:/BOOT/launcher.elf"
-#endif
-
 #ifndef DKWDRV_PATH
 #define DKWDRV_PATH "mc0:/BOOT/DKWDRV.ELF"
 #endif
@@ -27,7 +23,7 @@
 // Partition containing OSDMENU.CNF
 #define HOSD_CONF_PARTITION "hdd0:__sysconf"
 
-// Partition containing launcher.elf and DKWDRV
+// Partition containing DKWDRV
 #define HOSD_SYS_PARTITION "hdd0:__system"
 
 // Path relative to HOSD_CONF_PARTITION root
@@ -35,14 +31,9 @@
 #define HOSD_CONF_PATH "/OSDMENU/OSDMENU.CNF"
 #endif
 
-// Path to HDD-OSD ELF relative to HOSD_SYS_PARTITION partition root
+// Path to HDD OSD ELF relative to HOSD_SYS_PARTITION partition root
 #ifndef HOSD_HDDOSD_PATH
 #define HOSD_HDDOSD_PATH "/osd100/OSDSYS_A.XLF"
-#endif
-
-// Path to launcher.elf relative to HOSD_SYS_PARTITION partition root
-#ifndef HOSD_LAUNCHER_PATH
-#define HOSD_LAUNCHER_PATH "/osdmenu/launcher.elf"
 #endif
 
 // Full path to DKWDRV, including the partition
