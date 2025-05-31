@@ -19,7 +19,7 @@ int handlePFS(int argc, char *argv[]) {
     return -EINVAL;
   }
 
-  int res = initPFS(argv[0]);
+  int res = initPFS(argv[0], 0);
   if (res)
     return res;
 

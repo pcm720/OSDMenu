@@ -14,14 +14,16 @@ void _libcglue_rtc_update() {}
 PS2_DISABLE_AUTOSTART_PTHREAD();
 
 int main(int argc, char *argv[]) {
+#ifdef FMCB
+  if (!strncmp("fmcb", argv[0], 4))
+    fail("Failed to launch %s: %d", argv[0], handleFMCB(argc, argv));
+  if (!strncmp("cdrom", argv[0], 5))
+    fail("Failed to launch %s: %d", argv[0], launchPath(argc, argv));
+#endif
+
   if ((argc < 2) || (argv[1][0] == '\0')) // argv[1] can be empty when launched from OPL
     // Try to quickboot with paths from .CNF located at the current working directory
     fail("Quickboot failed: %d", handleQuickboot(argv[0]));
-
-#ifdef FMCB
-  if (!strncmp("fmcb", argv[1], 4))
-    fail("Failed to launch %s: %d", argv[1], handleFMCB(argc, argv));
-#endif
 
   // Remove launcher path from arguments
   argc--;

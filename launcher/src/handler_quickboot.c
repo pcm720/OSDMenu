@@ -27,7 +27,7 @@ int handleQuickboot(char *cnfPath) {
   DeviceType dtype;
   if (isHDD) {
     dtype = Device_PFS;
-    if ((res = initPFS(cnfPath)))
+    if ((res = initPFS(cnfPath, 0)))
       return res;
   } else {
     dtype = guessDeviceType(cnfPath);
@@ -35,7 +35,7 @@ int handleQuickboot(char *cnfPath) {
       return -ENODEV;
 
     // Always reset IOP to a known state
-    if ((res = initModules(dtype)))
+    if ((res = initModules(dtype, 0)))
       return res;
   }
 

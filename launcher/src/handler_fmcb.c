@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <init.h>
 #include <kernel.h>
+#include <loadfile.h>
 #include <ps2sdkapi.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -14,15 +15,18 @@
 char cnfPath[sizeof(CONF_PATH) + 6] = {0};
 
 // Loads ELF specified in OSDMENU.CNF on the memory card or on the APA partition specified in HOSD_CONF_PARTITION
-// APA-formatted HDD handling requires the path to start with pfs...
+// Supported fmcb prefixes are:
+// fmcb0:<item index> — configuration file on mc0
+// fmcb1:<item index> — configuration file on mc1
+// fmcb9:<item index> — configuration file on APA HDD
 int handleFMCB(int argc, char *argv[]) {
   int isHDD = 0;
-  if (!strncmp(argv[0], "pfs", 3))
+  if (argv[0][4] == '9')
     isHDD = 1;
 
-  int res;
+  int res = 0;
   if (isHDD) {
-    if ((res = initPFS(HOSD_CONF_PARTITION)))
+    if ((res = initPFS(HOSD_CONF_PARTITION, 1)))
       return res;
 
     // Build path to OSDMENU.CNF
@@ -30,15 +34,15 @@ int handleFMCB(int argc, char *argv[]) {
     strcat(cnfPath, HOSD_CONF_PATH);
   } else {
     // Handle OSDMenu launch
-    int res = initModules(Device_MemoryCard);
+    int res = initModules(Device_MemoryCard, 1);
     if (res)
       return res;
 
     // Build path to OSDMENU.CNF
     strcpy(cnfPath, CONF_PATH);
 
-    // Get memory card slot from argv[1] (fmcb0/1)
-    if (argv[1][4] == '1') {
+    // Get memory card slot from argv[0] (fmcb0/1)
+    if (argv[0][4] == '1') {
       // If path is fmcb1:, try to get config from mc1 first
       cnfPath[2] = '1';
       if (tryFile(cnfPath)) // If file is not found, revert to mc0
@@ -46,7 +50,7 @@ int handleFMCB(int argc, char *argv[]) {
     }
   }
 
-  char *idx = strchr(argv[1], ':');
+  char *idx = strchr(argv[0], ':');
   if (!idx) {
     msg("FMCB: Argument '%s' doesn't contain entry index\n", argv[0]);
     if (isHDD)
@@ -68,6 +72,7 @@ int handleFMCB(int argc, char *argv[]) {
   int displayGameID = 1;
   int skipPS2LOGO = 0;
   int useDKWDRV = 0;
+  int ps1drvFlags = 0;
   char *dkwdrvPath = NULL;
 
   if (isHDD)
@@ -141,6 +146,16 @@ int handleFMCB(int argc, char *argv[]) {
       dkwdrvPath = strdup(valuePtr);
       continue;
     }
+    if (!strcmp(lineBuffer, "ps1drv_enable_fast")) {
+      if (atoi(valuePtr))
+        ps1drvFlags |= 1;
+      continue;
+    }
+    if (!strcmp(lineBuffer, "ps1drv_enable_smooth")) {
+      if (atoi(valuePtr))
+        ps1drvFlags |= 0x10;
+      continue;
+    }
   }
   fclose(file);
 
@@ -182,7 +197,7 @@ int handleFMCB(int argc, char *argv[]) {
       free(dkwdrvPath);
       dkwdrvPath = NULL;
     }
-    return startCDROM(displayGameID, skipPS2LOGO, dkwdrvPath);
+    return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath);
   }
 
   if (dkwdrvPath)

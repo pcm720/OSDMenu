@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <kernel.h>
 #include <libcdvd.h>
+#include <osd_config.h>
 #include <ps2sdkapi.h>
 #include <sifrpc.h>
 #include <stddef.h>
@@ -23,7 +24,7 @@ typedef enum {
 
 const char *getPS1GenericTitleID();
 int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion);
-int startCDROM(int displayGameID, int skipPS2LOGO, char *dkwdrvPath);
+int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath);
 
 #define MAX_STR 256
 
@@ -33,6 +34,9 @@ int handleCDROM(int argc, char *argv[]) {
   int displayGameID = 1;
   int useDKWDRV = 0;
   int skipPS2LOGO = 0;
+  // Nibble 0 — disc speed
+  // Nibble 1 — texture smoothing
+  int ps1drvFlags = 0;
 
   char *arg;
   char *dkwdrvPath = NULL;
@@ -46,6 +50,10 @@ int handleCDROM(int argc, char *argv[]) {
       skipPS2LOGO = 1;
     } else if (!strcmp("nogameid", arg)) {
       displayGameID = 0;
+    } else if (!strcmp("ps1fast", arg)) {
+      ps1drvFlags |= 1;
+    } else if (!strcmp("ps1smooth", arg)) {
+      ps1drvFlags |= 0x10;
     } else if (!strncmp("dkwdrv", arg, 6)) {
       useDKWDRV = 1;
       dkwdrvPath = strchr(arg, '=');
@@ -58,12 +66,12 @@ int handleCDROM(int argc, char *argv[]) {
   if (useDKWDRV && !dkwdrvPath)
     dkwdrvPath = strdup(DKWDRV_PATH);
 
-  return startCDROM(displayGameID, skipPS2LOGO, dkwdrvPath);
+  return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath);
 }
 
-int startCDROM(int displayGameID, int skipPS2LOGO, char *dkwdrvPath) {
+int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath) {
   // Always reset IOP to a known state
-  int res = initModules(Device_MemoryCard);
+  int res = initModules(Device_MemoryCard, 0);
   if (res)
     return res;
 
@@ -78,6 +86,10 @@ int startCDROM(int displayGameID, int skipPS2LOGO, char *dkwdrvPath) {
     DPRINTF("CDROM: Disabling visual game ID\n");
   if (skipPS2LOGO)
     DPRINTF("CDROM: Skipping PS2LOGO\n");
+  if (ps1drvFlags & 0x01)
+    DPRINTF("CDROM: Forcing PS1DRV fast disc speed\n");
+  if (ps1drvFlags & 0x10)
+    DPRINTF("CDROM: Forcing PS1DRV texture smoothing\n");
 
   // Wait until the drive is ready
   sceCdDiskReady(0);
@@ -138,6 +150,15 @@ int startCDROM(int displayGameID, int skipPS2LOGO, char *dkwdrvPath) {
       char *argv[] = {titleID, titleVersion};
       DPRINTF("Starting PS1DRV with title ID %s and version %s\n", argv[0], argv[1]);
       sceSifExitCmd();
+
+      // Set PS1DRV flags
+      if (ps1drvFlags) {
+        ConfigParam osdConfig;
+        GetOsdConfigParam(&osdConfig);
+        osdConfig.ps1drvConfig |= ps1drvFlags;
+        SetOsdConfigParam(&osdConfig);
+      }
+
       LoadExecPS2("rom0:PS1DRV", 2, argv);
     }
     break;

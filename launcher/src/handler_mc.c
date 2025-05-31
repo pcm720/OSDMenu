@@ -12,7 +12,7 @@ int handleMC(int argc, char *argv[]) {
     return -EINVAL;
   }
 
-  int res = initModules(Device_MemoryCard);
+  int res = initModules(Device_MemoryCard, 0);
   if (res)
     return res;
 
@@ -39,7 +39,7 @@ int handleMMCE(int argc, char *argv[]) {
     return -EINVAL;
   }
 
-  int res = initModules(Device_MMCE);
+  int res = initModules(Device_MMCE, 0);
   if (res)
     return res;
 

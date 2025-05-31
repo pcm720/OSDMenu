@@ -61,7 +61,10 @@ linkedStr *addStr(linkedStr *lstr, char *str);
 void freeLinkedStr(linkedStr *lstr);
 
 // Initializes APA-formatted HDD and mounts the partition
-int initPFS(char *path);
+int initPFS(char *path, int clearSPU);
+
+// Mounts the partition specified in path
+int mountPFS(char *path);
 
 // Unmounts the partition
 void deinitPFS();

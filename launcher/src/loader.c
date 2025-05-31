@@ -11,7 +11,7 @@ extern uint8_t loader_elf[];
 extern int size_loader_elf;
 
 //
-// All the following code is modified version of elf.c from PS2SDK with unneeded bits removed
+// All of the following code is a modified version of elf.c from PS2SDK with unneeded bits removed
 //
 
 typedef struct {

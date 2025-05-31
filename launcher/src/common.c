@@ -247,14 +247,40 @@ char *normalizePath(char *path, DeviceType type) {
   return pathbuffer;
 }
 
+// Mounts the partition specified in path
+int mountPFS(char *path) {
+#ifndef APA
+  return -ENODEV;
+#else
+  // Extract partition path
+  char *filePath = strstr(path, ":pfs:");
+  char pathSeparator = '\0';
+  if (filePath || (filePath = strchr(path, '/'))) {
+    // Terminate the partition path
+    pathSeparator = filePath[0];
+    filePath[0] = '\0';
+  }
+
+  // Mount the partition
+  DPRINTF("Mounting %s to %s\n", path, PFS_MOUNTPOINT);
+  int res = fileXioMount(PFS_MOUNTPOINT, path, FIO_MT_RDONLY);
+  if (pathSeparator != '\0')
+    filePath[0] = pathSeparator; // Restore the path
+  if (res)
+    return -ENODEV;
+
+  return 0;
+#endif
+}
+
 // Initializes APA-formatted HDD and mounts the partition
-int initPFS(char *path) {
+int initPFS(char *path, int clearSPU) {
 #ifndef APA
   return -ENODEV;
 #else
   int res;
   // Reset IOP
-  if ((res = initModules(Device_PFS)))
+  if ((res = initModules(Device_PFS, clearSPU)))
     return res;
 
   // Wait for IOP to initialize device driver
@@ -270,24 +296,7 @@ int initPFS(char *path) {
   if (res < 0)
     return -ENODEV;
 
-  // Extract partition path
-  char *filePath = strstr(path, ":pfs:");
-  char pathSeparator = '\0';
-  if (filePath || (filePath = strchr(path, '/'))) {
-    // Terminate the partition path
-    pathSeparator = filePath[0];
-    filePath[0] = '\0';
-  }
-
-  // Mount the partition
-  DPRINTF("Mounting %s to %s\n", path, PFS_MOUNTPOINT);
-  res = fileXioMount(PFS_MOUNTPOINT, path, FIO_MT_RDONLY);
-  if (pathSeparator != '\0')
-    filePath[0] = pathSeparator; // Restore the path
-  if (res)
-    return -ENODEV;
-
-  return 0;
+  return mountPFS(path);
 #endif
 }
 

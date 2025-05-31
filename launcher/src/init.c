@@ -171,7 +171,7 @@ static ModuleListEntry moduleList[] = {
 static DeviceType currentDevice = Device_None;
 
 // Initializes IOP modules for given device type
-int initModules(DeviceType device) {
+int initModules(DeviceType device, int clearSPU) {
   if (currentDevice == device)
     // Do nothing if the drivers are already loaded
     return 0;
@@ -185,6 +185,10 @@ int initModules(DeviceType device) {
   };
   while (!SifIopSync()) {
   };
+
+  // Clear SPU after OSDSYS
+  if (clearSPU)
+    SifLoadModule("rom0:CLEARSPU", 0, 0);
 
   // Initialize the RPC manager
   sceSifInitRpc(0);
@@ -249,7 +253,7 @@ void rebootPS2() {
 
 #ifdef FMCB
 // Shuts down the console.
-// Needs initModules(Device_Basic) to be called first
+// Needs initModules(Device_Basic, 0) to be called first
 void shutdownPS2() {
   sceSifInitRpc(0);
   SifExecModuleBuffer(poweroff_irx, size_poweroff_irx, 0, NULL, NULL);
@@ -259,7 +263,7 @@ void shutdownPS2() {
 
 #ifdef CDROM
 // Sets IOP emulation flags for Deckard consoles
-// Needs initModules(Device_Basic) to be called first
+// Needs initModules(Device_Basic, 0) to be called first
 void applyXPARAM(char *gameID) {
   sceSifInitRpc(0);
   SifExecModuleBuffer(xparam_irx, size_xparam_irx, strlen(gameID) + 1, gameID, NULL);
