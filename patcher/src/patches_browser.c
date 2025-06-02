@@ -4,48 +4,68 @@
 #include <debug.h>
 #include <string.h>
 
+//
+// Browser application launch patch
+// Allows launching SAS-compatible apps and ELFs from HDD or memory cards
+//
+
+// Common variables and functions
+char pathBuf[100];
+// Sets up browser for exiting to main menu (clock)
+// Verified exit types for OSDSYS:
+// 1 - SCE logo
+// 2 - Main menu (clock)
+// 3 - Browser main screen
+// 4 - Red error screen
+// 5 - Reloads browser and resets SPU?
+static void (*setupExitToPreviousModule)(int exitType) = NULL;
+// Sets up variables for the main menu thread
+static void (*exitToPreviousModule)() = NULL;
+
+// Launches path from pathBuf if set
+// Otherwise executes the original function
+void exitToPreviousModuleCustom() {
+  if (pathBuf[0] != '\0')
+    launchItem(pathBuf);
+
+  exitToPreviousModule();
+}
+
 #ifndef HOSD
 //
 // OSDMenu browser application launch patch
 // Swaps file properties and Copy/Delete menus around and launches an app when pressing Enter
-// if a title.cfg file is present in the save file directory
+//
+// 1. Replace the function that opens Copy/Delete or properties submenu for memory card icon
+//    This code checks the directory name and, if it contains _ at index 3, equals BOOT or ends with .ELF/.elf,
+//    builds the path into pathBuf and calls setupExitToPreviousModule to exit to the main menu.
+//
+//    Otherwise, it simply swaps around submenus and calls the original function.
+//
+// 3. Inject custom code into the function that exits to main menu
+//    This code calls launchItem instead of the original function if pathBuf is not empty
 //
 
-// Initializes submenu data
+// Sets up submenu data
 // entryProps — a pointer to save file properties. Contains icon properties, save date, file size and path relative to mc0/mc1
+//   Browser entry icon offsets:
+//    0x90  - icon flags (save icon/disc); 0x40 - disc flag
+//    0x114 - pointer to some data structure
+//   Some data structure offsets:
+//    0x124 - device number (2 - mc0, 3/6 - mc1)
 // fileSubmenuType — indicates submenu type, where 0 is the Copy/Delete menu and 1 is save file properties­
-static void (*browserDirSubmenuInitView)(uint8_t *entryProps, uint8_t fileSubmenuType) = NULL;
-// Returns directory size. Called only after submenu is entered and only once: the result is cached in entry properties and the buffer
-// is reused for subsequent sceMcGetDir calls. To persist the app indicator, browserGetMcDirSizeCustom stores 0xAA at *(entryProps - 0x2)
-static int (*browserGetMcDirSize)(void) = NULL;
-// The address of sceMcGetDir result buffer
-static uint32_t sceMcGetDirResultAddr = 0x0;
+static void (*browserDirSubmenuSetup)(uint8_t *entryProps, uint8_t fileSubmenuType) = NULL;
 
-// Selected MC index offset from $gp, signed
-int16_t selectedMCOffset = 0;
-// Entry properties address for the currently selected entry
-// The most significant bit is used to signal the browserGetMcDirSizeCustom function that it needs to launch the app immediately
-uint32_t entryPropsAddr = 0;
-// Path buffer
-char pathBuf[100];
-
-// This function is always executed first and called every time a submenu is opened
-void browserDirSubmenuInitViewCustom(uint8_t *entryProps, uint8_t fileSubmenuType) {
-  // Store the address for browserGetMcDirSizeCustom
-  entryPropsAddr = (uint32_t)entryProps;
-
+void browserDirSubmenuSetupCustom(uint8_t *entryProps, uint8_t fileSubmenuType) {
   if (fileSubmenuType == 1) { // Swap functions around so "Option" button triggers the Copy/Delete menu
-    browserDirSubmenuInitView(entryProps, 0);
+    browserDirSubmenuSetup(entryProps, 0);
     return;
   }
 
-  // Get memory card number by reading address relative to $gp
-  int mcNumber;
-  asm volatile("addu $t0, $gp, %1\n\t" // Add the offset to the gp register
-               "lw %0, 0($t0)"         // Load the word at the offset
-               : "=r"(mcNumber)
-               : "r"((int32_t)selectedMCOffset) // Cast the type to avoid GCC using lhu instead of lh
-               : "$t0");
+  // Get the pointer to device properties starting at offset 0x114
+  uint32_t mcNumber = _lw((uint32_t)entryProps + 0x114);
+  // Get the device number from offset 0x124
+  mcNumber = _lw(mcNumber + 0x124);
 
   // Translate the memory card number
   // The memory card number OSDSYS uses equals 2 for mc0 and 6 for mc1 (3 for mc1 on protokernels).
@@ -56,57 +76,38 @@ void browserDirSubmenuInitViewCustom(uint8_t *entryProps, uint8_t fileSubmenuTyp
   case 2: // mc0
     mcNumber = mcNumber - 2;
 
-    // Set the most significant bit to indicate that immediate launch is needed
-    entryPropsAddr |= (1 << 31);
-
     // Find the path in icon properties starting from offset 0x160
     char *stroffset = (char *)entryProps + 0x160;
     while (*stroffset != '/')
       stroffset++;
 
+    // Launch item if directory name has _ at index 3, equals BOOT or if file name ends with .elf/.ELF
+    char *ext = strrchr(stroffset, '.');
+    if (!ext && ((stroffset[4] == '_') || !strcmp(stroffset, "/BOOT")))
+      goto setupLaunch;
+    else if (ext && (!strcmp(ext, ".elf") || !strcmp(ext, ".ELF")))
+      goto setupLaunch;
+
+    goto setup;
+
+  setupLaunch:
     // Assemble the path
     pathBuf[0] = '\0';
     strcat(pathBuf, "mc?:");
     strcat(pathBuf, stroffset);
-    strcat(pathBuf, "/title.cfg");
+    if (!ext)
+      // Add "title.cfg" to SAS paths
+      strcat(pathBuf, "/title.cfg");
     pathBuf[2] = mcNumber + '0';
 
-    if (*(entryProps - 0x2) == 0xAA)
-      // If icon is an app, launch the app
-      launchItem(pathBuf);
-    // Else, the app will be launched by the browserGetMcDirSizeCustom function
+    // Call exit function to exit to clock
+    setupExitToPreviousModule(2);
+    return;
   }
 
-  browserDirSubmenuInitView(entryProps, 1);
-}
-
-// This function is always executed after browserDirSubmenuInitViewCustom and never called again
-// once it returns the directory size until the user goes back to the memory card select screen.
-// If immediate launch is requested, launches the app if it has title.cfg entry in sceMcGetDir result
-// Otherwise, puts 0xAA at (entryProps - 0x2) for browserDirSubmenuInitViewCustom
-int browserGetMcDirSizeCustom() {
-  int res = browserGetMcDirSize();
-  // This function returns -8 until sceMcSync returns the result
-  if ((res != -8)) {
-    // Each entry occupies 0x40 bytes, with entry name starting at offset 0x20
-    char *off = (char *)(sceMcGetDirResultAddr + 0x20);
-    while (off[0] != '\0') {
-      if (!strcmp("title.cfg", off)) {
-        // If immediate launch is requested, launch the app
-        if (entryPropsAddr & (1 << 31))
-          launchItem(pathBuf);
-
-        // Else, put app marker (0xAA) to *(entryProps - 0x2)
-        *(((uint8_t *)((entryPropsAddr) & 0x7FFFFFFF)) - 0x2) = 0xAA;
-        off += 0x40;
-        break;
-      }
-      off += 0x40;
-    }
-    // Zero-out the result buffer to avoid false positives since we don't know the number of entries
-    memset((void *)sceMcGetDirResultAddr, 0, ((uint32_t)off - sceMcGetDirResultAddr));
-  }
-  return res;
+setup:
+  browserDirSubmenuSetup(entryProps, 1);
+  return;
 }
 
 // Browser application launch patch
@@ -114,72 +115,55 @@ void patchBrowserApplicationLaunch(uint8_t *osd, int isProtokernel) {
   // Protokernel browser code starts at ~0x700000
   uint32_t osdOffset = (isProtokernel) ? (PROTOKERNEL_MENU_OFFSET + 0x100000) : 0;
 
-  // Find the target function
-  uint8_t *ptr = findPatternWithMask(osd + osdOffset, 0x100000, (uint8_t *)patternBrowserFileMenuInit, (uint8_t *)patternBrowserFileMenuInit_mask,
-                                     sizeof(patternBrowserFileMenuInit));
-
-  if (!ptr || ((_lw((uint32_t)ptr + 4 * 4) & 0xfc000000) != 0x0c000000))
+  // Find setupExitToPreviousModule address
+  uint8_t *ptr = findPatternWithMask(osd + osdOffset, 0x100000, (uint8_t *)patternSetupExitToPreviousModule,
+                                     (uint8_t *)patternSetupExitToPreviousModule_mask, sizeof(patternSetupExitToPreviousModule));
+  if (!ptr)
     return;
-  ptr += 4 * 4;
+
+  setupExitToPreviousModule = (void *)ptr;
+
+  // Find exitToPreviousModule address
+  ptr = findPatternWithMask(osd + osdOffset, 0x100000, (uint8_t *)patternExitToPreviousModule, (uint8_t *)patternExitToPreviousModule_mask,
+                            sizeof(patternExitToPreviousModule));
+  if (!ptr || ((_lw((uint32_t)ptr + 0xc) & 0xfc000000) != 0x0c000000))
+    return;
+
+  // Get the original function call, save the address and replace it with the custom one
+  ptr += 0xc;
+  exitToPreviousModule = (void *)((_lw((uint32_t)ptr) & 0x03ffffff) << 2);
+  _sw((0x0c000000 | ((uint32_t)exitToPreviousModuleCustom >> 2)), (uint32_t)ptr); // jal exitToPreviousModuleCustom
+
+  // Find browserDirSubmenuSetup calls
+  ptr = findPatternWithMask(osd + osdOffset, 0x100000, (uint8_t *)patternBrowserMainLevelHandler, (uint8_t *)patternBrowserMainLevelHandler_mask,
+                            sizeof(patternBrowserMainLevelHandler));
+  if (!ptr || ((_lw((uint32_t)ptr + 4) & 0xfc000000) != 0x0c000000))
+    return;
+
+  // Store the pointer
+  uint32_t tmp = (uint32_t)ptr + 4;
 
   // Get the original function call and save the address
-  browserDirSubmenuInitView = (void *)((_lw((uint32_t)ptr) & 0x03ffffff) << 2);
+  browserDirSubmenuSetup = (void *)((_lw(tmp) & 0x03ffffff) << 2);
 
-  // Find the selected memory card offset
-  uint8_t *ptr2 = findPatternWithMask((uint8_t *)browserDirSubmenuInitView, 0x500, (uint8_t *)patternBrowserSelectedMC,
-                                      (uint8_t *)patternBrowserSelectedMC_mask, sizeof(patternBrowserSelectedMC));
-  if (!ptr2)
-    return;
-  // Store memory card offset
-  selectedMCOffset = _lw((uint32_t)ptr2) & 0xffff;
+  if (!osdOffset) {
+    // On newer ROMS, there might be two browserDirSubmenuSetup calls
+    while (_lw((uint32_t)ptr) != _lw(tmp)) {
+      ptr -= 4;
 
-  // Find the target function
-  ptr2 = findPatternWithMask(osd + osdOffset, 0x100000, (uint8_t *)patternBrowserGetMcDirSize, (uint8_t *)patternBrowserGetMcDirSize_mask,
-                             sizeof(patternBrowserGetMcDirSize));
-  if (!ptr2)
-    return;
-  // Get the original function call and save the address
-  browserGetMcDirSize = (void *)((_lw((uint32_t)ptr2) & 0x03ffffff) << 2);
-
-  if (isProtokernel)
-    // Use fixed address for protokernels. The call tree is way more complicated on these,
-    // so it's not worth the trouble since the address is identical for both 1.00 and 1.01
-    sceMcGetDirResultAddr = 0x008f66d0;
-  else {
-    // Trace the sceMcGetDir result buffer address
-    // From the browserGetMcDirSize function, get the address of the next function call
-    //  that retrieves directory size for mc0/mc1. This function sends sceMcGetDir request
-    //  to the libmc worker thread. The buffer address is stored in $t0.
-    // This function loads the upper part of the address to $v0
-    // adds the base offset to $s1, adds constant offset and puts the result into $t0.
-    // So, to get the address:
-    // 1. Find the first load into $v0 (lui   v0,????)
-    // 2. Find the first add into $s1  (addiu s1,v0,????)
-    // 3. Add the constant offset 0xc38 (same for all ROM versions >=1.10)
-    uint32_t offset = (uint32_t)browserGetMcDirSize;
-
-    // Find the first function call in browserGetMcDirSize and get the function address
-    while ((_lw(offset) & 0xfc000000) != 0x0c000000)
-      offset += 4;
-    offset = (_lw((uint32_t)offset) & 0x03ffffff) << 2;
-
-    // Initialize with fixed offset
-    sceMcGetDirResultAddr = 0xc38;
-
-    // Search for lui v0,???? instruction to get the upper part
-    while ((_lw(offset) & 0x3c020000) != 0x3c020000)
-      offset += 4;
-    sceMcGetDirResultAddr |= (_lw(offset) & 0xffff) << 16;
-
-    // Search for addiu s1,v0,???? to get the lower part (might be negative)
-    while ((_lw(offset) & 0x24510000) != 0x24510000)
-      offset += 4;
-    sceMcGetDirResultAddr += (int32_t)((int16_t)(_lw(offset) & 0xffff));
+      if ((tmp - (uint32_t)ptr) >= 0x150) {
+        // Failed to find the second call
+        ptr = NULL;
+        break;
+      }
+    }
+    // Replace the function call
+    if (ptr)
+      _sw((0x0c000000 | ((uint32_t)browserDirSubmenuSetupCustom >> 2)), (uint32_t)ptr); // jal browserDirSubmenuSetupCustom
   }
 
-  // Replace original functions
-  _sw((0x0c000000 | ((uint32_t)browserDirSubmenuInitViewCustom >> 2)), (uint32_t)ptr); // jal browserDirSubmenuInitViewCustom
-  _sw((0x0c000000 | ((uint32_t)browserGetMcDirSizeCustom >> 2)), (uint32_t)ptr2);      // jal browserGetMcDirSizeCustom
+  // Replace the function call
+  _sw((0x0c000000 | ((uint32_t)browserDirSubmenuSetupCustom >> 2)), tmp); // jal browserDirSubmenuSetupCustom
 }
 
 #else
@@ -202,12 +186,8 @@ void patchBrowserApplicationLaunch(uint8_t *osd, int isProtokernel) {
 //  0x124 - device number (2 - mc0, 6 - mc1, >10 = directories on HDD)
 //  0x12C - device name or directory name in __common
 
-// Path buffer
-char pathBuf[100];
 // Original functions
 void (*buildIconData)(uint8_t *iconDataLocation, uint8_t *deviceDataLocation) = NULL;
-void (*exitToPreviousModule)() = NULL;
-void (*setupExitToPreviousModule)(int appType) = NULL;
 
 void buildIconDataCustom(uint8_t *iconDataLocation, uint8_t *deviceDataLocation) {
   // Call the original function
@@ -226,13 +206,6 @@ void buildIconDataCustom(uint8_t *iconDataLocation, uint8_t *deviceDataLocation)
     if (ext && (!strcmp(ext, ".elf") || !strcmp(ext, ".ELF")))
       *(iconDataLocation + 0x90) |= 0x40;
   }
-}
-
-void exitToPreviousModuleCustom() {
-  if (pathBuf[0] != '\0')
-    launchItem(pathBuf);
-
-  exitToPreviousModule();
 }
 
 void setupExitToPreviousModuleCustom(int appType) {

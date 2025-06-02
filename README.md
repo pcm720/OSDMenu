@@ -58,7 +58,8 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
 - Set PS1 driver options to values from `OSDMENU.CNF` on every boot
 
 **OSDMenu**:
-- Launch SAS-compatible applications from the memory card browser if `title.cfg` exists in the directory (see [config handler](#config-handler))  
+- Launch SAS-compatible applications from the memory card browser if directory name is   
+  `BOOT`, `<3-letter SAS prefix>_<appname>` or if file name ends with `.ELF` or `.elf`.  
   This patch swaps around the "Enter" and "Options" menus and substitutes file properties submenu with the launcher.  
   To launch an app, just press "Enter" after selecting the app icon.  
   To copy or delete the save file, just use the triangle button.  

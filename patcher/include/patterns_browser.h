@@ -6,39 +6,42 @@
 #ifndef HOSD
 // OSDMenu patterns
 
-// Pattern for getting the address of the Browser file properties/Copy/Delete view init function
-// Seems to be consistent across all ROM versions, including protokernels
-static uint32_t patternBrowserFileMenuInit[] = {
+// Pattern for getting the address of the function that sets up exit to the clock screen
+// There might be two functions matching this pattern, but the target function seems to be
+// always the first one across all ROM versions.
+// Target function should have 0x2402ffff (addiu v0,0xffff) within the first 10 to 20 instructions
+static uint32_t patternSetupExitToPreviousModule[] = {
     0x27bdffe0, // addiu sp,sp,-0x20
-    0x30a500ff, // andi  a1,a1,0x00FF
-                // 0xffb00000, // sd s0,0x0000,sp // s0 contains current memory card index
-                // 0xffbf0010, // sd ra,0x0010,sp
-                // 0x0c000000, // jal browserDirSubmenuInitView <- target function
+    0xffb00000, // sd    s0,0x0000,sp
+    0x0080802d, // daddu s0,a0,zero
+    0xffbf0010, // sd    ra,0x0010,sp
+    0x0c000000, // jal   ???
+    0x24040002, // addiu a0,zero,0x0002
 };
-static uint32_t patternBrowserFileMenuInit_mask[] = {0xffffffff, 0xffffffff};
-
-// Pattern for getting the address of the currently selected memory card
-// Located in browserDirSubmenuInitView function
-static uint32_t patternBrowserSelectedMC[] = {
-    0x8f820000, // lw v0,0x0000,gp <-- address relative to $gp
-    0x2442fffe, // addiu v0,v0,-0x2
-    0x2c420000, // sltiu v0,v0,0x?
+static uint32_t patternSetupExitToPreviousModule_mask[] = {
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xfc000000, 0xffffffff,
 };
-static uint32_t patternBrowserSelectedMC_mask[] = {0xffff0000, 0xffffffff, 0xfffffff0};
 
-// Pattern for getting the address of the function that
-// triggers sceMcGetDir call and returns the directory size or -8 if result
-// is yet to be retrieved.
-// When this function returns -8, browserDirSubmenuInitView gets called repeatedly
-// until browserGetMcDirSize returns valid directory size
-static uint32_t patternBrowserGetMcDirSize[] = {
-    0x0c000000, // jal browserGetMcDirSize <-- target function
+// Pattern for geting the address of the exit from browser function
+static uint32_t patternExitToPreviousModule[] = {
+    0x8f820000, // lw  v0,????,gp
+    0x1440ff00, // bne v0,zero,0xff??
     0x00000000, // nop
-    0x0040802d, // daddu s0,v0,zero
-    0x2402fff8, // addiu v0,zero,0x8
-    0x12020030, // beq   s0,v0,0x003?
+    0x0c000000, // jal exitToPreviousModule
 };
-static uint32_t patternBrowserGetMcDirSize_mask[] = {0xfc000000, 0xffffffff, 0xffffffff, 0xffffffff, 0xfffffff0};
+static uint32_t patternExitToPreviousModule_mask[] = {0xffff0000, 0xffffff00, 0xffffffff, 0xfc000000};
+
+// Pattern for getting the address of the first or second browserDirSubmenuSetup call in browser main level handler
+// There might be two browserDirSubmenuSetup calls in total on newer ROMs
+// Another browserDirSubmenuSetup call is located within the last 0x150 bytes before this pattern.
+static uint32_t patternBrowserMainLevelHandler[] = {
+  0x24050001, // addiu a1,zero,0x0001
+  0x0c000000, // jal browserDirSubmenuSetup
+  0x00000000, // nop
+  0x24045200, // addiu a0,zero,0x5200
+};
+static uint32_t patternBrowserMainLevelHandler_mask[] = {0xffffffff, 0xfc000000, 0xffffffff, 0xffffffff};
+
 #else
 // HOSDMenu patterns
 
