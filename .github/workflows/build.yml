@@ -27,6 +27,7 @@ jobs:
       with:
         name: artifacts
         path: |
+          examples/
           osdmenu.elf
           hosdmenu.elf
           README.md

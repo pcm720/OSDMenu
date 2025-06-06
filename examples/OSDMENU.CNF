@@ -1,0 +1,45 @@
+hacked_OSDSYS = 1
+OSDSYS_video_mode = AUTO
+OSDSYS_Inner_Browser = 0
+OSDSYS_Browser_Launcher = 1
+OSDSYS_selected_color = 0x10,0x80,0xE0,0x80
+OSDSYS_unselected_color = 0x33,0x33,0x33,0x80
+OSDSYS_scroll_menu = 1
+OSDSYS_menu_x = 432
+OSDSYS_menu_y = 110
+OSDSYS_enter_x = 30
+OSDSYS_enter_y = -1
+OSDSYS_version_x = -1
+OSDSYS_version_y = -1
+OSDSYS_cursor_max_velocity = 1500
+OSDSYS_cursor_acceleration = 150
+OSDSYS_left_cursor =
+OSDSYS_right_cursor =
+OSDSYS_menu_top_delimiter =
+OSDSYS_menu_bottom_delimiter =
+OSDSYS_num_displayed_items = 5
+OSDSYS_Skip_MC = 1
+OSDSYS_Skip_HDD = 1
+OSDSYS_Skip_Disc = 1
+OSDSYS_Skip_Logo = 1
+cdrom_skip_ps2logo = 1
+cdrom_disable_gameid = 0
+cdrom_use_dkwdrv = 0
+ps1drv_enable_fast = 0
+ps1drv_enable_smooth = 0
+# path_custom_payload = hdd0:__system:pfs:/p2lboot/PSBBN.ELF
+# boot_custom_payload = 1
+# path_DKWDRV_ELF = mc?:/BOOT/DKWDRV.ELF
+# --------------------------------------------------
+name_OSDSYS_ITEM_1 = Launch Disc
+path1_OSDSYS_ITEM_1 = cdrom
+arg_OSDSYS_ITEM_1 = -nologo
+# --------------------------------------------------
+name_OSDSYS_ITEM_2 = wLaunchELF
+path1_OSDSYS_ITEM_2 = mc?:/BOOT/BOOT.ELF
+path2_OSDSYS_ITEM_2 = mmce?:/apps/wLaunchELF.elf
+path3_OSDSYS_ITEM_2 = usb:/apps/wLaunchELF.elf
+# --------------------------------------------------
+name_OSDSYS_ITEM_250 = Shutdown
+path1_OSDSYS_ITEM_250 = POWEROFF
+# --------------------------------------------------
