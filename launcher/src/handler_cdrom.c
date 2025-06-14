@@ -22,6 +22,14 @@ typedef enum {
   DiscType_PS2,
 } DiscType;
 
+// PS1 Video Mode Negator variables
+extern uint8_t ps1vn_elf[];
+extern int size_ps1vn_elf;
+
+#define CDROM_PS1_FAST 0x1
+#define CDROM_PS1_SMOOTH 0x10
+#define CDROM_PS1_VN 0xFF00
+
 const char *getPS1GenericTitleID();
 int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion);
 int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath);
@@ -51,9 +59,11 @@ int handleCDROM(int argc, char *argv[]) {
     } else if (!strcmp("nogameid", arg)) {
       displayGameID = 0;
     } else if (!strcmp("ps1fast", arg)) {
-      ps1drvFlags |= 1;
+      ps1drvFlags |= CDROM_PS1_FAST;
     } else if (!strcmp("ps1smooth", arg)) {
-      ps1drvFlags |= 0x10;
+      ps1drvFlags |= CDROM_PS1_SMOOTH;
+    } else if (!strcmp("ps1vneg", arg)) {
+      ps1drvFlags |= CDROM_PS1_VN;
     } else if (!strncmp("dkwdrv", arg, 6)) {
       useDKWDRV = 1;
       dkwdrvPath = strchr(arg, '=');
@@ -86,10 +96,12 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
     DPRINTF("CDROM: Disabling visual game ID\n");
   if (skipPS2LOGO)
     DPRINTF("CDROM: Skipping PS2LOGO\n");
-  if (ps1drvFlags & 0x01)
+  if (ps1drvFlags & CDROM_PS1_FAST)
     DPRINTF("CDROM: Forcing PS1DRV fast disc speed\n");
-  if (ps1drvFlags & 0x10)
+  if (ps1drvFlags & CDROM_PS1_SMOOTH)
     DPRINTF("CDROM: Forcing PS1DRV texture smoothing\n");
+  if (ps1drvFlags & CDROM_PS1_VN)
+    DPRINTF("CDROM: Running PS1DRV via PS1VModeNeg\n");
 
   // Wait until the drive is ready
   sceCdDiskReady(0);
@@ -148,18 +160,26 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       launchPath(1, argv);
     } else {
       char *argv[] = {titleID, titleVersion};
-      DPRINTF("Starting PS1DRV with title ID %s and version %s\n", argv[0], argv[1]);
-      sceSifExitCmd();
 
       // Set PS1DRV flags
-      if (ps1drvFlags) {
+      if (ps1drvFlags & (CDROM_PS1_FAST | CDROM_PS1_SMOOTH)) {
         ConfigParam osdConfig;
         GetOsdConfigParam(&osdConfig);
-        osdConfig.ps1drvConfig |= ps1drvFlags;
+        osdConfig.ps1drvConfig |= (ps1drvFlags & ~CDROM_PS1_VN);
+        DPRINTF("Will set PS1DRV config to %x\n", osdConfig.ps1drvConfig);
         SetOsdConfigParam(&osdConfig);
       }
 
-      LoadExecPS2("rom0:PS1DRV", 2, argv);
+      if (ps1drvFlags & CDROM_PS1_VN) {
+        DPRINTF("Starting PS1DRV via PS1VModeNeg with title ID %s and version %s\n", argv[0], argv[1]);
+        sceSifExitCmd();
+        LoadEmbeddedELF(ps1vn_elf, 2, argv);
+      } else {
+        char *argv[] = {titleID, titleVersion};
+        DPRINTF("Starting PS1DRV with title ID %s and version %s\n", argv[0], argv[1]);
+        sceSifExitCmd();
+        LoadExecPS2("rom0:PS1DRV", 2, argv);
+      }
     }
     break;
   case DiscType_PS2:

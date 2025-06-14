@@ -89,7 +89,7 @@ ifeq ($(APA), 1)
  DEV9 = 1
  EE_CFLAGS += -DAPA
  EE_OBJS += handler_pfs.o
- IRX_FILES += ps2atad.irx ps2hdd.irx ps2fs.irx
+ IRX_FILES += ps2atad.irx ps2hdd-osd.irx ps2fs.irx
 endif
 
 ifeq ($(CDROM),1)
@@ -97,6 +97,7 @@ ifeq ($(CDROM),1)
  EE_OBJS += handler_cdrom.o history.o game_id.o
  RES_FILES += icon_A.sys icon_C.sys icon_J.sys
  IRX_FILES += xparam.irx
+ ELF_FILES += ps1vn.elf
 endif
 
 # Driver dependencies
@@ -163,6 +164,7 @@ $(EE_BIN_PKD): $(EE_BIN)
 
 clean:
 	$(MAKE) -C loader clean
+	$(MAKE) -C ps1vn clean
 	$(MAKE) -C iop/xparam clean
 	$(MAKE) -C iop/smap_udpbd clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD)
@@ -172,6 +174,9 @@ BIN2C = $(PS2SDK)/bin/bin2c
 # IRX files
 %_irx.c:
 	$(BIN2C) $(PS2SDK)/iop/irx/$(*:$(EE_SRC_DIR)%=%).irx $@ $(*:$(EE_SRC_DIR)%=%)_irx
+
+%ps2hdd-osd_irx.c:
+	$(BIN2C) $(PS2SDK)/iop/irx/ps2hdd-osd.irx $@ $(*:$(EE_SRC_DIR)%=%)ps2hdd_osd_irx
 
 # smap_udpbd.irx
 iop/smap_udpbd/smap_udpbd.irx: iop/smap_udpbd
@@ -197,6 +202,13 @@ loader.elf:
 
 %loader_elf.c: loader.elf
 	$(BIN2C) $(*:$(EE_SRC_DIR)%=loader/%)loader.elf $@ $(*:$(EE_SRC_DIR)%=%)loader_elf
+
+# PS1 Video Mode Negator
+ps1vn.elf:
+	$(MAKE) -C ps1vn/$<
+
+%ps1vn_elf.c: ps1vn.elf
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=ps1vn/%)ps1vn.elf $@ $(*:$(EE_SRC_DIR)%=%)ps1vn_elf
 
 # Resource files
 %_sys.c:

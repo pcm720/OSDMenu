@@ -71,7 +71,7 @@ IRX_DEFINE(smap_udpbd);
 #ifdef APA
 #define DEV9
 IRX_DEFINE(ps2atad);
-IRX_DEFINE(ps2hdd);
+IRX_DEFINE(ps2hdd_osd);
 IRX_DEFINE(ps2fs);
 #endif
 
@@ -162,7 +162,7 @@ static ModuleListEntry moduleList[] = {
 #endif
 #ifdef APA
     INT_MODULE(ps2atad, NULL, Device_PFS),
-    INT_MODULE(ps2hdd, &initPS2HDDArguments, Device_PFS),
+    INT_MODULE(ps2hdd_osd, &initPS2HDDArguments, Device_PFS),
     INT_MODULE(ps2fs, &initPS2FSArguments, Device_PFS),
 #endif
 };

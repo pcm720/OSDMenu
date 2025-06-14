@@ -10,9 +10,9 @@
 extern uint8_t loader_elf[];
 extern int size_loader_elf;
 
-//
-// All of the following code is a modified version of elf.c from PS2SDK with unneeded bits removed
-//
+int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]);
+
+int LoadELFFromFile(int argc, char *argv[]) { return LoadEmbeddedELF(loader_elf, argc, argv); }
 
 typedef struct {
   uint8_t ident[16]; // struct definition for ELF object header
@@ -46,8 +46,9 @@ typedef struct {
 #define ELF_MAGIC 0x464c457f
 #define ELF_PT_LOAD 1
 
-int LoadELFFromFile(int argc, char *argv[]) {
-  uint8_t *boot_elf;
+// Loads and executes the ELF boot_elf points to
+// Based on PS2SDK elf-loader
+int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]) {
   elf_header_t *eh;
   elf_pheader_t *eph;
   void *pdata;
@@ -56,7 +57,6 @@ int LoadELFFromFile(int argc, char *argv[]) {
   // Wipe memory region where the ELF loader is going to be loaded (see loader/linkfile)
   memset((void *)0x00084000, 0, 0x00100000 - 0x00084000);
 
-  boot_elf = (uint8_t *)loader_elf;
   eh = (elf_header_t *)boot_elf;
   if (_lw((uint32_t)&eh->ident) != ELF_MAGIC)
     __builtin_trap();
