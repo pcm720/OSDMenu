@@ -133,6 +133,7 @@ Supports the following arguments:
 - `-dkwdrv=<path to DKWDRV>` — same as `-dkwdrv`, but with custom DKWDRV path
 - `-ps1fast` — will force fast disc speed for PS1 discs when not using DKWDRV
 - `-ps1smooth` — will force texture smoothing for PS1 discs when not using DKWDRV
+- `-ps1vneg` — will run PS1DRV via the PS1DRV Video Mode Negator
 
 For PS1 CDs with generic executable name (e.g. `PSX.EXE`), attempts to guess the game ID using the volume creation date
 stored in the Primary Volume Descriptor, based on the table from [TonyHax International](https://github.com/alex-free/tonyhax/blob/master/loader/gameid-psx-exe.c).
@@ -214,15 +215,16 @@ New to OSDMenu/HOSDMenu:
 28. `OSDSYS_Browser_Launcher` — enables/disables patch for launching applications from the Browser 
 29. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
 30. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
+31. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
 
 Options exclusive to OSDMenu:
 
-31. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
+32. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
 
 Options exclusive to HOSDMenu (mostly for running from `__mbr`):
 
-31. `path_custom_payload` — full path to custom payload on `hdd0:__system`, will be run when the Cross button is pressed during initialization
-32. `boot_custom_payload` — if enabled, will invert the original behavior and run custom payload by default
+32. `path_custom_payload` — full path to custom payload on `hdd0:__system`, will be run when the Cross button is pressed during initialization
+33. `boot_custom_payload` — if enabled, will invert the original behavior and run custom payload by default
 
 ## Credits
 
