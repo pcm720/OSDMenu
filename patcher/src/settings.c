@@ -312,6 +312,13 @@ int loadConfig(void) {
         settings.patcherFlags &= ~(FLAG_PS1DRV_SMOOTH);
       continue;
     }
+    if (!strcmp(name, "ps1drv_use_ps1vn")) {
+      if (atoi(value))
+        settings.patcherFlags |= FLAG_PS1DRV_USE_VN;
+      else
+        settings.patcherFlags &= ~(FLAG_PS1DRV_USE_VN);
+      continue;
+    }
   }
 
   if (pCNF != NULL)

@@ -12,7 +12,7 @@
 #include <sifrpc.h>
 #include <string.h>
 
-char *argv[5] = {0};
+char *argv[6] = {0};
 int argc = 0;
 int LoadELFFromFile(int argc, char *argv[]);
 
@@ -94,7 +94,8 @@ void launchItem(char *item) {
       GetOsdConfigParam(&osdConfig);
       argv[3] = (osdConfig.ps1drvConfig & 0x1) ? "-ps1fast" : "";
       argv[4] = (osdConfig.ps1drvConfig & 0x10) ? "-ps1smooth" : "";
-      argc += 2;
+      argv[5] = (!(settings.patcherFlags & FLAG_PS1DRV_USE_VN)) ? "" : "-ps1vneg";
+      argc += 3;
     }
   }
 

@@ -8,18 +8,19 @@
 #define NAME_LEN 80      // Max menu item length (incl. the string terminator)
 
 typedef enum {
-  FLAG_CUSTOM_MENU = (1 << 0),          // Apply menu patches
-  FLAG_SKIP_DISC = (1 << 1),            // Disable disc autolaunch
-  FLAG_SKIP_SCE_LOGO = (1 << 2),        // Skip SCE logo on boot
-  FLAG_BOOT_BROWSER = (1 << 3),         // Boot directly to MC browser
-  FLAG_SCROLL_MENU = (1 << 4),          // Enable infinite scrolling
-  FLAG_SKIP_PS2_LOGO = (1 << 5),        // Skip PS2LOGO when booting discs
-  FLAG_DISABLE_GAMEID = (1 << 6),       // Disable PixelFX game ID
-  FLAG_USE_DKWDRV = (1 << 7),           // Use DKWDRV for PS1 discs
-  FLAG_BROWSER_LAUNCHER = (1 << 8),     // Apply patches for launching applications from the Browser
-  FLAG_BOOT_PAYLOAD = (1 << 9),         // If set, HOSDMenu will boot the payload by default
-  FLAG_PS1DRV_FAST = (1 << 10),   // If set, will force PS1DRV fast disc speed
-  FLAG_PS1DRV_SMOOTH = (1 << 11), // If set, will force PS1DRV texture smoothing
+  FLAG_CUSTOM_MENU = (1 << 0),      // Apply menu patches
+  FLAG_SKIP_DISC = (1 << 1),        // Disable disc autolaunch
+  FLAG_SKIP_SCE_LOGO = (1 << 2),    // Skip SCE logo on boot
+  FLAG_BOOT_BROWSER = (1 << 3),     // Boot directly to MC browser
+  FLAG_SCROLL_MENU = (1 << 4),      // Enable infinite scrolling
+  FLAG_SKIP_PS2_LOGO = (1 << 5),    // Skip PS2LOGO when booting discs
+  FLAG_DISABLE_GAMEID = (1 << 6),   // Disable PixelFX game ID
+  FLAG_USE_DKWDRV = (1 << 7),       // Use DKWDRV for PS1 discs
+  FLAG_BROWSER_LAUNCHER = (1 << 8), // Apply patches for launching applications from the Browser
+  FLAG_BOOT_PAYLOAD = (1 << 9),     // If set, HOSDMenu will boot the payload by default
+  FLAG_PS1DRV_FAST = (1 << 10),     // If set, will force PS1DRV fast disc speed
+  FLAG_PS1DRV_SMOOTH = (1 << 11),   // If set, will force PS1DRV texture smoothing
+  FLAG_PS1DRV_USE_VN = (1 << 12),   // If set, run PS1DRV via the PS1DRV Video Mode Negator
 } PatcherFlags;
 
 // Patcher settings struct, contains all configurable patch settings and menu items
