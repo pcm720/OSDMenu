@@ -35,7 +35,7 @@ ifeq ($(HOSD), 1)
  EE_CFLAGS += -DHOSD
  EE_LINKFILE = linkfile.hosd
  EE_LIBS += -lfileXio -lpad
- IRX_FILES += iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd.irx ps2fs.irx legacy_ps2atad.irx
+ IRX_FILES += iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd-osd.irx ps2fs.irx legacy_ps2atad.irx
 endif
 
 ifeq ($(ENABLE_SPLASH), 1)
@@ -79,6 +79,9 @@ BIN2C = $(PS2SDK)/bin/bin2c
 # IRX files
 %_irx.c:
 	$(BIN2C) $(PS2SDK)/iop/irx/$(*:$(EE_SRC_DIR)%=%).irx $@ $(*:$(EE_SRC_DIR)%=%)_irx
+
+%ps2hdd-osd_irx.c:
+	$(BIN2C) $(PS2SDK)/iop/irx/ps2hdd-osd.irx $@ $(*:$(EE_SRC_DIR)%=%)ps2hdd_osd_irx
 
 # Legacy ps2atad.irx
 iop/atad/ps2atad.irx: iop/atad

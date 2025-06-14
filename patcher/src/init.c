@@ -81,7 +81,7 @@ IRX_DEFINE(iomanX);
 IRX_DEFINE(fileXio);
 IRX_DEFINE(ps2dev9);
 IRX_DEFINE(ps2atad);
-IRX_DEFINE(ps2hdd);
+IRX_DEFINE(ps2hdd_osd);
 IRX_DEFINE(ps2fs);
 
 // ps2hdd module arguments. Up to 4 descriptors, 20 buffers
@@ -129,7 +129,7 @@ int initModules(void) {
   IRX_LOAD(fileXio, 0, NULL)
   IRX_LOAD(ps2dev9, 0, NULL)
   IRX_LOAD(ps2atad, 0, NULL)
-  IRX_LOAD(ps2hdd, sizeof(ps2hddArguments), ps2hddArguments)
+  IRX_LOAD(ps2hdd_osd, sizeof(ps2hddArguments), ps2hddArguments)
   IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments)
 
   if ((ret = SifLoadModule("rom0:SIO2MAN", 0, NULL)) < 0)
