@@ -1,16 +1,15 @@
-PAYLOAD ?= patcher.elf
-
-EE_BIN = mbr.elf
-EE_BIN_RAW = payload.bin
+EE_BIN_PKD = mbrboot.elf
+EE_BIN = mbrboot_unc.elf
 
 EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include
-EE_LIBS = -lpatches -ldma
-EE_OBJS = main.o crt0.o mbrboot_elf.o
+EE_LIBS = -lpatches -ldma -ldebug
+EE_OBJS = main.o mbrboot.o mbrboot_crypto.o
+ELF_FILES = loader.elf
 
 # C compiler flags
 EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
 EE_CFLAGS = -D_EE -Os -G0 -Wall -Werror -fdata-sections -ffunction-sections $(EE_INCS)
-EE_LDFLAGS += -Wl,-zmax-page-size=128 -Wl,--gc-sections -nostartfiles -s
+EE_LDFLAGS += -Wl,-zmax-page-size=128 -Wl,--gc-sections -s
 
 # Reduce binary size by using newlib-nano
 EE_NEWLIB_NANO = 1
@@ -21,41 +20,28 @@ EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
 
 EE_OBJS += $(IRX_FILES:.irx=_irx.o)
-ifneq (,$(findstring ELF,$(PAYLOAD)))
-	EE_OBJS += $(PAYLOAD:.ELF=_ELF.o)
-else
-	EE_OBJS += $(PAYLOAD:.elf=_elf.o)
-endif
+EE_OBJS += $(ELF_FILES:.elf=_elf.o)
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
 
 .PHONY: all clean
 
-all: $(EE_BIN_RAW)
+all: $(EE_BIN_PKD)
 
 clean:
 	$(MAKE) -C ../../patcher clean
-	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_RAW)
+	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD)
 
-# HOSDMenu payload
-%patcher_elf.c:
-	$(MAKE) -C ../../patcher clean
-	$(MAKE) -C ../../patcher HOSD=1
-	$(BIN2C) ../../patcher/patcher.elf $@ payload_elf
+# ELF loader
+loader.elf:
+	$(MAKE) -C ../loader/$<
 
-# MBRBOOT payload
-%mbrboot_elf.c:
-	$(MAKE) -C ../mbrboot clean
-	$(MAKE) -C ../mbrboot
-	$(BIN2C) ../mbrboot/mbrboot.elf $@ mbrboot_elf
-
-# Custom payload
-%_elf.c:
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=%).elf $@ payload_elf
-
-%_ELF.c:
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=%).ELF $@ payload_elf
+%loader_elf.c: loader.elf
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=../loader/%)loader.elf $@ $(*:$(EE_SRC_DIR)%=%)loader_elf
 
 BIN2C = $(PS2SDK)/bin/bin2c
+
+$(EE_BIN_PKD): $(EE_BIN)
+	ps2-packer $< $@
 
 $(EE_ASM_DIR):
 	@mkdir -p $@

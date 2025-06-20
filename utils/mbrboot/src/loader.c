@@ -1,5 +1,4 @@
 #include <kernel.h>
-#include <ps2sdkapi.h>
 #include <sifrpc.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -7,30 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-// Reduce binary size by disabling the unneeded functionality
-void _libcglue_init() {}
-void _libcglue_deinit() {}
-void _libcglue_args_parse(int argc, char **argv) {}
-DISABLE_PATCHED_FUNCTIONS();
-DISABLE_EXTRA_TIMERS_FUNCTIONS();
-PS2_DISABLE_AUTOSTART_PTHREAD();
-
-// Loader ELF variables
-extern uint8_t payload_elf[];
-extern int size_payload_elf;
-
-// MBRBOOT ELF variables
-extern uint8_t mbrboot_elf[];
-extern int size_mbrboot_elf;
-
-int loadELFFromMemory(uint8_t *elf, int argc, char *argv[]);
-
-int main(int argc, char *argv[]) {
-  if (!strcmp(argv[0], "rom0:MBRBOOT")) {
-    return loadELFFromMemory(mbrboot_elf, argc, argv);
-  }
-  return loadELFFromMemory(payload_elf, argc, argv);
-}
+// Based on PS2SDK elf-loader
 
 typedef struct {
   uint8_t ident[16]; // struct definition for ELF object header
@@ -64,25 +40,29 @@ typedef struct {
 #define ELF_MAGIC 0x464c457f
 #define ELF_PT_LOAD 1
 
+// Loads and executes the ELF boot_elf points to
 // Based on PS2SDK elf-loader
-int loadELFFromMemory(uint8_t *elf, int argc, char *argv[]) {
+int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]) {
   elf_header_t *eh;
   elf_pheader_t *eph;
   void *pdata;
   int i;
 
-  eh = (elf_header_t *)elf;
+  // Wipe memory region where the ELF loader is going to be loaded (see loader/linkfile)
+  memset((void *)0x00084000, 0, 0x00100000 - 0x00084000);
+
+  eh = (elf_header_t *)boot_elf;
   if (_lw((uint32_t)&eh->ident) != ELF_MAGIC)
     __builtin_trap();
 
-  eph = (elf_pheader_t *)(elf + eh->phoff);
+  eph = (elf_pheader_t *)(boot_elf + eh->phoff);
 
   // Scan through the ELF's program headers and copy them into RAM
   for (i = 0; i < eh->phnum; i++) {
     if (eph[i].type != ELF_PT_LOAD)
       continue;
 
-    pdata = (void *)(elf + eph[i].offset);
+    pdata = (void *)(boot_elf + eph[i].offset);
     memcpy(eph[i].vaddr, pdata, eph[i].filesz);
   }
 

@@ -163,7 +163,7 @@ $(EE_BIN_PKD): $(EE_BIN)
 	ps2-packer $< $@
 
 clean:
-	$(MAKE) -C loader clean
+	$(MAKE) -C ../utils/loader clean
 	$(MAKE) -C ps1vn clean
 	$(MAKE) -C iop/xparam clean
 	$(MAKE) -C iop/smap_udpbd clean
@@ -198,10 +198,10 @@ iop/xparam/xparam.irx: iop/xparam
 
 # ELF loader
 loader.elf:
-	$(MAKE) -C loader/$<
+	$(MAKE) -C ../utils/loader/$<
 
 %loader_elf.c: loader.elf
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=loader/%)loader.elf $@ $(*:$(EE_SRC_DIR)%=%)loader_elf
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=../utils/loader/%)loader.elf $@ $(*:$(EE_SRC_DIR)%=%)loader_elf
 
 # PS1 Video Mode Negator
 ps1vn.elf:

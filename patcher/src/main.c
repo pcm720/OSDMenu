@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
   if (haveOSD >= 0)
     launchOSDSYS();
 
-  // Fallback to BOOT.ELF on mc0
+  // Fallback to RECOVERY_PAYLOAD_PATH
   fileXioUmount("pfs0:");
   launchPayload(RECOVERY_PAYLOAD_PATH);
 }
