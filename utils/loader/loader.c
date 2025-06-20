@@ -7,9 +7,10 @@
 # Licenced under Academic Free License version 2.0
 # Review ps2sdk README & LICENSE files for further details.
 #
-# Modified to not reset IOP
+# Modified to not reset IOP if not explicitly requested
 */
 
+#include <iopcontrol.h>
 #include <kernel.h>
 #include <loadfile.h>
 #include <ps2sdkapi.h>
@@ -52,13 +53,19 @@ int main(int argc, char *argv[]) {
 
   elfdata.epc = 0;
 
-  // arg[0] is path to ELF
+  // arg[0] is the path to ELF
   if (argc < 1) {
     return -EINVAL;
   }
 
+  int doIOPReset = 0;
+  if (!strcmp(argv[0], "-r")) {
+    argv++;
+    doIOPReset = 1;
+  }
+
   // Initialize
-  SifInitRpc(0);
+  sceSifInitRpc(0);
   wipeUserMem();
 
   char *elfPath = NULL;
@@ -76,9 +83,20 @@ int main(int argc, char *argv[]) {
 
   // Writeback data cache before loading ELF.
   FlushCache(0);
+
   SifLoadFileInit();
   ret = SifLoadElf(elfPath, &elfdata);
+  if (ret) // Try to load KELF if SifLoadElf fails
+    ret = SifLoadElfEncrypted(elfPath, &elfdata);
   SifLoadFileExit();
+
+  if (doIOPReset) {
+    while (!SifIopReset("", 0)) {
+    };
+    while (!SifIopSync()) {
+    };
+  }
+
   if (ret == 0 && elfdata.epc != 0) {
     FlushCache(0);
     FlushCache(2);

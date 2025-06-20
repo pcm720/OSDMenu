@@ -1,0 +1,7 @@
+#ifndef _MBRBOOT_CRYPTO_H_
+#define _MBRBOOT_CRYPTO_H_
+
+// Decrypts PSBBN MBRBOOT arguments
+char **decryptMBRBOOTArgs(int *argc, char **argv);
+
+#endif
