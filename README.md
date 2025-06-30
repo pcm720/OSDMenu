@@ -5,7 +5,7 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
 ## Usage
 
 ### OSDMenu
-1. Copy `osdmenu.elf` to `mc?:/BOOT/`  
+1. Copy `osdmenu.elf` to `mc?:/BOOT/` or copy and paste `SYS_OSDMENU.psu` via wLaunchELF using `psuPaste`
    Copy DKWDRV to `mc?:/BOOT/DKWDRV.ELF` _(optional)_ 
 2. Edit `mc?:/SYS-CONF/OSDMENU.CNF` [as you see fit](#osdmenucnf)
 3. Configure PS2BBL to launch `mc?:/BOOT/osdmenu.elf` or launch it manually from anywhere
@@ -199,7 +199,7 @@ DKWDRV and custom payload paths are limited to 49 characters.
 15. `OSDSYS_menu_bottom_delimiter` — bottom menu delimiter text
 16. `OSDSYS_num_displayed_items` — the number of menu items displayed
 17. `OSDSYS_Skip_Disc` — enables/disables automatic CD/DVD launch
-18. `OSDSYS_Skip_Logo` — enables/disables SCE logo
+18. `OSDSYS_Skip_Logo` — enables/disables SCE logo (also needs `OSDSYS_Skip_Disc` to be disabled to actually show the logo)
 19. `OSDSYS_Inner_Browser` — enables/disables going to the Browser after launching OSDSYS
 20. `OSDSYS_selected_color` — color of selected menu entry
 21. `OSDSYS_unselected_color` — color of unselected menu entry
@@ -235,3 +235,4 @@ Options exclusive to HOSDMenu (mostly for running from `__mbr`):
 https://github.com/rickgaiser/neutrino) and Neutrino GSM
 - Matías Israelson for making [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader)
 - CosmicScale for [RetroGEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher)
+- Ripto for creating the OSDMenu Browser icons and Yornn for collecting all files required for the PSU package
