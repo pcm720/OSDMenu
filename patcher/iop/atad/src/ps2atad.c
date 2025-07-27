@@ -857,11 +857,13 @@ static int ata_init_devices(ata_devinfo_t *devinfo) {
       lba_48bit[i] = 1;
       /* I don't think anyone would use a >2TB HDD but just in case.  */
       if (ata_param[ATA_ID_48BIT_SECTOTAL_HI]) {
-        // Limit to 0x7fffffff to work around HDD-OSD treating this number as a signed value
-        devinfo[i].total_sectors = 0x7fffffff;
+        devinfo[i].total_sectors = 0xffffffff;
       } else {
         devinfo[i].total_sectors = (ata_param[ATA_ID_48BIT_SECTOTAL_MI] << 16) | ata_param[ATA_ID_48BIT_SECTOTAL_LO];
       }
+      if (devinfo[i].total_sectors > 0x7fffffff)
+        // Limit the total sector count to 0x7fffffff to work around HDD-OSD treating this number as a signed value
+        devinfo[i].total_sectors = 0x7fffffff;
     } else {
       lba_48bit[i] = 0;
       devinfo[i].total_sectors = (ata_param[ATA_ID_SECTOTAL_HI] << 16) | ata_param[ATA_ID_SECTOTAL_LO];
