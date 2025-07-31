@@ -108,7 +108,7 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
 #else
   int n = 0;
   char *args[3];
-  args[n++] = "hdd0:__system:pfs:" HOSD_HDDOSD_PATH;
+  args[n++] = "hdd0:__system:pfs:/osd100/hosdsys.elf";
   if (settings.patcherFlags & FLAG_BOOT_BROWSER)
     args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
   else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))
@@ -165,8 +165,9 @@ void launchOSDSYS() {
   if (SifLoadElf("rom0:OSDSYS", &exec) || (exec.epc < 0))
     return;
 #else
-  if (SifLoadElfEncrypted("pfs0:" HOSD_HDDOSD_PATH, &exec) || (exec.epc < 0))
-    return;
+  if (SifLoadElfEncrypted("pfs0:/osd100/hosdsys.elf", &exec) || (exec.epc < 0))
+    if (SifLoadElfEncrypted("pfs0:/osd100/OSDSYS_A.XLF", &exec) || (exec.epc < 0))
+      return;
 
   fileXioUmount("pfs0:");
 #endif

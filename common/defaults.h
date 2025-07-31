@@ -31,11 +31,6 @@
 #define HOSD_CONF_PATH "/OSDMENU/OSDMENU.CNF"
 #endif
 
-// Path to HDD OSD ELF relative to HOSD_SYS_PARTITION partition root
-#ifndef HOSD_HDDOSD_PATH
-#define HOSD_HDDOSD_PATH "/osd100/OSDSYS_A.XLF"
-#endif
-
 // Full path to DKWDRV, including the partition
 #ifndef HOSD_DKWDRV_PATH
 #define HOSD_DKWDRV_PATH HOSD_SYS_PARTITION ":pfs:/osdmenu/DKWDRV.ELF"

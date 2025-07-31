@@ -120,7 +120,9 @@ int main(int argc, char *argv[]) {
 #endif
 
   // Check if HDD OSD executable exists
-  int haveOSD = checkFile("pfs0:" HOSD_HDDOSD_PATH);
+  int haveOSD = checkFile("pfs0:/osd100/hosdsys.elf");
+  if (haveOSD < 0)
+    haveOSD = checkFile("pfs0:/osd100/OSDSYS_A.XLF");
 
   if (haveOSD >= 0)
     launchOSDSYS();

@@ -12,8 +12,8 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
 
 ### HOSDMenu — OSDMenu for HDD OSD
 1. Install HDD OSD 1.10U  
-   Make sure HDD OSD binaries are installed into `hdd0:__system/osd100/` and `OSDSYS_A.XLF` is present.  
-   SHA-256 hashes of `OSDSYS_A.XLF` known to work:
+   Make sure HDD OSD binaries are installed into `hdd0:__system/osd100/` and `hosdsys.elf`/`OSDSYS_A.XLF` is present.  
+   SHA-256 hashes of `hosdsys.elf`/`OSDSYS_A.XLF` known to work:
    - `acc905233f79678b9d7c1de99b0aee2409136197d13e7d78bf8978cd85b736ae` — original binary from the official HDD Utility Disc Version 1.10
    - `65360a6c210b36def924770f23d5565382b5fa4519ef0bb8ddf5c556531eec14` — cracked HDD OSD with 48-bit LBA support from the Sony Utility Disc Compilation 4 disc
 
