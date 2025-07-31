@@ -3,9 +3,11 @@ PAYLOAD ?= patcher.elf
 EE_BIN = mbr.elf
 EE_BIN_RAW = payload.bin
 
+EE_LINKFILE = linkfile
+
 EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include
 EE_LIBS = -lpatches -ldma
-EE_OBJS = main.o crt0.o mbrboot_elf.o
+EE_OBJS = main.o crt0.o
 
 # C compiler flags
 EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
@@ -41,12 +43,6 @@ clean:
 	$(MAKE) -C ../../patcher clean
 	$(MAKE) -C ../../patcher HOSD=1
 	$(BIN2C) ../../patcher/patcher.elf $@ payload_elf
-
-# MBRBOOT payload
-%mbrboot_elf.c:
-	$(MAKE) -C ../mbrboot clean
-	$(MAKE) -C ../mbrboot
-	$(BIN2C) ../mbrboot/mbrboot.elf $@ mbrboot_elf
 
 # Custom payload
 %_elf.c:

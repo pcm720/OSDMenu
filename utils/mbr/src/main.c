@@ -18,20 +18,6 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 // Loader ELF variables
 extern uint8_t payload_elf[];
 extern int size_payload_elf;
-
-// MBRBOOT ELF variables
-extern uint8_t mbrboot_elf[];
-extern int size_mbrboot_elf;
-
-int loadELFFromMemory(uint8_t *elf, int argc, char *argv[]);
-
-int main(int argc, char *argv[]) {
-  if (!strcmp(argv[0], "rom0:MBRBOOT")) {
-    return loadELFFromMemory(mbrboot_elf, argc, argv);
-  }
-  return loadELFFromMemory(payload_elf, argc, argv);
-}
-
 typedef struct {
   uint8_t ident[16]; // struct definition for ELF object header
   uint16_t type;
@@ -65,24 +51,24 @@ typedef struct {
 #define ELF_PT_LOAD 1
 
 // Based on PS2SDK elf-loader
-int loadELFFromMemory(uint8_t *elf, int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
   elf_header_t *eh;
   elf_pheader_t *eph;
   void *pdata;
   int i;
 
-  eh = (elf_header_t *)elf;
+  eh = (elf_header_t *)payload_elf;
   if (_lw((uint32_t)&eh->ident) != ELF_MAGIC)
     __builtin_trap();
 
-  eph = (elf_pheader_t *)(elf + eh->phoff);
+  eph = (elf_pheader_t *)(payload_elf + eh->phoff);
 
   // Scan through the ELF's program headers and copy them into RAM
   for (i = 0; i < eh->phnum; i++) {
     if (eph[i].type != ELF_PT_LOAD)
       continue;
 
-    pdata = (void *)(elf + eph[i].offset);
+    pdata = (void *)(payload_elf + eph[i].offset);
     memcpy(eph[i].vaddr, pdata, eph[i].filesz);
   }
 
