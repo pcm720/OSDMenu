@@ -34,7 +34,7 @@ NEWLIB_NANO = 1
 ifeq ($(HOSD), 1)
  EE_CFLAGS += -DHOSD
  EE_LINKFILE = linkfile.hosd
- EE_LIBS += -lfileXio -lpad
+ EE_LIBS += -lfileXio
  IRX_FILES += iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd-osd.irx ps2fs.irx legacy_ps2atad.irx
 endif
 

@@ -132,11 +132,6 @@ int initModules(void) {
   IRX_LOAD(ps2hdd_osd, sizeof(ps2hddArguments), ps2hddArguments)
   IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments)
 
-  if ((ret = SifLoadModule("rom0:SIO2MAN", 0, NULL)) < 0)
-    return ret;
-  if ((ret = SifLoadModule("rom0:PADMAN", 0, NULL)) < 0)
-    return ret;
-
   // Wait for IOP to initialize device drivers
   for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {
     ret = open("hdd0:", O_DIRECTORY | O_RDONLY);

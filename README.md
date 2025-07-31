@@ -74,6 +74,8 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
   Note that HDD OSD will not see more than 1048448 MB. For larger drives, [APA Jail](https://www.psx-place.com/threads/apa-jail.34847/) is recommended.  
   You can also check out [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) for more automated APA Jail experience and easy-to-use HDD OSD+Broadband Navigator setup.
 
+  HOSDMenu will skip the full IOP initialization when it receives `mbrboot` as `argv[1]`, improving boot times when running from a compatible `__mbr`.
+
 Patches not supported/limited on protokernel systems:
 - Automatic disc launch bypass
 - Button prompt customization
@@ -220,11 +222,6 @@ New to OSDMenu/HOSDMenu:
 Options exclusive to OSDMenu:
 
 32. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
-
-Options exclusive to HOSDMenu (mostly for running from `__mbr`):
-
-32. `path_custom_payload` — full path to custom payload on `hdd0:__system`, will be run when the Cross button is pressed during initialization
-33. `boot_custom_payload` — if enabled, will invert the original behavior and run custom payload by default
 
 ## Credits
 

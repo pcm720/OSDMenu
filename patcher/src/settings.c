@@ -205,21 +205,6 @@ int loadConfig(void) {
       strncpy(settings.dkwdrvPath, value, (sizeof(settings.dkwdrvPath) / sizeof(char)) - 1);
       continue;
     }
-#else
-    if (!strcmp(name, "path_custom_payload")) {
-      if (strlen(value) < 13 || strncmp(value, "hdd0:__system", 13))
-        continue; // Accept only HDD paths on __system partition
-
-      strncpy(settings.customPayload, value, (sizeof(settings.customPayload) / sizeof(char)) - 1);
-      continue;
-    }
-    if (!strcmp(name, "boot_custom_payload")) {
-      if (atoi(value))
-        settings.patcherFlags |= FLAG_BOOT_PAYLOAD;
-      else
-        settings.patcherFlags &= ~(FLAG_BOOT_PAYLOAD);
-      continue;
-    }
 #endif
     if (!strcmp(name, "OSDSYS_video_mode")) {
       if (!strcmp(value, "AUTO"))
@@ -372,8 +357,6 @@ void initConfig(void) {
 #ifndef HOSD
   settings.dkwdrvPath[0] = '\0'; // Can be null
   settings.mcSlot = 0;
-#else
-  settings.customPayload[0] = '\0';
 #endif
 
   initVariables();

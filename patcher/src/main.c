@@ -73,22 +73,23 @@ int main(int argc, char *argv[]) {
 
 #include <fcntl.h>
 #include <fileXio_rpc.h>
-#include <libpad.h>
 
 #define RECOVERY_PAYLOAD_PATH "usb:/RECOVERY.ELF"
 
-void handleCustomPayload(int haveOSD);
 int checkFile(char *path);
-int readPad();
 
 int main(int argc, char *argv[]) {
   // Clear memory while avoiding the embedded launcher
   memset((void *)USER_MEM_START_ADDR, 0, (int)&launcher_elf - USER_MEM_START_ADDR);
   memset(((void *)&launcher_elf + size_launcher_elf), 0, USER_MEM_END_ADDR - ((int)&launcher_elf + size_launcher_elf));
 
-  // Load needed modules
-  if (initModules())
-    launchPayload(RECOVERY_PAYLOAD_PATH);
+  if ((argc < 2) || strcmp(argv[1], "mbrboot")) {
+    // If argc < 2 or argv[1] is not "mbrboot", do the full init
+    if (initModules())
+      launchPayload(RECOVERY_PAYLOAD_PATH);
+  } else
+    // Skip the full init and just initialize fileXio
+    fileXioInit();
 
   // Set FMCB & OSDSYS default settings for configurable items
   initConfig();
@@ -121,54 +122,12 @@ int main(int argc, char *argv[]) {
   // Check if HDD OSD executable exists
   int haveOSD = checkFile("pfs0:" HOSD_HDDOSD_PATH);
 
-  // If custom payload path is set, attempt to launch it
-  if (settings.customPayload[0] != '\0')
-    handleCustomPayload(haveOSD);
-
   if (haveOSD >= 0)
     launchOSDSYS();
 
   // Fallback to RECOVERY_PAYLOAD_PATH
   fileXioUmount("pfs0:");
   launchPayload(RECOVERY_PAYLOAD_PATH);
-}
-
-// Checks if payload exists and attempts to boot it if
-// HDD OSD is missing or if requested by the user
-void handleCustomPayload(int haveOSD) {
-  // Extract relative path from hdd0: path and build PFS path
-  char payloadPath[50] = {0};
-  strcat(payloadPath, "pfs0:");
-  char *filePath = strstr(settings.customPayload, ":pfs:");
-  if (filePath)
-    filePath += 5;
-  else if (!(filePath = strchr(settings.customPayload, '/')))
-    return;
-
-  strcat(payloadPath, filePath);
-
-  // Make sure payload exists
-  if (checkFile(payloadPath) < 0)
-    return;
-
-  // Fallback to payload if OSDSYS_A.XLF is missing
-  if (haveOSD < 0)
-    goto launch;
-
-  // Otherwise, read the pad
-  int doBoot = readPad();
-  if (!doBoot && (settings.patcherFlags & FLAG_BOOT_PAYLOAD))
-    // If button is not pressed and the flag is set
-    goto launch;
-  if (doBoot && !(settings.patcherFlags & FLAG_BOOT_PAYLOAD))
-    // If button is pressed and the flag is not set
-    goto launch;
-
-  return;
-
-launch:
-  fileXioUmount("pfs0:");
-  launchPayload(settings.customPayload);
 }
 
 // Returns >=0 if file exists
@@ -179,32 +138,5 @@ int checkFile(char *path) {
   }
   close(res);
   return res;
-}
-
-// Initiailizes the pad library and returns 1 if Cross was pressed
-int readPad() {
-  struct padButtonStatus buttons;
-  static char padBuf[256] __attribute__((aligned(64)));
-
-  padInit(0);
-  padPortOpen(0, 0, padBuf);
-  int padState = 0;
-  while ((padState = padGetState(0, 0))) {
-    if (padState == PAD_STATE_STABLE)
-      break;
-    if (padState == PAD_STATE_DISCONN)
-      return 0;
-  }
-
-  int retries = 10;
-  while (retries--) {
-    if (padRead(0, 0, &buttons) != 0) {
-      uint32_t paddata = 0xffff ^ buttons.btns;
-      if (paddata & PAD_CROSS)
-        return 1;
-    }
-  }
-  padEnd();
-  return 0;
 }
 #endif
