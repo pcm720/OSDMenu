@@ -14,10 +14,17 @@ PHDRS {
 
 SECTIONS {
 	.text : {
+		_ftext = . ;
 		*(.text)
+		*(.text.*)
+		*(.gnu.linkonce.t*)
+		KEEP(*(.init))
+		KEEP(*(.fini))
+		QUAD(0)
 	} >MAIN_REGION :text
 
-	.reginfo : { *(.reginfo) } >MAIN_REGION
+	PROVIDE(_etext = .);
+	PROVIDE(etext = .);
 
 	.ctors ALIGN(16): {
 		KEEP(*crtbegin*.o(.ctors))
@@ -33,15 +40,24 @@ SECTIONS {
 		KEEP(*(.dtors))
 	} >MAIN_REGION
 
-	.rodata ALIGN(128): {
-		*(.rodata)
-	} >MAIN_REGION
+	.reginfo : { *(.reginfo) } >MAIN_REGION
 
 	.data ALIGN(128): {
 		_fdata = . ;
 		*(.data)
+		*(.data.*)
+		*(.gnu.linkonce.d*)
 		SORT(CONSTRUCTORS)
 	} >MAIN_REGION
+
+	.rodata ALIGN(128): {
+		*(.rodata)
+		*(.rodata.*)
+		*(.gnu.linkonce.r*)
+	} >MAIN_REGION
+
+	.rdata ALIGN(128): { *(.rdata) } >MAIN_REGION
+	.gcc_except_table ALIGN(128): { *(.gcc_except_table) } >MAIN_REGION
 
 	_gp = ALIGN(128) + 0x7ff0;
 	.lit4 ALIGN(128): { *(.lit4) } >MAIN_REGION
@@ -49,21 +65,39 @@ SECTIONS {
 
 	.sdata ALIGN(128): {
 		*(.sdata)
+		*(.sdata.*)
+		*(.gnu.linkonce.s*)
 	} >MAIN_REGION
+
+	_edata = .;
+	PROVIDE(edata = .);
 
 	.sbss ALIGN(128) : {
 		_fbss = . ;
 		*(.sbss)
+		*(.sbss.*)
+		*(.gnu.linkonce.sb*)
+		*(.scommon)
 	} >MAIN_REGION
 
 	.bss ALIGN(128) : {
 		*(.bss)
+		*(.bss.*)
+		*(.gnu.linkonce.b*)
+		*(COMMON)
 	} >MAIN_REGION
 
-	/* Symbols needed by crt0.s.  */
-	PROVIDE(_end = .);
-	PROVIDE(_heap_size = -1);
+	_end_bss = .;
 
+	_end = . ;
+	PROVIDE(end = .);
+
+	.spad 0x70000000: {
+		*(.spad)
+	}
+
+	/* Symbols needed by crt0.s.  */
+	PROVIDE(_heap_size = -1);
 	PROVIDE(_stack = .);
 	PROVIDE(_stack_size = ORIGIN(MAIN_REGION) + LENGTH(MAIN_REGION) - _stack);
 }

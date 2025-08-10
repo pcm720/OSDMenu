@@ -10,7 +10,7 @@ EE_BIN = loader.elf
 
 EE_OBJS = loader.o
 
-EE_LIBS =
+EE_LIBS = -lfileXio
 
 all: $(EE_BIN)
 
