@@ -2,6 +2,7 @@
 #include "defaults.h"
 #include "game_id.h"
 #include "game_id_table.h"
+#include "handlers.h"
 #include "history.h"
 #include "init.h"
 #include "loader.h"
@@ -25,10 +26,6 @@ typedef enum {
 // PS1 Video Mode Negator variables
 extern uint8_t ps1vn_elf[];
 extern int size_ps1vn_elf;
-
-#define CDROM_PS1_FAST 0x1
-#define CDROM_PS1_SMOOTH 0x10
-#define CDROM_PS1_VN 0xFF00
 
 const char *getPS1GenericTitleID();
 int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion);

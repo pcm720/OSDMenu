@@ -11,6 +11,10 @@ int handleBDM(DeviceType device, int argc, char *argv[]);
 // handler_cdrom.c
 //
 // Launches the disc while displaying the visual game ID and writing to the history file
+#define CDROM_PS1_FAST 0x1
+#define CDROM_PS1_SMOOTH 0x10
+#define CDROM_PS1_VN 0xFF00
+
 int handleCDROM(int argc, char *argv[]);
 int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath);
 

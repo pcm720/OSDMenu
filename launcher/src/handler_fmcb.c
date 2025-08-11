@@ -148,12 +148,16 @@ int handleFMCB(int argc, char *argv[]) {
     }
     if (!strcmp(lineBuffer, "ps1drv_enable_fast")) {
       if (atoi(valuePtr))
-        ps1drvFlags |= 1;
+        ps1drvFlags |= CDROM_PS1_FAST;
       continue;
     }
     if (!strcmp(lineBuffer, "ps1drv_enable_smooth")) {
       if (atoi(valuePtr))
-        ps1drvFlags |= 0x10;
+        ps1drvFlags |= CDROM_PS1_SMOOTH;
+      continue;
+    }
+    if (!strcmp(lineBuffer, "ps1drv_use_ps1vn")) {
+      ps1drvFlags |= CDROM_PS1_VN;
       continue;
     }
   }
