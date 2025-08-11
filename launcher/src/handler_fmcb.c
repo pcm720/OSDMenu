@@ -142,7 +142,7 @@ int handleFMCB(int argc, char *argv[]) {
       useDKWDRV = 1;
       continue;
     }
-    if (!strncmp(lineBuffer, "path_DKWDRV_ELF", 15)) {
+    if (!isHDD && !strncmp(lineBuffer, "path_DKWDRV_ELF", 15)) {
       dkwdrvPath = strdup(valuePtr);
       continue;
     }
