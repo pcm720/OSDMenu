@@ -165,7 +165,6 @@ $(EE_BIN_PKD): $(EE_BIN)
 clean:
 	$(MAKE) -C ../utils/loader clean
 	$(MAKE) -C ../utils/ps1vn clean
-	$(MAKE) -C iop/xparam clean
 	$(MAKE) -C iop/smap_udpbd clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD)
 
@@ -184,13 +183,6 @@ iop/smap_udpbd/smap_udpbd.irx: iop/smap_udpbd
 
 %smap_udpbd_irx.c: iop/smap_udpbd/smap_udpbd.irx
 	$(BIN2C) iop/smap_udpbd/$(*:$(EE_SRC_DIR)%=%)smap_udpbd.irx $@ $(*:$(EE_SRC_DIR)%=%)smap_udpbd_irx
-
-# xparam.irx
-iop/xparam/xparam.irx: iop/xparam
-	$(MAKE) -C $<
-
-%xparam_irx.c: iop/xparam/xparam.irx
-	$(BIN2C) iop/xparam/$(*:$(EE_SRC_DIR)%=%)xparam.irx $@ $(*:$(EE_SRC_DIR)%=%)xparam_irx
 
 # mmceman module, temporary override until it lands in the SDK
 %mmceman_irx.c:
