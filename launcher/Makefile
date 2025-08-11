@@ -164,7 +164,7 @@ $(EE_BIN_PKD): $(EE_BIN)
 
 clean:
 	$(MAKE) -C ../utils/loader clean
-	$(MAKE) -C ps1vn clean
+	$(MAKE) -C ../utils/ps1vn clean
 	$(MAKE) -C iop/xparam clean
 	$(MAKE) -C iop/smap_udpbd clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD)
@@ -205,10 +205,10 @@ loader.elf:
 
 # PS1 Video Mode Negator
 ps1vn.elf:
-	$(MAKE) -C ps1vn/$<
+	$(MAKE) -C ../utils/ps1vn/$<
 
 %ps1vn_elf.c: ps1vn.elf
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=ps1vn/%)ps1vn.elf $@ $(*:$(EE_SRC_DIR)%=%)ps1vn_elf
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=../utils/ps1vn/%)ps1vn.elf $@ $(*:$(EE_SRC_DIR)%=%)ps1vn_elf
 
 # Resource files
 %_sys.c:
