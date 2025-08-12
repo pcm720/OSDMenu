@@ -146,17 +146,17 @@ int handleFMCB(int argc, char *argv[]) {
       dkwdrvPath = strdup(valuePtr);
       continue;
     }
-    if (!strcmp(lineBuffer, "ps1drv_enable_fast")) {
+    if (!strncmp(lineBuffer, "ps1drv_enable_fast", 18)) {
       if (atoi(valuePtr))
         ps1drvFlags |= CDROM_PS1_FAST;
       continue;
     }
-    if (!strcmp(lineBuffer, "ps1drv_enable_smooth")) {
+    if (!strncmp(lineBuffer, "ps1drv_enable_smooth", 20)) {
       if (atoi(valuePtr))
         ps1drvFlags |= CDROM_PS1_SMOOTH;
       continue;
     }
-    if (!strcmp(lineBuffer, "ps1drv_use_ps1vn")) {
+    if (!strncmp(lineBuffer, "ps1drv_use_ps1vn", 16)) {
       ps1drvFlags |= CDROM_PS1_VN;
       continue;
     }
@@ -181,7 +181,8 @@ int handleFMCB(int argc, char *argv[]) {
     freeLinkedStr(targetArgs);
     if (dkwdrvPath)
       free(dkwdrvPath);
-    rebootPS2();
+
+    ExecOSD(0, NULL);
   }
 
   // Handle 'POWEROFF' entry

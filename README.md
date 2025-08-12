@@ -116,6 +116,7 @@ Supported paths are:
 - `ilink:` — i.Link mass storage (supported via BDM)
 - `udpbd:` — UDPBD (supported via BDM)
 - `hdd0:` — internal APA-formatted HDD
+- `rom?:` — ROM binaries
 - `cdrom` — CD/DVD discs
 - `fmcb` — special path for the patcher
 

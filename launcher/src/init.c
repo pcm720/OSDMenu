@@ -239,8 +239,8 @@ int initModules(DeviceType device, int clearSPU) {
   return 0;
 }
 
-// Reboots the console
-void rebootPS2() {
+// Reboots the IOP and executes a path from ROM via LoadExecPS2
+void execROMPath(int argc, char *argv[]) {
   sceSifInitRpc(0);
   while (!SifIopReset("", 0)) {
   };
@@ -248,7 +248,9 @@ void rebootPS2() {
   };
   sceSifExitRpc();
   SifLoadFileInit();
-  LoadExecPS2("rom0:OSDSYS", 0, NULL);
+
+  argc--;
+  LoadExecPS2(argv[0], argc, &argv[1]);
 }
 
 #ifdef FMCB

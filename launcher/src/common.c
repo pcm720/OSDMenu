@@ -51,7 +51,9 @@ void fail(const char *str, ...) {
   va_end(args);
 
   sleep(10);
-  rebootPS2();
+
+  char *argv[1] = {"BootIllegal"};
+  ExecOSD(1, argv);
 }
 
 // Tests if file exists by opening it
@@ -111,6 +113,9 @@ int launchPath(int argc, char *argv[]) {
     ret = handleCDROM(argc, argv);
     break;
 #endif
+  case Device_ROM:
+    execROMPath(argc, argv);
+    break;
   default:
     return -ENODEV;
   }
@@ -191,7 +196,9 @@ DeviceType guessDeviceType(char *path) {
   } else if (!strncmp("cdrom", path, 5)) {
     return Device_CDROM;
 #endif
-  }
+  } else if (!strncmp("rom", path, 3))
+    return Device_ROM;
+
   return Device_None;
 }
 

@@ -23,6 +23,7 @@ typedef enum {
   //
   Device_PFS = (1 << 8),
   Device_CDROM = (1 << 9),
+  Device_ROM = (1 << 10),
 } DeviceType;
 
 typedef enum {
