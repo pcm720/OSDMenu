@@ -1,4 +1,9 @@
+#include "hdd.h"
+#include "init.h"
+#include <errno.h>
+#include <iopcontrol.h>
 #include <kernel.h>
+#include <loadfile.h>
 #include <sifrpc.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -7,6 +12,8 @@
 #include <unistd.h>
 
 // Based on PS2SDK elf-loader
+extern uint8_t loader_elf[];
+extern int size_loader_elf;
 
 typedef struct {
   uint8_t ident[16]; // struct definition for ELF object header
@@ -42,14 +49,11 @@ typedef struct {
 
 // Loads and executes the ELF boot_elf points to
 // Based on PS2SDK elf-loader
-int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]) {
+int LoadEmbeddedELF(int resetIOP, uint8_t *boot_elf, int argc, char *argv[]) {
   elf_header_t *eh;
   elf_pheader_t *eph;
   void *pdata;
   int i;
-
-  // Wipe memory region where the ELF loader is going to be loaded (see loader/linkfile)
-  memset((void *)0x00084000, 0, 0x00100000 - 0x00084000);
 
   eh = (elf_header_t *)boot_elf;
   if (_lw((uint32_t)&eh->ident) != ELF_MAGIC)
@@ -66,9 +70,22 @@ int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]) {
     memcpy(eph[i].vaddr, pdata, eph[i].filesz);
   }
 
-  SifExitRpc();
   FlushCache(0);
   FlushCache(2);
 
+  if (resetIOP) {
+    argc++;
+    char **nargv = malloc(argc * sizeof(char *));
+    nargv[0] = "-r";
+    for (i = 1; i < argc; i++)
+      nargv[i] = argv[i - 1];
+
+    free(argv);
+    argv = nargv;
+  }
+
   return ExecPS2((void *)eh->entry, NULL, argc, argv);
 }
+
+// Loads ELF from file specified in argv[0]
+int LoadELFFromFile(int resetIOP, int argc, char *argv[]) { return LoadEmbeddedELF(resetIOP, loader_elf, argc, argv); }

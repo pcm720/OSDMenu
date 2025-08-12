@@ -2,15 +2,11 @@
 #define _LOADER_H_
 #include <stdint.h>
 
-// Payload ELF variables
-extern uint8_t payload_elf[];
-extern int size_payload_elf;
-
-// Loader ELF variables
-extern uint8_t loader_elf[];
-extern int size_loader_elf;
-
 // Loads and executes the ELF boot_elf points to
-int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]);
+// Based on PS2SDK elf-loader
+int LoadEmbeddedELF(int resetIOP, uint8_t *boot_elf, int argc, char *argv[]);
+
+// Loads ELF from file specified in argv[0]
+int LoadELFFromFile(int resetIOP, int argc, char *argv[]);
 
 #endif
