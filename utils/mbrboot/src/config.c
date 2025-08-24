@@ -54,10 +54,11 @@ void freeLinkedStr(linkedStr *lstr) {
 }
 
 int loadConfig() {
+  // Mount the config partition
   mountPFS(HOSD_CONF_PARTITION);
 
   // Open the config file
-  FILE *file = fopen(configPath, "r");
+  FILE *file = fopen(configPath, "rb");
   if (!file) {
     umountPFS();
     return -ENOENT;
@@ -134,7 +135,8 @@ int loadConfig() {
       if (!settings.paths)
         settings.paths = currentPath;
 
-      if ((optPtr = strchr(lineBuffer, '_')) && !strncmp(++optPtr, "arg", 3))
+      // Check if the option has an _arg suffix
+      if ((optPtr = strrchr(lineBuffer, '_')) && !strncmp(++optPtr, "arg", 3))
         // Add the argument
         currentPath->args = addStr(currentPath->args, valuePtr);
       else

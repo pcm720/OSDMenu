@@ -76,9 +76,10 @@ int LoadEmbeddedELF(int resetIOP, uint8_t *boot_elf, int argc, char *argv[]) {
   if (resetIOP) {
     argc++;
     char **nargv = malloc(argc * sizeof(char *));
-    nargv[0] = "-r";
-    for (i = 1; i < argc; i++)
-      nargv[i] = argv[i - 1];
+    for (i = 0; i < argc-1; i++)
+      nargv[i] = argv[i];
+
+    nargv[argc-1] = "-iopreset";
 
     free(argv);
     argv = nargv;

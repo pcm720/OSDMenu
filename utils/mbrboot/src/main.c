@@ -4,6 +4,7 @@
 #include "loader.h"
 #include "mbrboot.h"
 #include "mbrboot_crypto.h"
+#include <debug.h>
 #include <kernel.h>
 #include <libpad.h>
 #include <ps2sdkapi.h>
@@ -14,17 +15,28 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <debug.h>
+// Placeholder entrypoint function for the PS2SDK crt0, to be placed at 0x100000.
+// Jumps to the actual entrypoint (__start)
+__attribute__((weak)) void __start();
+__attribute__((noreturn)) void __entrypoint() {
+  asm volatile("# Jump to crt0 __start \n"
+               "j      %0              \n"
+               :
+               : "Csy"(__start)
+               :);
+  __builtin_unreachable();
+}
 
 // Initiailizes the pad library and returns the button pressed
 TriggerType readPad();
 // Shuts down HDD, dev9 and exits to OSDSYS
-void bootFail();
+void bootFail(char *msg);
 
 int main(int argc, char *argv[]) {
   // Initialize IOP modules
   int res = 0;
   if ((res = initModules())) {
+    bootFail("Failed to initialize IOP modules");
     return res;
   }
 
@@ -32,23 +44,20 @@ int main(int argc, char *argv[]) {
   switch ((res = isFsckRequired())) {
   case -1:
     // Fail to OSDSYS
-    bootFail();
+    bootFail("Failed to check the hard drive for errors");
     break;
   case 1:
     // Run fsck
     runFsck();
     // Fail to OSDSYS
-    bootFail();
+    bootFail("Failed to launch the fsck utility to check the hard drive for errors");
     break;
   }
 
-  init_scr();
-  scr_setCursor(0);
-  scr_clear();
-  scr_printf("\n\n\n\nargc: %d\n", argc);
+  printf("argc: %d\n", argc);
 
   for (int i = 0; i < argc; i++)
-    scr_printf("argv[%d]: %s\n", i, argv[i]);
+    printf("argv[%d]: %s\n", i, argv[i]);
 
   if (!strcmp(argv[0], "rom0:MBRBOOT")) {
     scr_printf("\nDecrypting arguments\n");
@@ -57,40 +66,70 @@ int main(int argc, char *argv[]) {
     handlePSBBNArgs(argc, argv);
 
     __builtin_trap();
-
-    int ret = 0x20000000;
-    while (ret--)
-      asm("nop\nnop\nnop\nnop");
   }
 
-  if (loadConfig())
-    bootFail();
+  if ((res = loadConfig()))
+    printf("WARN: Failed to load the config file: %d, will use defaults\n", res);
+
+  printf("flags: %x\n", settings.flags);
+  launchPath *lpath = settings.paths;
+  linkedStr *lstr;
+  while (lpath != NULL) {
+    lstr = lpath->paths;
+    while (lstr != NULL) {
+      printf("trigger %d: path %s\n", lpath->trigger, lstr->str);
+      lstr = lstr->next;
+    }
+    lstr = lpath->args;
+    while (lstr != NULL) {
+      printf("trigger %d: arg %s\n", lpath->trigger, lstr->str);
+      lstr = lstr->next;
+    }
+    lpath = lpath->next;
+  }
 
   switch (readPad()) {
   case TRIGGER_TYPE_START:
-    scr_printf("Start\n");
+    printf("Start\n");
     break;
   case TRIGGER_TYPE_SQUARE:
-    scr_printf("Square\n");
+    printf("Square\n");
     break;
   case TRIGGER_TYPE_CROSS:
-    scr_printf("Cross\n");
+    printf("Cross\n");
     break;
   case TRIGGER_TYPE_CIRCLE:
-    scr_printf("Circle\n");
+    printf("Circle\n");
     break;
   case TRIGGER_TYPE_TRIANGLE:
-    scr_printf("Triangle\n");
+    printf("Triangle\n");
     break;
   default:
   }
+
+  int ret = 0x20000000;
+  while (ret--)
+    asm("nop\nnop\nnop\nnop");
+  __builtin_trap();
 }
 
 // Shuts down HDD, dev9 and exits to OSDSYS
-void bootFail() {
+void bootFail(char *msg) {
+  // Display the error message
+  init_scr();
+  scr_setCursor(0);
+  scr_clear();
+  scr_printf(".\n\n\n\n\tFatal error:\n\t%s\n", msg);
+
+  // Shutdown dev9
   shutdownDEV9();
 
-  // Exec OSD with the "BootError" argument
+  // Delay
+  int ret = 0x20000000;
+  while (ret--)
+    asm("nop\nnop\nnop\nnop");
+
+  // Execute OSDSYS with the "BootError" argument
   char *args[] = {"BootError"};
   ExecOSD(1, args);
   __builtin_trap();

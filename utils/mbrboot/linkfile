@@ -10,7 +10,7 @@
 # Linkfile script for ee-ld, modified for OSDMenu MBR to start from 0x100000
 */
 
-ENTRY(__start);
+ENTRY(__entrypoint);
 
 PHDRS {
   text PT_LOAD;
@@ -18,8 +18,8 @@ PHDRS {
 
 SECTIONS {
 	.text 0x00100000: {
+		*(.text.__entrypoint)
 		_ftext = . ;
-		*(._start)
 		*(.text)
 		*(.text.*)
 		*(.gnu.linkonce.t*)

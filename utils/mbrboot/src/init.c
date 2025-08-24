@@ -93,13 +93,11 @@ int initModules(void) {
   if ((ret = SifLoadModule("rom0:PADMAN", 0, NULL)) < 0)
     return ret;
 
-  fileXioInit();
-
   // Wait for IOP to initialize device drivers
   for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {
-    ret = fioOpen("hdd0:", FIO_O_DIROPEN | FIO_O_RDONLY);
+    ret = open("hdd0:", O_RDONLY | O_DIRECTORY);
     if (ret >= 0) {
-      fioClose(ret);
+      close(ret);
       return 0;
     }
 

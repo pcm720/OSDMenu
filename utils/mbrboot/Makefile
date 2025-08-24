@@ -5,14 +5,14 @@ EE_LINKFILE = linkfile
 
 EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include -I../../common
 EE_LIBS = -lpatches -ldma -ldebug -lfileXio -lsecr -lpad
-EE_OBJS = crt0.o main.o init.o config.o mbrboot.o mbrboot_crypto.o loader.o hdd.o common.o
+EE_OBJS =  main.o init.o config.o mbrboot.o mbrboot_crypto.o loader.o hdd.o common.o
 ELF_FILES = loader.elf
 IRX_FILES = iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd-osd.irx ps2fs.irx secrsif.irx
 
 # C compiler flags
 EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
 EE_CFLAGS = -D_EE -Os -G0 -Wall -Werror -fdata-sections -ffunction-sections $(EE_INCS)
-EE_LDFLAGS += -Wl,-zmax-page-size=128 -Wl,--gc-sections -nostartfiles # -s
+EE_LDFLAGS += -Wl,-zmax-page-size=128 -Wl,--gc-sections # -s
 
 # Reduce binary size by using newlib-nano
 EE_NEWLIB_NANO = 1
