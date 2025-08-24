@@ -1,6 +1,6 @@
 // This code is a heavily modified version of OPL OSDHistory.c with unneeded bits removed
 #include "history.h"
-#include "common.h"
+#include "dprintf.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <libcdvd.h>

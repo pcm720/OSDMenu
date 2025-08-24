@@ -1,3 +1,4 @@
+#include "dprintf.h"
 #include "handlers.h"
 #include "init.h"
 #include <debug.h>

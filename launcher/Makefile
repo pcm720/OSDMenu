@@ -94,7 +94,7 @@ endif
 
 ifeq ($(CDROM),1)
  EE_CFLAGS += -DCDROM
- EE_OBJS += handler_cdrom.o history.o game_id.o
+ EE_OBJS += handler_cdrom.o history.o game_id.o cdrom.o
  RES_FILES += icon_A.sys icon_C.sys icon_J.sys
  IRX_FILES += xparam.irx
  ELF_FILES += ps1vn.elf
@@ -143,7 +143,7 @@ EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
 EE_LIBS = -lcdvd -lpatches -lkernel -ldebug -lfileXio -lgskit -ldmakit -lmc -lpoweroff
-EE_INCS = -I../common -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include -I$(PS2DEV)/gsKit/include
+EE_INCS = -I../common/include -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include -I$(PS2DEV)/gsKit/include
 EE_LDFLAGS += -L$(PS2DEV)/gsKit/lib -s
 
 EE_OBJS += $(IRX_FILES:.irx=_irx.o)
@@ -195,6 +195,14 @@ loader.elf:
 %loader_elf.c: loader.elf
 	$(BIN2C) $(*:$(EE_SRC_DIR)%=../utils/loader/%)loader.elf $@ $(*:$(EE_SRC_DIR)%=%)loader_elf
 
+# Common CDROM files
+$(EE_OBJS_DIR)history.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/history.c -o $@
+$(EE_OBJS_DIR)game_id.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/game_id.c -o $@
+$(EE_OBJS_DIR)cdrom.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/cdrom.c -o $@
+
 # PS1 Video Mode Negator
 ps1vn.elf:
 	$(MAKE) -C ../utils/ps1vn/$<
@@ -204,7 +212,7 @@ ps1vn.elf:
 
 # Resource files
 %_sys.c:
-	$(BIN2C) res/$(*:$(EE_SRC_DIR)%=%).sys $@ $(*:$(EE_SRC_DIR)%=%)_sys
+	$(BIN2C) ../common/res/$(*:$(EE_SRC_DIR)%=%).sys $@ $(*:$(EE_SRC_DIR)%=%)_sys
 
 $(EE_ASM_DIR):
 	@mkdir -p $@

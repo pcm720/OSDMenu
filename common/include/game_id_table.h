@@ -1,5 +1,5 @@
-#ifndef _GAME_ID_TABLE_
-#define _GAME_ID_TABLE_
+#ifndef _GAME_ID_TABLE_H_
+#define _GAME_ID_TABLE_H_
 
 // The original is sourced from
 // https://github.com/alex-free/tonyhax/blob/master/loader/gameid-psx-exe.c

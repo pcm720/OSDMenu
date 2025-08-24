@@ -1,6 +1,5 @@
 // GS functions
 // Based on code by Tony Saveski, t_saveski@yahoo.com
-#include "common.h"
 #include <dmaKit.h>
 #include <gsKit.h>
 #include <stdint.h>

@@ -13,7 +13,7 @@ GIT_VERSION := $(shell git describe --always --dirty --tags --exclude nightly)
 EE_BIN_PKD = patcher.elf
 EE_BIN = patcher_unc.elf
 
-EE_INCS = -I../common -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include
+EE_INCS = -I../common/include -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include
 
 EE_LINKFILE = linkfile
 EE_LIBS = -lpatches -ldma

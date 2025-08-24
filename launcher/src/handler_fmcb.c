@@ -1,5 +1,6 @@
 #include "common.h"
 #include "defaults.h"
+#include "dprintf.h"
 #include "handlers.h"
 #include <ctype.h>
 #include <init.h>

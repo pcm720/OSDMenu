@@ -26,11 +26,6 @@ typedef enum {
   Device_ROM = (1 << 10),
 } DeviceType;
 
-typedef enum {
-  PAL_640_512_32,
-  NTSC_640_448_32
-} GSVideoMode;
-
 // A simple linked list for paths and arguments
 typedef struct linkedStr {
   char *str;
@@ -69,11 +64,5 @@ int mountPFS(char *path);
 
 // Unmounts the partition
 void deinitPFS();
-
-#ifdef ENABLE_PRINTF
-    #define DPRINTF(x...) printf(x)
-#else
-    #define DPRINTF(x...)
-#endif
 
 #endif

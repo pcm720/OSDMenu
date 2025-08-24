@@ -1,4 +1,5 @@
 #include "common.h"
+#include "dprintf.h"
 #include <ctype.h>
 #include <init.h>
 #include <ps2sdkapi.h>
