@@ -28,12 +28,12 @@ int handlePFS(int argc, char *argv[]) {
   if (!elfPath)
     return -ENODEV;
 
-  // Make sure file exists
+  // Make sure file exists and unmount the partition
   DPRINTF("Checking for %s\n", elfPath);
-  if (tryFile(elfPath)) {
-    deinitPFS();
+  res = tryFile(elfPath);
+  deinitPFS();
+  if (res)
     return -ENOENT;
-  }
 
   // Build the path as 'hdd0:<partition name>:pfs:/<path to ELF>'
   if ((path = strstr(argv[0], ":pfs:"))) {
