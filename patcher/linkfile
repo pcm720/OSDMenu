@@ -15,17 +15,16 @@
 
 ENTRY(__start);
 
+MEMORY {
+	bram	: ORIGIN = 0x000a8000, LENGTH = 0x58000 /* 0x000a8000 - 0x00100000: BIOS unused memory */
+}
+
 PHDRS {
   text PT_LOAD;
 }
 
 SECTIONS {
-	/*.text 0x000db000: {*/
-	/*.text 0x01800000: {*/
-	/*.text 0x000a8000: {*/
-	/* .text 0x000b0000: { */
-	/*.text 0x00090000: {*/
-	.text 0x000a8000: {
+	.text : {
 		_ftext = . ;
 		*(.text)
 		*(.text.*)
@@ -33,7 +32,7 @@ SECTIONS {
 		KEEP(*(.init))
 		KEEP(*(.fini))
 		QUAD(0)
-	} :text
+	} >bram :text
 
 	PROVIDE(_etext = .);
 	PROVIDE(etext = .);
@@ -44,15 +43,15 @@ SECTIONS {
 		KEEP(*(EXCLUDE_FILE(*crtend*.o) .ctors))
 		KEEP(*(SORT(.ctors.*)))
 		KEEP(*(.ctors))
-	}
+	} >bram
 	.dtors ALIGN(16): {
 		KEEP(*crtbegin*.o(.dtors))
 		KEEP(*(EXCLUDE_FILE(*crtend*.o) .dtors))
 		KEEP(*(SORT(.dtors.*)))
 		KEEP(*(.dtors))
-	}
+	} >bram
 
-	.reginfo : { *(.reginfo) }
+	.reginfo : { *(.reginfo) } >bram
 
 	.data ALIGN(128): {
 		_fdata = . ;
@@ -60,27 +59,27 @@ SECTIONS {
 		*(.data.*)
 		*(.gnu.linkonce.d*)
 		SORT(CONSTRUCTORS)
-	}
+	} >bram
 
 	/* Static data.  */
 	.rodata ALIGN(128): {
 		*(.rodata)
 		*(.rodata.*)
 		*(.gnu.linkonce.r*)
-	}
+	} >bram
 
-	.rdata ALIGN(128): { *(.rdata) }
-	.gcc_except_table ALIGN(128): { *(.gcc_except_table) }
+	.rdata ALIGN(128): { *(.rdata) } >bram
+	.gcc_except_table ALIGN(128): { *(.gcc_except_table) } >bram
 
 	_gp = ALIGN(128) + 0x7ff0;
-	.lit4 ALIGN(128): { *(.lit4) }
-	.lit8 ALIGN(128): { *(.lit8) }
+	.lit4 ALIGN(128): { *(.lit4) } >bram
+	.lit8 ALIGN(128): { *(.lit8) } >bram
 
 	.sdata ALIGN(128): {
 		*(.sdata)
 		*(.sdata.*)
 		*(.gnu.linkonce.s*)
-	}
+	} >bram
 
 	_edata = .;
 	PROVIDE(edata = .);
@@ -92,14 +91,14 @@ SECTIONS {
 		*(.sbss.*)
 		*(.gnu.linkonce.sb*)
 		*(.scommon)
-	}
+	} >bram
 
 	.bss ALIGN(128) : {
 		*(.bss)
 		*(.bss.*)
 		*(.gnu.linkonce.b*)
 		*(COMMON)
-	}
+	} >bram
 	_end_bss = .;
 
 	_end = . ;
@@ -109,8 +108,8 @@ SECTIONS {
 		*(.spad)
 	}
 
-	/* Symbols needed by crt0.s.  */
+	/* Symbols needed by crt0.  */
 	PROVIDE(_heap_size = -1);
-	PROVIDE(_stack = -1);
-	PROVIDE(_stack_size = 128 * 1024);
+	PROVIDE(_stack = .);
+	PROVIDE(_stack_size = ORIGIN(bram) + LENGTH(bram) - _stack);
 }

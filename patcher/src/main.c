@@ -83,13 +83,13 @@ int main(int argc, char *argv[]) {
   memset((void *)USER_MEM_START_ADDR, 0, (int)&launcher_elf - USER_MEM_START_ADDR);
   memset(((void *)&launcher_elf + size_launcher_elf), 0, USER_MEM_END_ADDR - ((int)&launcher_elf + size_launcher_elf));
 
-  if ((argc < 2) || strcmp(argv[1], "mbrboot")) {
-    // If argc < 2 or argv[1] is not "mbrboot", do the full init
+  if ((argc < 2) || strcmp(argv[1], "-mbrboot")) {
+    // If argc < 2 or argv[1] is not "-mbrboot", do the full init
     if (initModules())
       launchPayload(RECOVERY_PAYLOAD_PATH);
   } else
     // Skip the full init and just initialize fileXio
-    fileXioInit();
+    shortInit();
 
   // Set FMCB & OSDSYS default settings for configurable items
   initConfig();

@@ -9,7 +9,7 @@
 #include <fileio.h>
 
 // Resets IOP before loading OSDSYS
-void resetModules(void) {
+void resetModules() {
   while (!SifIopReset("", 0)) {
   };
   while (!SifIopSync()) {
@@ -29,7 +29,7 @@ void resetModules(void) {
 // OSDMenu
 
 // Loads IOP modules
-int initModules(void) {
+int initModules() {
   sceSifInitRpc(0);
   while (!SifIopReset("", 0)) {
   };
@@ -106,7 +106,7 @@ char ps2fsArguments[] = "-m"
                         "40";
 
 // Loads IOP modules
-int initModules(void) {
+int initModules() {
   sceSifInitRpc(0);
   while (!SifIopReset("", 0)) {
   };
@@ -145,5 +145,11 @@ int initModules(void) {
       asm("nop\nnop\nnop\nnop");
   }
   return -1;
+}
+
+// Inits SIF RPC and fileXio without rebooting the IOP. Assumes all modules are already loaded
+void shortInit() {
+  sceSifInitRpc(0);
+  fileXioInit();
 }
 #endif

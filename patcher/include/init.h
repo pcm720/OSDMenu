@@ -5,9 +5,14 @@
 #define USER_MEM_END_ADDR 0x2000000
 
 // Loads IOP modules
-int initModules(void);
+int initModules();
 
 // Resets IOP before loading OSDSYS
 void resetModules();
+
+#ifdef HOSD
+// Inits SIF RPC and fileXio without rebooting the IOP. Assumes all modules are already loaded
+void shortInit();
+#endif
 
 #endif
