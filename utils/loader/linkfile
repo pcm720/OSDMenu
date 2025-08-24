@@ -1,12 +1,23 @@
+/*
+# _____     ___ ____     ___ ____
+#  ____|   |    ____|   |        | |____|
+# |     ___|   |____ ___|    ____| |    \    PS2DEV Open Source Project.
+#-----------------------------------------------------------------------
+# Copyright 2001-2004, ps2dev - http://www.ps2dev.org
+# Licenced under Academic Free License version 2.0
+# Review ps2sdk README & LICENSE files for further details.
+#
+# Linkfile script for ee-ld
+#
+# Modified for OSDMenu to make sure the ELF loads into the unused kernel memory
+#
+*/
+
 ENTRY(__start);
 
 MEMORY {
-	bios	: ORIGIN = 0x00000000, LENGTH = 528K /* 0x00000000 - 0x00084000: BIOS memory */
-	bram	: ORIGIN = 0x00084000, LENGTH = 496K /* 0x00084000 - 0x00100000: BIOS unused memory */
-	gram	: ORIGIN = 0x00100000, LENGTH =  31M /* 0x00100000 - 0x02000000: GAME memory */
+	bram	: ORIGIN = 0x00084000, LENGTH = 0x7C000 /* 0x00084000 - 0x00100000: BIOS unused memory */
 }
-
-REGION_ALIAS("MAIN_REGION", bram);
 
 PHDRS {
   text PT_LOAD;
@@ -21,26 +32,26 @@ SECTIONS {
 		KEEP(*(.init))
 		KEEP(*(.fini))
 		QUAD(0)
-	} >MAIN_REGION :text
+	} >bram :text
 
 	PROVIDE(_etext = .);
 	PROVIDE(etext = .);
 
+	/* Global/static constructors and deconstructors. */
 	.ctors ALIGN(16): {
 		KEEP(*crtbegin*.o(.ctors))
 		KEEP(*(EXCLUDE_FILE(*crtend*.o) .ctors))
 		KEEP(*(SORT(.ctors.*)))
 		KEEP(*(.ctors))
-	} >MAIN_REGION
-
+	} >bram
 	.dtors ALIGN(16): {
 		KEEP(*crtbegin*.o(.dtors))
 		KEEP(*(EXCLUDE_FILE(*crtend*.o) .dtors))
 		KEEP(*(SORT(.dtors.*)))
 		KEEP(*(.dtors))
-	} >MAIN_REGION
+	} >bram
 
-	.reginfo : { *(.reginfo) } >MAIN_REGION
+	.reginfo : { *(.reginfo) } >bram
 
 	.data ALIGN(128): {
 		_fdata = . ;
@@ -48,45 +59,46 @@ SECTIONS {
 		*(.data.*)
 		*(.gnu.linkonce.d*)
 		SORT(CONSTRUCTORS)
-	} >MAIN_REGION
+	} >bram
 
+	/* Static data.  */
 	.rodata ALIGN(128): {
 		*(.rodata)
 		*(.rodata.*)
 		*(.gnu.linkonce.r*)
-	} >MAIN_REGION
+	} >bram
 
-	.rdata ALIGN(128): { *(.rdata) } >MAIN_REGION
-	.gcc_except_table ALIGN(128): { *(.gcc_except_table) } >MAIN_REGION
+	.rdata ALIGN(128): { *(.rdata) } >bram
+	.gcc_except_table ALIGN(128): { *(.gcc_except_table) } >bram
 
 	_gp = ALIGN(128) + 0x7ff0;
-	.lit4 ALIGN(128): { *(.lit4) } >MAIN_REGION
-	.lit8 ALIGN(128): { *(.lit8) } >MAIN_REGION
+	.lit4 ALIGN(128): { *(.lit4) } >bram
+	.lit8 ALIGN(128): { *(.lit8) } >bram
 
 	.sdata ALIGN(128): {
 		*(.sdata)
 		*(.sdata.*)
 		*(.gnu.linkonce.s*)
-	} >MAIN_REGION
+	} >bram
 
 	_edata = .;
 	PROVIDE(edata = .);
 
+	/* Uninitialized data.  */
 	.sbss ALIGN(128) : {
 		_fbss = . ;
 		*(.sbss)
 		*(.sbss.*)
 		*(.gnu.linkonce.sb*)
 		*(.scommon)
-	} >MAIN_REGION
+	} >bram
 
 	.bss ALIGN(128) : {
 		*(.bss)
 		*(.bss.*)
 		*(.gnu.linkonce.b*)
 		*(COMMON)
-	} >MAIN_REGION
-
+	} >bram
 	_end_bss = .;
 
 	_end = . ;
@@ -96,8 +108,8 @@ SECTIONS {
 		*(.spad)
 	}
 
-	/* Symbols needed by crt0.s.  */
+	/* Symbols needed by crt0.  */
 	PROVIDE(_heap_size = -1);
 	PROVIDE(_stack = .);
-	PROVIDE(_stack_size = ORIGIN(MAIN_REGION) + LENGTH(MAIN_REGION) - _stack);
+	PROVIDE(_stack_size = ORIGIN(bram) + LENGTH(bram) - _stack);
 }

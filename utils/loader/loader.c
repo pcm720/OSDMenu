@@ -99,8 +99,7 @@ int main(int argc, char *argv[]) {
   }
 
   int doIOPReset = 0;
-  if (!strcmp(argv[0], "-r")) {
-    argv++;
+  if (!strcmp(argv[argc-1], "-iopreset")) {
     argc--;
     doIOPReset = 1;
   }
