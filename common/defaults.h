@@ -28,7 +28,12 @@
 
 // Path relative to HOSD_CONF_PARTITION root
 #ifndef HOSD_CONF_PATH
-#define HOSD_CONF_PATH "/OSDMENU/OSDMENU.CNF"
+#define HOSD_CONF_PATH "/osdmenu/OSDMENU.CNF"
+#endif
+
+// Path relative to HOSD_CONF_PARTITION root
+#ifndef HOSDMBR_CONF_PATH
+#define HOSDMBR_CONF_PATH "/osdmenu/OSDMBR.CNF"
 #endif
 
 // Full path to DKWDRV, including the partition

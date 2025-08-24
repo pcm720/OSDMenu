@@ -21,7 +21,7 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
    to change the MagicGate region to 0xff (region free).
 2. Copy `hosdmenu.elf` to `hdd0:__system/osdmenu/`  
    Copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` _(optional)_ 
-3. Edit `hdd0:__sysconf/OSDMENU/OSDMENU.CNF` [as you see fit](#osdmenucnf)
+3. Edit `hdd0:__sysconf/osdmenu/OSDMENU.CNF` [as you see fit](#osdmenucnf)
 4. Configure your bootloader to launch `hdd0:__system/osdmenu/hosdmenu.elf` or launch it manually from anywhere  
    You can also install HOSDMenu as `__mbr` payload to get quicker boot times, see [installer](utils/installer/README.md) for details.  
 
@@ -74,7 +74,7 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
   Note that HDD OSD will not see more than 1048448 MB. For larger drives, [APA Jail](https://www.psx-place.com/threads/apa-jail.34847/) is recommended.  
   You can also check out [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) for more automated APA Jail experience and easy-to-use HDD OSD+Broadband Navigator setup.
 
-  HOSDMenu will skip the full IOP initialization when it receives `mbrboot` as `argv[1]`, improving boot times when running from a compatible `__mbr`.
+  HOSDMenu will skip the full IOP initialization when it receives `-mbrboot` as `argv[1]`, improving boot times when running from a compatible `__mbr`.
 
 Patches not supported/limited on protokernel systems:
 - Automatic disc launch bypass
@@ -82,7 +82,7 @@ Patches not supported/limited on protokernel systems:
 - PAL video mode
 
 **OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` and patches the `rom0:OSDSYS` binary.  
-**HOSDMenu** version reads settings from `hdd0:__sysconf/OSDMENU/OSDMENU.CNF` and patches the `hdd0:__system/osd100/OSDSYS_A.XLF`
+**HOSDMenu** version reads settings from `hdd0:__sysconf/osdmenu/OSDMENU.CNF` and patches the `hdd0:__system/osd100/OSDSYS_A.XLF`
 
 ### Configuration
 
