@@ -20,7 +20,7 @@ jobs:
       id: make
       run: |
         make
-        python3 utils/makepsu.py SYS_OSDMENU.psu SYS_OSDMENU res/psu/ osdmenu.elf
+        python3 utils/psu/makepsu.py SYS_OSDMENU.psu SYS_OSDMENU utils/psu/res osdmenu.elf
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
