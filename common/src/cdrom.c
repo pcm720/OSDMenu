@@ -13,30 +13,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Attempts to guess PS1 title ID from volume creation date stored in PVD
+const char *getPS1GenericTitleID();
+
 // Parses the SYSTEM.CNF file into passed string pointers
 // - bootPath (BOOT/BOOT2): boot path
-// - titleID: detected title ID
 // - titleVersion (VER): title version (optional, argument can be NULL)
 // - dev9Power (HDDUNITPOWER): can be NIC or NICHDD (optional)
 // - ioprpPath (IOPRP): IOPRP path (optional)
 //
-// Returns disc type or a negative number if an error occurs.
-// Except for titleID (max 12 bytes), all other parameters must have CNF_MAX_STR bytes allocated.
-int parseSystemCNF(char *bootPath, char *titleID, char *titleVersion, char *dev9Power, char *ioprpPath) {
-  // Open SYSTEM.CNF
-  int fd = open("cdrom0:\\SYSTEM.CNF;1", O_RDONLY);
-  if (fd < 0) {
-    // Apparently not all PS1 titles have SYSTEM.CNF
-    // Try to guess the title ID from the disc PVD
-    const char *tID = getPS1GenericTitleID();
-    if (tID) {
-      DPRINTF("Guessed the title ID from disc PVD: %s\n", tID);
-      strncpy(titleID, tID, 11);
-      return DiscType_PS1;
-    }
-    return -ENOENT;
-  }
-
+// Expects a libcglue file descriptor for the opened SYSTEM.CNF as fd
+// Returns the executable type or a negative number if an error occurs.
+// All parameters must have at least CNF_MAX_STR bytes allocated.
+ExecType parseSystemCNF(int fd, char *bootPath, char *titleVersion, char *dev9Power, char *ioprpPath) {
   // Get the file size
   int size = lseek(fd, 0, SEEK_END);
   if (size <= 0) {
@@ -66,7 +55,7 @@ int parseSystemCNF(char *bootPath, char *titleID, char *titleVersion, char *dev9
 
   char lineBuffer[255] = {0};
   char *valuePtr = NULL;
-  DiscType type = -1;
+  ExecType type = -1;
   while (fgets(lineBuffer, sizeof(lineBuffer), file)) { // fgets returns NULL if EOF or an error occurs
     // Find the start of the value
     valuePtr = strchr(lineBuffer, '=');
@@ -80,12 +69,12 @@ int parseSystemCNF(char *bootPath, char *titleID, char *titleVersion, char *dev9
     valuePtr[strcspn(valuePtr, "\r\n")] = '\0';
 
     if (!strncmp(lineBuffer, "BOOT2", 5)) { // PS2 title
-      type = DiscType_PS2;
+      type = ExecType_PS2;
       strncpy(bootPath, valuePtr, CNF_MAX_STR);
       continue;
     }
     if (!strncmp(lineBuffer, "BOOT", 4)) { // PS1 title
-      type = DiscType_PS1;
+      type = ExecType_PS1;
       strncpy(bootPath, valuePtr, CNF_MAX_STR);
       continue;
     }
@@ -105,8 +94,39 @@ int parseSystemCNF(char *bootPath, char *titleID, char *titleVersion, char *dev9
   fclose(file);
   free(cnf);
 
+  return type;
+}
+
+// Parses the SYSTEM.CNF file on CD/DVD into passed string pointers and attempts to detect the title ID
+// - bootPath (BOOT/BOOT2): boot path
+// - titleID: detected title ID
+// - titleVersion (VER): title version (optional, argument can be NULL)
+//
+// Returns the executable type or a negative number if an error occurs.
+// Except for titleID (max 12 bytes), all other parameters must have CNF_MAX_STR bytes allocated.
+int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion) {
+  // Open SYSTEM.CNF
+  int fd = open("cdrom0:\\SYSTEM.CNF;1", O_RDONLY);
+  if (fd < 0) {
+    // Apparently not all PS1 titles have SYSTEM.CNF
+    // Try to guess the title ID from the disc PVD
+    const char *tID = getPS1GenericTitleID();
+    if (tID) {
+      DPRINTF("Guessed the title ID from disc PVD: %s\n", tID);
+      strncpy(titleID, tID, 11);
+      return ExecType_PS1;
+    }
+    return -ENOENT;
+  }
+
+  ExecType type = parseSystemCNF(fd, bootPath, titleVersion, NULL, NULL);
+  if (type < 0) {
+    DPRINTF("Failed to parse SYSTEM.CNF: %d\n", type);
+    return type;
+  }
+
   // Get the start of the executable path
-  valuePtr = strchr(bootPath, '\\');
+  char *valuePtr = strchr(bootPath, '\\');
   if (!valuePtr) {
     valuePtr = strchr(bootPath, ':'); // PS1 CDs don't have \ in the path
     if (!valuePtr) {

@@ -86,6 +86,7 @@ int main(int argc, char *argv[]) {
   if ((argc < 2) || strcmp(argv[1], "-mbrboot")) {
     // If argc < 2 or argv[1] is not "-mbrboot", do the full init
     if (initModules())
+      // Launch recovery payload on fail
       launchPayload(RECOVERY_PAYLOAD_PATH);
   } else
     // Skip the full init and just initialize fileXio

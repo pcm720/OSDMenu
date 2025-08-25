@@ -115,7 +115,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   char *bootPath = calloc(sizeof(char), CNF_MAX_STR);
   char *titleID = calloc(sizeof(char), 12);
   char *titleVersion = calloc(sizeof(char), CNF_MAX_STR);
-  discType = parseSystemCNF(bootPath, titleID, titleVersion, NULL, NULL);
+  discType = parseDiscCNF(bootPath, titleID, titleVersion);
   if (discType < 0) {
     msg("CDROM ERROR: Failed to parse SYSTEM.CNF\n");
     free(bootPath);
@@ -139,7 +139,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   sceCdInit(SCECdEXIT);
 
   switch (discType) {
-  case DiscType_PS1:
+  case ExecType_PS1:
     if (dkwdrvPath) {
       DPRINTF("Starting DKWDRV\n");
       free(bootPath);
@@ -171,7 +171,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       }
     }
     break;
-  case DiscType_PS2:
+  case ExecType_PS2:
     if (skipPS2LOGO) {
       // Apply IOP emulation flags for Deckard consoles
       // (simply returns on PGIF consoles)
