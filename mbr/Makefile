@@ -3,11 +3,13 @@ EE_BIN = mbrboot_unc.elf
 
 EE_LINKFILE = linkfile
 
-EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include -I../../common
+EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include -I../common/include
 EE_LIBS = -lpatches -ldma -ldebug -lfileXio -lsecr -lpad
 EE_OBJS =  main.o init.o config.o mbrboot.o mbrboot_crypto.o loader.o hdd.o common.o
 ELF_FILES = loader.elf
 IRX_FILES = iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd-osd.irx ps2fs.irx secrsif.irx
+
+EE_OBJS += history.o
 
 # C compiler flags
 EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
@@ -31,7 +33,7 @@ EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
 all: $(EE_BIN_PKD)
 
 clean:
-	$(MAKE) -C ../../patcher clean
+	$(MAKE) -C ../patcher clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD)
 
 # IRX files
@@ -43,10 +45,14 @@ clean:
 
 # ELF loader
 loader.elf:
-	$(MAKE) -C ../loader/$<
+	$(MAKE) -C ../utils/loader/$<
 
 %loader_elf.c: loader.elf
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=../loader/%)loader.elf $@ $(*:$(EE_SRC_DIR)%=%)loader_elf
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=../utils/loader/%)loader.elf $@ $(*:$(EE_SRC_DIR)%=%)loader_elf
+
+# CDROM files
+$(EE_OBJS_DIR)history.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/history.c -o $@
 
 BIN2C = $(PS2SDK)/bin/bin2c
 
