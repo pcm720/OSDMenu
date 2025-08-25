@@ -13,9 +13,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Parses SYSTEM.CNF on disc into bootPath, titleID and titleVersion
-// Returns disc type or a negative number if an error occurs
-int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion) {
+// Parses the SYSTEM.CNF file into passed string pointers
+// - bootPath (BOOT/BOOT2): boot path
+// - titleID: detected title ID
+// - titleVersion (VER): title version (optional, argument can be NULL)
+// - dev9Power (HDDUNITPOWER): can be NIC or NICHDD (optional)
+// - ioprpPath (IOPRP): IOPRP path (optional)
+//
+// Returns disc type or a negative number if an error occurs.
+// Except for titleID (max 12 bytes), all other parameters must have CNF_MAX_STR bytes allocated.
+int parseSystemCNF(char *bootPath, char *titleID, char *titleVersion, char *dev9Power, char *ioprpPath) {
   // Open SYSTEM.CNF
   int fd = open("cdrom0:\\SYSTEM.CNF;1", O_RDONLY);
   if (fd < 0) {
@@ -82,8 +89,16 @@ int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion) {
       strncpy(bootPath, valuePtr, CNF_MAX_STR);
       continue;
     }
-    if (!strncmp(lineBuffer, "VER", 3)) { // Title version
+    if (titleVersion && !strncmp(lineBuffer, "VER", 3)) { // Title version
       strncpy(titleVersion, valuePtr, CNF_MAX_STR);
+      continue;
+    }
+    if (dev9Power && !strncmp(lineBuffer, "HDDUNITPOWER", 12)) { // DEV9 Power
+      strncpy(dev9Power, valuePtr, CNF_MAX_STR);
+      continue;
+    }
+    if (ioprpPath && !strncmp(lineBuffer, "IOPRP", 5)) { // IOPRP path
+      strncpy(ioprpPath, valuePtr, CNF_MAX_STR);
       continue;
     }
   }

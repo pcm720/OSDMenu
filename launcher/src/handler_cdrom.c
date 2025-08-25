@@ -115,7 +115,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   char *bootPath = calloc(sizeof(char), CNF_MAX_STR);
   char *titleID = calloc(sizeof(char), 12);
   char *titleVersion = calloc(sizeof(char), CNF_MAX_STR);
-  discType = parseDiscCNF(bootPath, titleID, titleVersion);
+  discType = parseSystemCNF(bootPath, titleID, titleVersion, NULL, NULL);
   if (discType < 0) {
     msg("CDROM ERROR: Failed to parse SYSTEM.CNF\n");
     free(bootPath);
