@@ -89,7 +89,14 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
   // Apply disc launch patch to forward disc launch to the launcher
   patchDiscLaunch((uint8_t *)epc);
 
+  // Find OSDSYS deinit function
+  uint8_t *ptr =
+      findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternOSDSYSDeinit, (uint8_t *)patternOSDSYSDeinit_mask, sizeof(patternOSDSYSDeinit));
+  if (ptr)
+    osdsysDeinit = (void *)ptr;
+
 #ifndef HOSD
+  // OSDSYS
   int n = 0;
   char *args[5];
   args[n++] = "rom0:";
@@ -105,38 +112,7 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
     args[n++] = "SkipHdd";                          // Skip HDDLOAD on v5 and above
   else
     patchSkipHDD((uint8_t *)epc); // Skip HDD patch for earlier ROMs
-#else
-  int n = 0;
-  char *args[3];
-  args[n++] = "hdd0:__system:pfs:/osd100/hosdsys.elf";
-  if (settings.patcherFlags & FLAG_BOOT_BROWSER)
-    args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
-  else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))
-    args[n++] = "BootClock"; // Pass BootClock to skip OSDSYS intro
 
-  // Update atad
-  patchATAD();
-#endif
-
-  // Find OSDSYS deinit function
-  uint8_t *ptr =
-      findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternOSDSYSDeinit, (uint8_t *)patternOSDSYSDeinit_mask, sizeof(patternOSDSYSDeinit));
-  if (ptr)
-    osdsysDeinit = (void *)ptr;
-#ifdef HOSD
-  // Find sceRemove function
-  ptr = findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternSCERemove, (uint8_t *)patternSCERemove_mask, sizeof(patternSCERemove));
-  if (ptr)
-    sceRemove = (void *)ptr;
-  // Find sceUmount function
-  ptr = findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternSCEUmount, (uint8_t *)patternSCEUmount_mask, sizeof(patternSCEUmount));
-  if (ptr)
-    sceUmount = (void *)ptr;
-
-  // Relocate the embedded launcher to avoid HDD OSD overwriting it
-  memcpy((void *)USER_MEM_START_ADDR, launcher_elf, size_launcher_elf);
-  launcher_elf_addr = (uint8_t *)USER_MEM_START_ADDR;
-#else
   // Replace function calls with no-ops?
   // Not sure what it does, but leaving it here just in case
   if (_lw(0x202d78) == 0x0c080898 && _lw(0x202b40) == 0x0c080934 && _lw(0x20ffa0) == 0x0c080934) {
@@ -148,6 +124,31 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
   // Mangle system update paths to prevent OSDSYS from loading system updates (for ROMs not supporting SkipMc)
   while ((ptr = (uint8_t *)findString("EXEC-SYSTEM", (char *)epc, 0x100000)))
     ptr[2] = '\0';
+#else
+  // HDD OSD
+  int n = 0;
+  char *args[3];
+  args[n++] = "hdd0:__system:pfs:/osd100/hosdsys.elf";
+  if (settings.patcherFlags & FLAG_BOOT_BROWSER)
+    args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
+  else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))
+    args[n++] = "BootClock"; // Pass BootClock to skip OSDSYS intro
+
+  // Update atad
+  patchATAD();
+
+  // Find sceRemove function
+  ptr = findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternSCERemove, (uint8_t *)patternSCERemove_mask, sizeof(patternSCERemove));
+  if (ptr)
+    sceRemove = (void *)ptr;
+  // Find sceUmount function
+  ptr = findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternSCEUmount, (uint8_t *)patternSCEUmount_mask, sizeof(patternSCEUmount));
+  if (ptr)
+    sceUmount = (void *)ptr;
+
+  // Relocate the embedded launcher to avoid HDD OSD overwriting it
+  memcpy((void *)USER_MEM_START_ADDR, launcher_elf_addr, size_launcher_elf);
+  launcher_elf_addr = (uint8_t *)USER_MEM_START_ADDR;
 #endif
 
   FlushCache(0);

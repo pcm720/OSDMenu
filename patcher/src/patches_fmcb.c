@@ -43,13 +43,13 @@ int handleMenuEntry(int selected) {
   char item[28] = {0};
 #ifdef EMBED_CNF
   // osdm:a<8-char address>:<8-char CNF size>:<3-char idx>
-  sprintf(item, "osdm:a%08lX:%08lX:%d", (uint32_t)&embedded_cnf, (uint32_t)size_embedded_cnf, idx);
+  sprintf(item, "osdm:a%08lX:%08lX:%d", (uint32_t)embedded_cnf_addr, (uint32_t)size_embedded_cnf, idx);
 #else
   // osdm:d<1-char slot>:<3-char idx>
 #ifndef HOSD
   int slot = settings.mcSlot;
 #else
-  int slot = '9';
+  int slot = 9;
 #endif
   sprintf(item, "osdm:d%d:%d", slot, idx);
 #endif

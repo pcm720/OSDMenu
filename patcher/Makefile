@@ -7,7 +7,7 @@ ENABLE_SPLASH ?= 1
 
 # If enabled, will build HOSDMenu instead of the OSDMenu
 HOSD ?= 0
-# If set to CNF path, will build the patcher with the embedded config file
+# If set to CNF path, will build the OSDMenu patcher with the embedded config file
 CNF_FILE ?= 0
 
 GIT_VERSION := $(shell git describe --always --dirty --tags --exclude nightly)
@@ -39,9 +39,12 @@ ifeq ($(HOSD), 1)
  IRX_FILES += iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd-osd.irx ps2fs.irx legacy_ps2atad.irx
 endif
 
+ifneq ($(HOSD), 1)
+# Embedded CNF file is not supported by HOSDMenu
 ifneq ($(CNF_FILE), 0)
  EE_CFLAGS += -DEMBED_CNF
  EE_OBJS += $(CNF_FILE).o
+endif
 endif
 
 ifeq ($(ENABLE_SPLASH), 1)

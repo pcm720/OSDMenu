@@ -15,6 +15,10 @@ char cnfPath[] = CONF_PATH;
 char cnfPath[] = "pfs0:" HOSD_CONF_PATH;
 #endif
 
+#ifdef EMBED_CNF
+uint8_t *embedded_cnf_addr = embedded_cnf;
+#endif
+
 // getCNFString is the main CNF parser called for each CNF variable in a CNF file.
 // Input and output data is handled via its pointer parameters.
 // The return value flags 'false' when no variable is found. (normal at EOF)
@@ -76,7 +80,7 @@ int loadConfig(void) {
 #ifdef EMBED_CNF
   // Embedded config file.
   // Copy it to cnfPos to avoid the parser mangling the config
-  memcpy(cnfPos, embedded_cnf, size_embedded_cnf);
+  memcpy(cnfPos, embedded_cnf_addr, size_embedded_cnf);
   size_t cnfSize = size_embedded_cnf;
 #else
 // Read config from the HDD or one of the memory cards

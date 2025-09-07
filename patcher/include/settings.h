@@ -8,6 +8,9 @@
 #ifdef EMBED_CNF
 extern unsigned char embedded_cnf[] __attribute__((aligned(16))) __attribute__((aligned(16)));
 extern uint32_t size_embedded_cnf;
+// By default, points to embedded_cnf
+// Relocated by the patcher to EXTRA_RELOC_ADDR during startup
+extern uint8_t *embedded_cnf_addr;
 #endif
 
 #define CUSTOM_ITEMS 250 // Max number of items in custom menu

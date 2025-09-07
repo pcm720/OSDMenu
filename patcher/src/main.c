@@ -26,9 +26,16 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 #include <fileio.h>
 
 int main(int argc, char *argv[]) {
-  // Clear memory while avoiding the embedded data in the OSD memory region
-  memset((void *)USER_MEM_START_ADDR, 0, EXTRA_SECTION_START - USER_MEM_START_ADDR);
-  memset((void *)USER_MEM_START_ADDR, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
+#ifndef EMBED_CNF
+  // Clear the memory
+  memset((void *)USER_MEM_START_ADDR, 0, USER_MEM_END_ADDR - USER_MEM_START_ADDR);
+#else
+  // Clear the memory while avoiding the embedded data in the OSD memory region
+  memset((void *)EXTRA_SECTION_END, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
+  // Relocate the CNF file to the memory unused by the OSD code
+  memcpy((void *)EXTRA_RELOC_ADDR, (void *)embedded_cnf, size_embedded_cnf);
+  embedded_cnf_addr = (void *)EXTRA_RELOC_ADDR;
+#endif
 
 #ifndef EMBED_CNF
   // Load needed modules
@@ -83,8 +90,11 @@ int checkFile(char *path);
 
 int main(int argc, char *argv[]) {
   // Clear memory while avoiding the embedded data in the OSD memory region
-  memset((void *)USER_MEM_START_ADDR, 0, EXTRA_SECTION_START - USER_MEM_START_ADDR);
-  memset((void *)USER_MEM_START_ADDR, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
+  memset((void *)EXTRA_SECTION_END, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
+  // Relocate the embedded launcher to the memory unused by the OSD code
+  void *relocAddr = (void *)(EXTRA_RELOC_ADDR + launcher_elf - EXTRA_SECTION_START);
+  memcpy(relocAddr, (void *)launcher_elf, size_launcher_elf);
+  launcher_elf_addr = relocAddr;
 
   if ((argc < 2) || strcmp(argv[1], "-mbrboot")) {
     // If argc < 2 or argv[1] is not "-mbrboot", do the full init
