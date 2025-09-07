@@ -118,7 +118,7 @@ Supported paths are:
 - `hdd0:` — internal APA-formatted HDD
 - `rom?:` — ROM binaries
 - `cdrom` — CD/DVD discs
-- `fmcb` — special path for the patcher
+- `osdm` — special path for the patcher
 
 Device support can be enabled and disabled by changing build-time configuration options (see [Makefile](launcher/Makefile))
 
@@ -141,9 +141,11 @@ Supports the following arguments:
 For PS1 CDs with generic executable name (e.g. `PSX.EXE`), attempts to guess the game ID using the volume creation date
 stored in the Primary Volume Descriptor, based on the table from [TonyHax International](https://github.com/alex-free/tonyhax/blob/master/loader/gameid-psx-exe.c).
 
-### `fmcb` handler
-When the launcher receives `fmcb0:<idx>`, `fmcb1:<idx>` or `fmcb9:<idx>`  path as `argv[0]`, it reads `OSDMENU.CNF` from the respective memory card or the hard drive (`fmcb9`),
+### `osdm` handler
+When the launcher receives `osdm:d0:<idx>`, `osdm:d1:<idx>` or `osdm:d9:<idx>`  path as `argv[0]`, it reads `OSDMENU.CNF` from the respective memory card or the hard drive (`osdm:d9`),
 searches for `path?_OSDSYS_ITEM_<idx>` and `arg_OSDSYS_ITEM_<idx>` entries and attempts to launch the ELF.
+
+Additionally, the launcher supports parsing the configuration from an arbitrary address when receiving `osdm:a<address>:<CNF file size>:<idx>` as `argv[0]`.
 
 Respects `cdrom_skip_ps2logo`, `cdrom_disable_gameid` and `cdrom_use_dkwdrv` for `cdrom` paths.
 
