@@ -4,6 +4,12 @@
 #include "gs.h"
 #include <stdint.h>
 
+// Embedded CNF file
+#ifdef EMBED_CNF
+extern unsigned char embedded_cnf[] __attribute__((aligned(16))) __attribute__((aligned(16)));
+extern uint32_t size_embedded_cnf;
+#endif
+
 #define CUSTOM_ITEMS 250 // Max number of items in custom menu
 #define NAME_LEN 80      // Max menu item length (incl. the string terminator)
 

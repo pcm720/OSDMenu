@@ -17,6 +17,7 @@ ENTRY(__start);
 
 MEMORY {
 	bram	: ORIGIN = 0x000a8000, LENGTH = 0x58000 /* 0x000a8000 - 0x00100000: BIOS unused memory */
+	osdram	: ORIGIN = 0x01200000, LENGTH = 0x100000 /* 0x01200000 - 0x01300000: user memory region unused by the OSD code */
 }
 
 PHDRS {
@@ -103,6 +104,11 @@ SECTIONS {
 
 	_end = . ;
 	PROVIDE(end = .);
+
+	.data : {
+		*(._launcher)
+		*(._cnf)
+	} >osdram
 
 	.spad 0x70000000: {
 		*(.spad)

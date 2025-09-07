@@ -69,7 +69,19 @@ nextLine:
 
 // Loads config file from the memory card
 int loadConfig(void) {
+  // Load CNF at a fixed address, guaranteed not to be used by OSDMenu
+  // because the memory range is limited to <0x100000 in the linker script
+  char *cnfPos = (void *)0x100000;
+
+#ifdef EMBED_CNF
+  // Embedded config file.
+  // Copy it to cnfPos to avoid the parser mangling the config
+  memcpy(cnfPos, embedded_cnf, size_embedded_cnf);
+  size_t cnfSize = size_embedded_cnf;
+#else
+// Read config from the HDD or one of the memory cards
 #ifndef HOSD
+
   if (settings.mcSlot == 1)
     cnfPath[2] = '1';
   else
@@ -94,19 +106,12 @@ int loadConfig(void) {
     return -1;
 #endif
 
+  // Read the CNF as one long string
   size_t cnfSize = fioLseek(fd, 0, FIO_SEEK_END);
   fioLseek(fd, 0, FIO_SEEK_SET);
-
-  char *pCNF = (char *)malloc(cnfSize);
-
-  char *cnfPos = pCNF;
-  if (cnfPos == NULL) {
-    fioClose(fd);
-    return -1;
-  }
-
-  fioRead(fd, cnfPos, cnfSize); // Read CNF as one long string
+  fioRead(fd, cnfPos, cnfSize);
   fioClose(fd);
+#endif
   cnfPos[cnfSize] = '\0'; // Terminate the CNF string
 
   char *name, *value;
@@ -305,9 +310,6 @@ int loadConfig(void) {
       continue;
     }
   }
-
-  if (pCNF != NULL)
-    free(pCNF);
 
   return 0;
 }

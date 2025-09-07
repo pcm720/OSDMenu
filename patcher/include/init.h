@@ -3,6 +3,8 @@
 
 #define USER_MEM_START_ADDR 0x100000
 #define USER_MEM_END_ADDR 0x2000000
+#define EXTRA_SECTION_START 0x1200000
+#define EXTRA_SECTION_END 0x1300000
 
 // Loads IOP modules
 int initModules();

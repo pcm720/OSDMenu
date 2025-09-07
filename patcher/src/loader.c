@@ -61,7 +61,7 @@ void launchItem(char *item) {
   // Build argv for the launcher
   if (strcmp(item, "cdrom")) {
     argc = 1;
-    if (!strncmp(item, "fmcb", 4))
+    if (!strncmp(item, "osdm", 4))
       argv[0] = item;
     else {
       argv[0] = "";

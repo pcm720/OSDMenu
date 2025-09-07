@@ -3,7 +3,6 @@
 #include "gs.h"
 #include <dma.h>
 #include <kernel.h>
-#include <malloc.h>
 #include <stdint.h>
 #include <string.h>
 

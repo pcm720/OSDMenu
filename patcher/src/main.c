@@ -26,11 +26,14 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 #include <fileio.h>
 
 int main(int argc, char *argv[]) {
-  // Clear memory
-  memset((void *)USER_MEM_START_ADDR, 0, USER_MEM_END_ADDR - USER_MEM_START_ADDR);
+  // Clear memory while avoiding the embedded data in the OSD memory region
+  memset((void *)USER_MEM_START_ADDR, 0, EXTRA_SECTION_START - USER_MEM_START_ADDR);
+  memset((void *)USER_MEM_START_ADDR, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
 
+#ifndef EMBED_CNF
   // Load needed modules
   initModules();
+#endif
 
   // Set FMCB & OSDSYS default settings for configurable items
   initConfig();
@@ -79,9 +82,9 @@ int main(int argc, char *argv[]) {
 int checkFile(char *path);
 
 int main(int argc, char *argv[]) {
-  // Clear memory while avoiding the embedded launcher
-  memset((void *)USER_MEM_START_ADDR, 0, (int)&launcher_elf - USER_MEM_START_ADDR);
-  memset(((void *)&launcher_elf + size_launcher_elf), 0, USER_MEM_END_ADDR - ((int)&launcher_elf + size_launcher_elf));
+  // Clear memory while avoiding the embedded data in the OSD memory region
+  memset((void *)USER_MEM_START_ADDR, 0, EXTRA_SECTION_START - USER_MEM_START_ADDR);
+  memset((void *)USER_MEM_START_ADDR, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
 
   if ((argc < 2) || strcmp(argv[1], "-mbrboot")) {
     // If argc < 2 or argv[1] is not "-mbrboot", do the full init
