@@ -58,6 +58,7 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
 - Set PS1 driver options to values from `OSDMENU.CNF` on every boot
 
 **OSDMenu**:
+- The OSDMenu configuration file can be embedded into the patcher at compile time for memory card-independent setups and faster boot times
 - Launch SAS-compatible applications from the memory card browser if directory name is   
   `BOOT`, `<3-letter SAS prefix>_<appname>` or if file name ends with `.ELF` or `.elf`.  
   This patch swaps around the "Enter" and "Options" menus and substitutes file properties submenu with the launcher.  
@@ -81,7 +82,7 @@ Patches not supported/limited on protokernel systems:
 - Button prompt customization
 - PAL video mode
 
-**OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` and patches the `rom0:OSDSYS` binary.  
+**OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` (if the config file is not embedded) and patches the `rom0:OSDSYS` binary.  
 **HOSDMenu** version reads settings from `hdd0:__sysconf/osdmenu/OSDMENU.CNF` and patches the `hdd0:__system/osd100/OSDSYS_A.XLF`
 
 ### Configuration
