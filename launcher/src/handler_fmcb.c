@@ -16,55 +16,77 @@
 char cnfPath[sizeof(CONF_PATH) + 6] = {0};
 
 // Loads ELF specified in OSDMENU.CNF on the memory card or on the APA partition specified in HOSD_CONF_PARTITION
-// Supported fmcb prefixes are:
-// fmcb0:<item index> — configuration file on mc0
-// fmcb1:<item index> — configuration file on mc1
-// fmcb9:<item index> — configuration file on APA HDD
-int handleFMCB(int argc, char *argv[]) {
-  int isHDD = 0;
-  if (argv[0][4] == '9')
-    isHDD = 1;
+// Supported osdm prefixes are:
+// osdm:d0:<item index> — configuration file on mc0
+// osdm:d1:<item index> — configuration file on mc1
+// osdm:d9:<item index> — configuration file on APA HDD
+// osdm:a<HEX-encoded address>:<HEX-encoded file size>:<item index> — configuration file at the memory address
+int handleOSDM(int argc, char *argv[]) {
+  if (strlen(argv[0]) < 7)
+    return -EINVAL;
 
   int res = 0;
-  if (isHDD) {
-    if ((res = initPFS(HOSD_CONF_PARTITION, 1)))
-      return res;
-
-    // Build path to OSDMENU.CNF
-    strcat(cnfPath, PFS_MOUNTPOINT);
-    strcat(cnfPath, HOSD_CONF_PATH);
-  } else {
-    // Handle OSDMenu launch
-    int res = initModules(Device_MemoryCard, 1);
-    if (res)
-      return res;
-
-    // Build path to OSDMENU.CNF
-    strcpy(cnfPath, CONF_PATH);
-
-    // Get memory card slot from argv[0] (fmcb0/1)
-    if (argv[0][4] == '1') {
-      // If path is fmcb1:, try to get config from mc1 first
-      cnfPath[2] = '1';
-      if (tryFile(cnfPath)) // If file is not found, revert to mc0
-        cnfPath[2] = '0';
-    }
-  }
-
-  char *idx = strchr(argv[0], ':');
-  if (!idx) {
-    msg("FMCB: Argument '%s' doesn't contain entry index\n", argv[0]);
-    if (isHDD)
-      deinitPFS();
+  int target = 0;
+  int targetIdx = 0;
+  int targetSize = 0;
+  switch (argv[0][5]) {
+  case 'd':
+    // Configuration file on MC/HDD
+    res = sscanf(argv[0], "osdm:d%d:%d", &target, &targetIdx);
+    break;
+  case 'a':
+    // Embedded configuration file
+    res = sscanf(argv[0], "osdm:a%08X:%08X:%d", &target, &targetSize, &targetIdx);
+    break;
+  default:
+    msg("OSDM: unexpected device type '%c'\n", argv[0][5]);
     return -EINVAL;
   }
-  int targetIdx = atoi(++idx);
+  if (res < 2) {
+    msg("OSDM: failed to parse the argument: target %d, targetSize %d, targetIdx %d\n", target, targetSize, targetIdx);
+    return -EINVAL;
+  }
 
-  // Open the config file
-  FILE *file = fopen(cnfPath, "r");
+  FILE *file = NULL;
+  if (targetSize > 0) {
+    // Init file from memory
+    file = fmemopen((void *)target, targetSize, "r");
+  } else {
+    if (target == 9) {
+      // Handle HOSDMenu launch
+      if ((res = initPFS(HOSD_CONF_PARTITION, 1)))
+        return res;
+
+      // Build path to OSDMENU.CNF
+      strcat(cnfPath, PFS_MOUNTPOINT);
+      strcat(cnfPath, HOSD_CONF_PATH);
+    } else if (target < 2) {
+      // Handle OSDMenu launch
+      int res = initModules(Device_MemoryCard, 1);
+      if (res)
+        return res;
+
+      // Build path to OSDMENU.CNF
+      strcpy(cnfPath, CONF_PATH);
+
+      // Get memory card slot from argv[0] (osdm0/1)
+      if (argv[0][4] == '1') {
+        // If path is osdm1:, try to get config from mc1 first
+        cnfPath[2] = '1';
+        if (tryFile(cnfPath)) // If file is not found, revert to mc0
+          cnfPath[2] = '0';
+      }
+    } else {
+      msg("OSDM: unexpected device index %d\n", target);
+      return -EINVAL;
+    }
+    // Open the config file
+    file = fopen(cnfPath, "r");
+  }
+
   if (!file) {
-    msg("FMCB: Failed to open %s\n", cnfPath);
-    if (isHDD)
+    msg("OSDM: Failed to open the file: %d\n", errno);
+    if (target == 9)
       deinitPFS();
     return -ENOENT;
   }
@@ -76,7 +98,7 @@ int handleFMCB(int argc, char *argv[]) {
   int ps1drvFlags = 0;
   char *dkwdrvPath = NULL;
 
-  if (isHDD)
+  if (target == 9)
     // Set DKWDRV path for HOSDMenu
     dkwdrvPath = HOSD_DKWDRV_PATH;
 
@@ -143,7 +165,7 @@ int handleFMCB(int argc, char *argv[]) {
       useDKWDRV = 1;
       continue;
     }
-    if (!isHDD && !strncmp(lineBuffer, "path_DKWDRV_ELF", 15)) {
+    if (!(target == 9) && !strncmp(lineBuffer, "path_DKWDRV_ELF", 15)) {
       dkwdrvPath = strdup(valuePtr);
       continue;
     }
@@ -164,11 +186,11 @@ int handleFMCB(int argc, char *argv[]) {
   }
   fclose(file);
 
-  if (isHDD)
+  if (target == 9)
     deinitPFS();
 
   if (!targetPaths) {
-    msg("FMCB: No paths found for entry %d\n", targetIdx);
+    msg("OSDM: No paths found for entry %d\n", targetIdx);
     freeLinkedStr(targetPaths);
     freeLinkedStr(targetArgs);
     if (dkwdrvPath)
@@ -237,6 +259,6 @@ int handleFMCB(int argc, char *argv[]) {
   }
   free(targetPaths);
 
-  msg("FMCB: All paths have been tried\n");
+  msg("OSDM: All paths have been tried\n");
   return -ENODEV;
 }

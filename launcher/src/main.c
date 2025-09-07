@@ -15,8 +15,8 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 
 int main(int argc, char *argv[]) {
 #ifdef FMCB
-  if (!strncmp("fmcb", argv[0], 4))
-    fail("Failed to launch %s: %d", argv[0], handleFMCB(argc, argv));
+  if (!strncmp("osdm", argv[0], 4))
+    fail("Failed to launch %s: %d", argv[0], handleOSDM(argc, argv));
   if (!strncmp("cdrom", argv[0], 5))
     fail("Failed to launch %s: %d", argv[0], launchPath(argc, argv));
 #endif
