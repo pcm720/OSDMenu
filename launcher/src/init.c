@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <iopcontrol.h>
 #include <kernel.h>
+#include <libcdvd.h>
 #include <libpwroff.h>
 #include <loadfile.h>
 #include <ps2sdkapi.h>
@@ -258,6 +259,7 @@ void execROMPath(int argc, char *argv[]) {
 // Needs initModules(Device_Basic, 0) to be called first
 void shutdownPS2() {
   sceSifInitRpc(0);
+  sceCdInit(SCECdINoD);
   SifExecModuleBuffer(poweroff_irx, size_poweroff_irx, 0, NULL, NULL);
   poweroffShutdown();
 }
