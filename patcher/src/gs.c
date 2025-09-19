@@ -93,15 +93,23 @@ int gsInit(GSVideoMode vmode) {
   return 1;
 }
 
-// Draws black rectangle
-void gsClearScreen() {
+// Draws a black rectangle over the whole screen
+void gsClearScreen() { gsDrawSprite(0, 0, (gsMaxX + 1), (gsMaxY + 1), 0, GS_RGBAQ(0, 0, 0, 0, 0)); }
+
+// Returns the max X coordinate for currently initialized video mode
+uint16_t gsGetMaxX() { return gsMaxX + 1; }
+// Returns the max Y coordinate for currently initialized video mode
+uint16_t gsGetMaxY() { return gsMaxY + 1; }
+
+// Draws a simple rectangle sprite
+void gsDrawSprite(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t z, uint64_t color) {
   BEGIN_GS_PACKET(gsDMABuf);
 
   GIF_TAG_AD(gsDMABuf, 4, 1, 0, 0, 0);
   GIF_DATA_AD(gsDMABuf, GS_REG_PRIM, GS_PRIM(PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0));
-  GIF_DATA_AD(gsDMABuf, GS_REG_RGBAQ, GS_RGBAQ(0, 0, 0, 0, 0));
-  GIF_DATA_AD(gsDMABuf, GS_REG_XYZ2, GS_XYZ2(0, 0, 0));
-  GIF_DATA_AD(gsDMABuf, GS_REG_XYZ2, GS_XYZ2((gsMaxX + 1) << 4, (gsMaxY + 1) << 4, 0));
+  GIF_DATA_AD(gsDMABuf, GS_REG_RGBAQ, color);
+  GIF_DATA_AD(gsDMABuf, GS_REG_XYZ2, GS_XYZ2(x1 << 4, y1 << 4, z));
+  GIF_DATA_AD(gsDMABuf, GS_REG_XYZ2, GS_XYZ2(x2 << 4, y2 << 4, z));
 
   SEND_GS_PACKET(gsDMABuf);
 }

@@ -17,11 +17,20 @@ typedef enum {
 // Resets and initializes GS
 int gsInit(GSVideoMode vmode);
 
+// Returns the max X coordinate for currently initialized video mode
+uint16_t gsGetMaxX();
+
+// Returns the max Y coordinate for currently initialized video mode
+uint16_t gsGetMaxY();
+
 // Draws black rectangle
 void gsClearScreen();
 
 // Transfers raw bitmap image to GS' memory and draws it on screen at specified coordinates
 void gsPrintBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t *data);
+
+// Draws a simple rectangle sprite
+void gsDrawSprite(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t z, uint64_t color);
 
 //---------------------------------------------------------------------------
 // GS_PACKET macros
