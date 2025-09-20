@@ -92,6 +92,8 @@ int initModules(void) {
     return ret;
   if ((ret = SifLoadModule("rom0:PADMAN", 0, NULL)) < 0)
     return ret;
+  if ((ret = SifLoadModule("rom0:ADDDRV", 0, NULL)) < 0)
+    return ret;
 
   // Wait for IOP to initialize device drivers
   for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {

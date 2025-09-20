@@ -1,4 +1,5 @@
 #include <debug.h>
+#include <disc.h>
 #include <fcntl.h>
 #include <kernel.h>
 #include <loader.h>
@@ -127,13 +128,13 @@ int handlePSBBNArgs(int argc, char *argv[]) {
     char *nargv[1] = {"BootIllegal"};
     LoadExecPS2("rom0:OSDSYS", 1, nargv);
   } else if (!strcmp(argv[1], "BootPs1Cd"))
-    scr_printf("Unhandled argument\n");
+    startGameDisc();
   else if (!strcmp(argv[1], "BootPs2Cd"))
-    scr_printf("Unhandled argument\n");
+    startGameDisc();
   else if (!strcmp(argv[1], "BootPs2Dvd"))
-    scr_printf("Unhandled argument\n");
+    startGameDisc();
   else if (!strcmp(argv[1], "BootDvdVideo"))
-    scr_printf("Unhandled argument\n");
+    startDVDVideo();
   else if (!strcmp(argv[1], "BootHddApp")) {
 
     char *p = strstr(argv[2], ":PATINFO");

@@ -1,4 +1,3 @@
-#include "hdd.h"
 #include "init.h"
 #include <errno.h>
 #include <iopcontrol.h>

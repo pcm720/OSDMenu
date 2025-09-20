@@ -68,7 +68,7 @@ void runFsck() {
   for (int i = 0; i < (sizeof(fsckPaths) / sizeof(char *)); i++) {
     mountPFS(fsckPaths[i]);
     elfPath = (strstr(fsckPaths[i], ":pfs")) + 1;
-    if (checkFile(elfPath)) {
+    if (checkFile(elfPath) >= 0) {
       arg[0] = fsckPaths[i];
       break;
     }
