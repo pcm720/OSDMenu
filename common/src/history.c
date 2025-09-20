@@ -98,7 +98,7 @@ int updateHistoryFile(const char *titleID) {
     return -ENODEV;
   }
 
-  if (mcInit(MC_TYPE_XMC)) {
+  if (mcInit(MC_TYPE_MC)) {
     DPRINTF("ERROR: Failed to initialize libmc\n");
     sceCdInit(SCECdEXIT);
     return -ENODEV;
