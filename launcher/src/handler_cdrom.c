@@ -23,8 +23,6 @@
 extern uint8_t ps1vn_elf[];
 extern int size_ps1vn_elf;
 
-const char *getPS1GenericTitleID();
-
 // Launches the disc while displaying the visual game ID and writing to the history file
 int handleCDROM(int argc, char *argv[]) {
   // Parse arguments

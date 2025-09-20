@@ -21,7 +21,7 @@ CDROM ?= 1
 # Size reduction options
 # If enabled, will use SIO2MAN, MCMAN and MCSERV from rom0 instead of PS2SDK modules
 USE_ROM_MODULES ?= 0
-# If enabled, will print additional debug test to stdout
+# If enabled, will print additional debug text to stdout
 ENABLE_PRINTF ?= 0
 
 # End of configurable section
