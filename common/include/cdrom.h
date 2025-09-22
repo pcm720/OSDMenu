@@ -1,9 +1,12 @@
 #ifndef _CDROM_H_
 #define _CDROM_H_
 
+#include <stdio.h>
+
 #define CNF_MAX_STR 256
 
 typedef enum {
+  ExecType_Error,
   ExecType_PS1,
   ExecType_PS2,
 } ExecType;
@@ -14,10 +17,9 @@ typedef enum {
 // - dev9Power (HDDUNITPOWER): can be NIC or NICHDD (optional)
 // - ioprpPath (IOPRP): IOPRP path (optional)
 //
-// Expects a libcglue file descriptor for the opened SYSTEM.CNF as fd
 // Returns the executable type or a negative number if an error occurs.
 // All parameters must have at least CNF_MAX_STR bytes allocated.
-ExecType parseSystemCNF(int fd, char *bootPath, char *titleVersion, char *dev9Power, char *ioprpPath);
+ExecType parseSystemCNF(FILE *cnfFile, char *bootPath, char *titleVersion, char *dev9Power, char *ioprpPath);
 
 // Parses the SYSTEM.CNF file on CD/DVD into passed string pointers and attempts to detect the title ID
 // - bootPath (BOOT/BOOT2): boot path

@@ -21,42 +21,13 @@ const char *getPS1GenericTitleID();
 // - titleVersion (VER): title version (optional, argument can be NULL)
 // - dev9Power (HDDUNITPOWER): can be NIC or NICHDD (optional)
 // - ioprpPath (IOPRP): IOPRP path (optional)
-//
-// Expects a libcglue file descriptor for the opened SYSTEM.CNF as fd
-// Returns the executable type or a negative number if an error occurs.
+// Returns the executable type or a ExecType_Error if an error occurs.
 // All parameters must have at least CNF_MAX_STR bytes allocated.
-ExecType parseSystemCNF(int fd, char *bootPath, char *titleVersion, char *dev9Power, char *ioprpPath) {
-  // Get the file size
-  int size = lseek(fd, 0, SEEK_END);
-  if (size <= 0) {
-    DPRINTF("CDROM ERROR: Bad SYSTEM.CNF size\n");
-    close(fd);
-    return -EIO;
-  }
-  lseek(fd, 0, SEEK_SET);
-
-  // Read file into memory
-  char *cnf = malloc(size * sizeof(char));
-  if (read(fd, cnf, size) != size) {
-    DPRINTF("CDROM ERROR: Failed to read SYSTEM.CNF\n");
-    close(fd);
-    free(cnf);
-    return -EIO;
-  }
-  close(fd);
-
-  // Open memory buffer as stream
-  FILE *file = fmemopen(cnf, size, "r");
-  if (file == NULL) {
-    DPRINTF("CDROM ERROR: Failed to open SYSTEM.CNF for reading\n");
-    free(cnf);
-    return -ENOENT;
-  }
-
+ExecType parseSystemCNF(FILE *cnfFile, char *bootPath, char *titleVersion, char *dev9Power, char *ioprpPath) {
   char lineBuffer[255] = {0};
   char *valuePtr = NULL;
-  ExecType type = -1;
-  while (fgets(lineBuffer, sizeof(lineBuffer), file)) { // fgets returns NULL if EOF or an error occurs
+  ExecType type = ExecType_Error;
+  while (fgets(lineBuffer, sizeof(lineBuffer), cnfFile)) { // fgets returns NULL if EOF or an error occurs
     // Find the start of the value
     valuePtr = strchr(lineBuffer, '=');
     if (!valuePtr)
@@ -91,8 +62,6 @@ ExecType parseSystemCNF(int fd, char *bootPath, char *titleVersion, char *dev9Po
       continue;
     }
   }
-  fclose(file);
-  free(cnf);
 
   return type;
 }
@@ -119,7 +88,36 @@ int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion) {
     return -ENOENT;
   }
 
-  ExecType type = parseSystemCNF(fd, bootPath, titleVersion, NULL, NULL);
+  // Get the file size
+  int size = lseek(fd, 0, SEEK_END);
+  if (size <= 0) {
+    DPRINTF("CDROM ERROR: Bad SYSTEM.CNF size\n");
+    close(fd);
+    return -EIO;
+  }
+  lseek(fd, 0, SEEK_SET);
+
+  // Read file into memory
+  char *cnf = malloc(size * sizeof(char));
+  if (read(fd, cnf, size) != size) {
+    DPRINTF("CDROM ERROR: Failed to read SYSTEM.CNF\n");
+    close(fd);
+    free(cnf);
+    return -EIO;
+  }
+  close(fd);
+
+  // Open memory buffer as stream
+  FILE *file = fmemopen(cnf, size, "r");
+  if (file == NULL) {
+    DPRINTF("CDROM ERROR: Failed to open SYSTEM.CNF for reading\n");
+    free(cnf);
+    return -ENOENT;
+  }
+
+  ExecType type = parseSystemCNF(file, bootPath, titleVersion, NULL, NULL);
+  fclose(file);
+  free(cnf);
   if (type < 0) {
     DPRINTF("Failed to parse SYSTEM.CNF: %d\n", type);
     return type;
