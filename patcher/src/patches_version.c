@@ -44,7 +44,7 @@ char *getPatchVersion() { return "\ar0.80" GIT_VERSION "\ar0.00"; }
 // Supports dynamic variables that will be updated every time the version menu opens
 customVersionEntry entries[] = {
     {"Video Mode", NULL, getVideoMode, getVideoMode},               //
-    {"OSDMenu Patch", NULL, getPatchVersion, getPatchVersionProto}, //
+    {"OSDMenu", NULL, getPatchVersion, getPatchVersionProto}, //
     {"ROM", romverValue, NULL},                                     //
     {"Emotion Engine", eeRevision, NULL},                           //
     {"Graphics Synthesizer", NULL, getGSRevision, getGSRevision},   //
