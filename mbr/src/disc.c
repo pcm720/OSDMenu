@@ -27,6 +27,8 @@ extern int size_ps1vn_elf;
 
 // Boots PS1 disc using PS1DRV or DKWDRV
 void handlePS1Disc(char *titleID, char *titleVersion);
+// Boots PS2 disc directly or via PS2LOGO
+void handlePS2Disc(char *bootPath);
 
 // Boots PS1/PS2 game CD/DVD
 int startGameDisc() {
@@ -100,17 +102,7 @@ int startGameDisc() {
     handlePS1Disc(titleID, titleVersion);
     break;
   case ExecType_PS2:
-    shutdownDEV9();
-    if (settings.flags & FLAG_SKIP_PS2_LOGO) {
-      sceSifExitCmd();
-      // Launch PS2 game directly
-      LoadExecPS2(bootPath, 0, NULL);
-    } else {
-      sceSifExitCmd();
-      // Launch PS2 game with rom0:PS2LOGO
-      char *argv[] = {bootPath};
-      LoadExecPS2("rom0:PS2LOGO", 1, argv);
-    }
+    handlePS2Disc(bootPath);
     break;
   default:
     bootFail("CDROM ERROR: unknown disc type\n");
@@ -163,6 +155,21 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
     DPRINTF("Starting PS1DRV with title ID %s and version %s\n", argv[0], argv[1]);
     sceSifExitCmd();
     LoadExecPS2("rom0:PS1DRV", 2, argv);
+  }
+}
+
+// Boots PS2 disc directly or via PS2LOGO
+void handlePS2Disc(char *bootPath) {
+  shutdownDEV9();
+  if (settings.flags & FLAG_SKIP_PS2_LOGO) {
+    sceSifExitCmd();
+    // Launch PS2 game directly
+    LoadExecPS2(bootPath, 0, NULL);
+  } else {
+    sceSifExitCmd();
+    // Launch PS2 game with rom0:PS2LOGO
+    char *argv[] = {bootPath};
+    LoadExecPS2("rom0:PS2LOGO", 1, argv);
   }
 }
 

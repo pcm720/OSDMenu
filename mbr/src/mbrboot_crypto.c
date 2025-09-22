@@ -1,5 +1,6 @@
 // PSBBN MBR rom0:MBRBOOT argument decryption code
 // Based on decompiled code regurgitated by LLM and uyjulian HDD OSD reverese engineering efforts
+#include "dprintf.h"
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -50,7 +51,7 @@ char **decryptMBRBOOTArgs(int *argc, char **argv) {
   if (decodedLength < 0) {
     // Decoding failed
     *argc = 1;
-    printf("Decoding failed\n");
+    DPRINTF("Decoding failed\n");
     return argv;
   }
 

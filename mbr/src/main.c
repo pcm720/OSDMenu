@@ -1,4 +1,7 @@
+#include "common.h"
 #include "config.h"
+#include "disc.h"
+#include "dprintf.h"
 #include "hdd.h"
 #include "init.h"
 #include "loader.h"
@@ -15,6 +18,10 @@
 #include <string.h>
 #include <unistd.h>
 
+// Embedded payload ELF
+extern uint8_t payload_elf[];
+extern int size_payload_elf;
+
 // Placeholder entrypoint function for the PS2SDK crt0, to be placed at 0x100000.
 // Jumps to the actual entrypoint (__start)
 __attribute__((weak)) void __start();
@@ -29,8 +36,8 @@ __attribute__((noreturn)) void __entrypoint() {
 
 // Initiailizes the pad library and returns the button pressed
 TriggerType readPad();
-// Shuts down HDD, dev9 and exits to OSDSYS
-void bootFail(char *msg);
+// Handles arguments supported by the PSBBN MBR
+int handlePSBBNArgs(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
   // Initialize IOP modules
@@ -40,53 +47,49 @@ int main(int argc, char *argv[]) {
     return res;
   }
 
-  // Check if filesystems need checking
-  switch ((res = isFsckRequired())) {
-  case -1:
-    // Fail to OSDSYS
-    bootFail("Failed to check the hard drive for errors");
-    break;
-  case 1:
-    // Run fsck
-    runFsck();
-    // Fail to OSDSYS
-    bootFail("Failed to launch the fsck utility to check the hard drive for errors");
-    break;
+  if (!strcmp(argv[0], "rom0:MBRBOOT")) {
+    DPRINTF("Decrypting PSBBN MBR arguments\n");
+    argv = decryptMBRBOOTArgs(&argc, argv);
   }
 
-  printf("argc: %d\n", argc);
-
-  for (int i = 0; i < argc; i++)
-    printf("argv[%d]: %s\n", i, argv[i]);
-
-  if (!strcmp(argv[0], "rom0:MBRBOOT")) {
-    scr_printf("\nDecrypting arguments\n");
-    argv = decryptMBRBOOTArgs(&argc, argv);
-
-    handlePSBBNArgs(argc, argv);
-
-    __builtin_trap();
+  // Check if filesystems need checking
+  if ((argc > 1) && strcmp(argv[1], "SkipFsck")) {
+    switch ((res = isFsckRequired())) {
+    case -1:
+      // Fail to OSDSYS
+      bootFail("Failed to check the hard drive for errors");
+      break;
+    case 1:
+      // Run fsck
+      runFsck();
+      // Fail to OSDSYS
+      bootFail("Failed to launch the fsck utility to check the hard drive for errors");
+      break;
+    }
   }
 
   if ((res = loadConfig()))
     printf("WARN: Failed to load the config file: %d, will use defaults\n", res);
 
-  printf("flags: %x\n", settings.flags);
+  DPRINTF("flags: %x\n", settings.flags);
   launchPath *lpath = settings.paths;
   linkedStr *lstr;
   while (lpath != NULL) {
     lstr = lpath->paths;
     while (lstr != NULL) {
-      printf("trigger %d: path %s\n", lpath->trigger, lstr->str);
+      DPRINTF("trigger %d: path %s\n", lpath->trigger, lstr->str);
       lstr = lstr->next;
     }
     lstr = lpath->args;
     while (lstr != NULL) {
-      printf("trigger %d: arg %s\n", lpath->trigger, lstr->str);
+      DPRINTF("trigger %d: arg %s\n", lpath->trigger, lstr->str);
       lstr = lstr->next;
     }
     lpath = lpath->next;
   }
+
+  if (!strcmp(argv[0], "rom0:MBRBOOT"))
+    handlePSBBNArgs(argc, argv);
 
   switch (readPad()) {
   case TRIGGER_TYPE_START:
@@ -105,33 +108,22 @@ int main(int argc, char *argv[]) {
     printf("Triangle\n");
     break;
   default:
+    printf("Default\n");
+    break;
   }
 
+  // #ifdef HOSDMENU
+  //   char **nargv = malloc(2 * sizeof(char *));
+  //   nargv[0] = "hosdmenu";
+  //   nargv[1] = "-mbrboot";
+  //   LoadEmbeddedELF(0, (uint8_t *)payload_elf, 2, nargv);
+  // #else
+  //   LoadEmbeddedELF(0, (uint8_t *)payload_elf, 0, NULL);
+  // #endif
+
   int ret = 0x20000000;
   while (ret--)
     asm("nop\nnop\nnop\nnop");
-  __builtin_trap();
-}
-
-// Shuts down HDD, dev9 and exits to OSDSYS
-void bootFail(char *msg) {
-  // Display the error message
-  init_scr();
-  scr_setCursor(0);
-  scr_clear();
-  scr_printf(".\n\n\n\n\tFatal error:\n\t%s\n", msg);
-
-  // Shutdown dev9
-  shutdownDEV9();
-
-  // Delay
-  int ret = 0x20000000;
-  while (ret--)
-    asm("nop\nnop\nnop\nnop");
-
-  // Execute OSDSYS with the "BootError" argument
-  char *args[] = {"BootError"};
-  ExecOSD(1, args);
   __builtin_trap();
 }
 
@@ -168,4 +160,46 @@ TriggerType readPad() {
   }
   padEnd();
   return TRIGGER_TYPE_AUTO;
+}
+
+// Handles arguments supported by the PSBBN MBR
+int handlePSBBNArgs(int argc, char *argv[]) {
+  if (!strcmp(argv[1], "BootError")) {
+    char *nargv[1] = {"BootError"};
+    ExecOSD(1, nargv);
+  } else if (!strcmp(argv[1], "BootClock")) {
+    char *nargv[1] = {"BootClock"};
+    ExecOSD(1, nargv);
+  } else if (!strcmp(argv[1], "BootBrowser")) {
+    char *nargv[1] = {"BootBrowser"};
+    ExecOSD(1, nargv);
+  } else if (!strcmp(argv[1], "BootCdPlayer")) {
+    char *nargv[1] = {"BootCdPlayer"};
+    ExecOSD(1, nargv);
+  } else if (!strcmp(argv[1], "BootOpening")) {
+    char *nargv[1] = {"BootOpening"};
+    ExecOSD(1, nargv);
+  } else if (!strcmp(argv[1], "BootWarning")) {
+    char *nargv[1] = {"BootWarning"};
+    ExecOSD(1, nargv);
+  } else if (!strcmp(argv[1], "BootIllegal")) {
+    char *nargv[1] = {"BootIllegal"};
+    ExecOSD(1, nargv);
+  } else if (!strcmp(argv[1], "Initialize")) {
+    char *nargv[1] = {"Initialize"};
+    ExecOSD(1, nargv);
+  } else if ((!strcmp(argv[1], "BootPs1Cd")) || (!strcmp(argv[1], "BootPs2Cd")) || (!strcmp(argv[1], "BootPs2Dvd")))
+    return startGameDisc();
+  else if (!strcmp(argv[1], "BootDvdVideo"))
+    return startDVDVideo();
+  else if (!strcmp(argv[1], "BootHddApp")) {
+    return startHDDApplication(argc, argv);
+  } else if (!strcmp(argv[1], "DnasPs1Emu"))
+    startDNAS(argc, argv);
+  else if (!strcmp(argv[1], "DnasPs2Native"))
+    startDNAS(argc, argv);
+  else if (!strcmp(argv[1], "DnasPs2Hdd"))
+    startDNAS(argc, argv);
+
+  return -1;
 }
