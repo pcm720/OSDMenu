@@ -10,7 +10,7 @@ EE_BIN = loader.elf
 
 EE_OBJS = loader.o
 
-EE_LIBS = -lfileXio
+EE_LIBS = -lfileXio -liopreboot -lpatches
 
 all: $(EE_BIN)
 
