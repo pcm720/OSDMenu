@@ -106,8 +106,13 @@ int handlePATINFO(int partFd, AttributeAreaFile elf, int argc, char *argv[]) {
   sceSifInitRpc(0);
 
   char *nargv[1] = {argv[2]};
-  LoadEmbeddedELF(0, elfMem, 1, nargv);
-  return 0;
+  LoadOptions opts = {
+      .elfMem = elfMem,
+      .elfSize = elf.size,
+      .argc = 1,
+      .argv = nargv,
+  };
+  return loadELF(&opts);
 }
 
 // Starts HDD application using data from the partition attribute area header
@@ -188,7 +193,11 @@ int startHDDApplication(int argc, char *argv[]) {
   if (!strncmp(bootPath, "pfs", 3)) {
     // Build the full path
     sprintf("%s:%s", bootPath, argv[2], bootPath);
-    return LoadELFFromFile(0, argc, argv);
+    LoadOptions opts = {
+        .argc = argc,
+        .argv = argv,
+    };
+    return loadELF(&opts);
   }
 
   return -1;

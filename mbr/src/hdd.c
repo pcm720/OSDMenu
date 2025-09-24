@@ -79,7 +79,11 @@ void runFsck() {
     return;
 
   umountPFS();
-  LoadELFFromFile(0, 1, arg);
+  LoadOptions opts = {
+      .argc = 1,
+      .argv = arg,
+  };
+  loadELF(&opts);
 }
 
 // Mounts the partition specified in path

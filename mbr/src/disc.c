@@ -125,7 +125,12 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
       free(titleID);
       free(titleVersion);
       char *argv[] = {HOSD_DKWDRV_PATH};
-      LoadELFFromFile(0, 1, argv);
+      LoadOptions opts = {
+          .argc = 1,
+          .argv = argv,
+      };
+      loadELF(&opts);
+      return;
     }
     DPRINTF("DKWDRV was not found, falling back to PS1DRV\n");
   }
@@ -149,7 +154,14 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
   if (settings.flags & FLAG_PS1DRV_USE_VN) {
     DPRINTF("Starting PS1DRV via PS1VModeNeg with title ID %s and version %s\n", argv[0], argv[1]);
     sceSifExitCmd();
-    LoadEmbeddedELF(0, ps1vn_elf, 2, argv);
+    LoadOptions opts = {
+        .elfMem = ps1vn_elf,
+        .elfSize = size_ps1vn_elf,
+        .argc = 2,
+        .argv = argv,
+    };
+    loadELF(&opts);
+    return;
   } else {
     char *argv[] = {titleID, titleVersion};
     DPRINTF("Starting PS1DRV with title ID %s and version %s\n", argv[0], argv[1]);
