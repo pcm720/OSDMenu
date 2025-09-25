@@ -235,14 +235,17 @@ int startHDDApplication(int argc, char *argv[]) {
 
 // Starts the dnasload applcation
 void startDNAS(int argc, char *argv[]) {
-  // The PSBBN MBR code runs "hdd0:__system:pfs:/dnas100/dnasload.elf"
-  msg("\tdnasload arguments are not supported yet!\n\tPlease create a new issue in the OSDMenu repository with the following:\n\t\targc: %d\n", argc);
-  for (int i = 0; i < argc; i++)
-    msg("\t\targ[%d]: %s\n", i, argv[i]);
+  // Update the history file
+  updateLaunchHistory(argv[2]);
 
-  msg("\n");
-
-  bootFail("DNAS: argument not supported\n");
+  // Override argv[1] with the dnasload path and adjust argc
+  argv[1] = "hdd0:__system:pfs:/dnas100/dnasload.elf";
+  argc -= 1;
+  LoadOptions opts = {
+      .argc = argc,
+      .argv = &argv[1],
+  };
+  loadELF(&opts);
 }
 
 // Attempts to parse the title from the full boot path and update the history file
