@@ -1,7 +1,8 @@
-// PSBBN MBR rom0:MBRBOOT argument decryption code
+// PSBBN MBR argument decryption/encryption code
 // Based on decompiled code regurgitated by LLM and uyjulian HDD OSD reverese engineering efforts
 #include "dprintf.h"
 #include <errno.h>
+#include <libcdvd-common.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,10 +20,12 @@ uint64_t applySBoxSubstitution(uint64_t input);
 uint64_t permuteBits(uint64_t input);
 // Derives 16 DES subkeys from a given 64-bit key
 void generateSubkeys(uint64_t *output_array, uint64_t key);
-// Deobfuscates base64-encoded argument string in-place using ROT13
-int deobfuscateString(char *input);
+// Transforms the string in-place using ROT13
+int applyROT13(char *input);
 // Converts a Base64 encoded string to its original binary form
 int base64Decode(char *output, const char *input, int inputSize);
+// Converts any arbitrary data to Base64
+int base64Encode(char *output, const char *input, int inputLength);
 
 // Decrypts PSBBN MBRBOOT arguments
 char **decryptMBRBOOTArgs(int *argc, char **argv) {
@@ -72,11 +75,11 @@ char **decryptMBRBOOTArgs(int *argc, char **argv) {
     // Clear buffer for decoding
     memset(decryptedData, 0, sizeof(decryptedData));
 
-    // Get current argument
+    // Get the current argument
     char *currentArg = outputArgs[i];
 
     // Deobfuscate the string
-    deobfuscateString(currentArg);
+    applyROT13(currentArg);
 
     // Base64 decode the argument
     stringLength = strlen(currentArg);
@@ -134,6 +137,101 @@ char **decryptMBRBOOTArgs(int *argc, char **argv) {
     strcpy(currentArg, (char *)decryptedData);
   }
 
+  return outputArgs;
+}
+
+// Encrypts arguments for PSBBN osdboot.elf
+char base64Key[13] = {0};
+char **encryptOSDBOOTArgs(int *argc, char **argv) {
+  uint64_t subkeys[32] = {0};       // Encryption keys
+  uint64_t encryptedData[32] = {0}; // Buffer for encrypted data
+
+  // Generate the key seed from the clock and generate the seed key
+  sceCdCLOCK clock;
+  sceCdReadClock(&clock);
+  uint64_t encKey = (clock.year * 7) + (clock.second * 5) + (clock.hour * 0xd) + (clock.day * 2) + (clock.month * 3) + (clock.minute * 0xb);
+  encKey = (encKey << 0xb) ^ (encKey >> 4) ^ 0xcb54312dddac8302;
+
+  // Encode the seed key
+  base64Encode(base64Key, (char *)&encKey, 8);
+
+  // Generate encryption subkeys from DES keys
+  generateSubkeys(subkeys, encKey);                  // subkeys 0-15
+  generateSubkeys(&subkeys[16], 0x53042dcb8db2cdb9); // subkeys 16-31
+
+  char **outputArgs = malloc(4 * sizeof(char *));
+  outputArgs[0] = argv[0];
+  outputArgs[1] = base64Key;
+
+  int nargc = *argc + 1;
+
+  // Process each argument
+  // argv[0] is always a path to osdboot.elf
+  encKey = 0;
+  for (int i = 1; i < *argc; i++) {
+    // Get the current argument
+    char *currentArg = argv[i];
+
+    // Align length to the next multiple of 8 bytes
+    int alignedLength = (strlen(currentArg) + 8) & ~0x7;
+
+    // Calculate the number of 8-byte blocks to process
+    int blockCount = alignedLength / 8;
+
+    // Clear the buffer for the next argument and copy the string
+    memset(encryptedData, 0, sizeof(encryptedData));
+    strncpy((char *)encryptedData, currentArg, sizeof(encryptedData));
+
+    // Process each 8-byte block
+    for (int j = 0; j < blockCount; j++) {
+      // Initialize variables
+      uint64_t tempData = encryptedData[j];
+      uint64_t substitutionResult = 0;
+      uint64_t tempValue = tempData;
+      uint64_t upperBits;
+      uint64_t lowerBits;
+      int keyIdx = 0;
+
+      // Do three encryption stages
+      // 1. 16 rounds with subkeys 0-15
+      // 2. 16 rounds with subkeys 16-31
+      // 3. 16 rounds with subkeys 0-15
+      for (int stage = 0; stage < 3; stage++) {
+        if (stage == 0)
+          upperBits = transposeBytes(tempValue ^ encKey);
+        else
+          upperBits = transposeBytes(tempValue);
+        lowerBits = upperBits << 32;
+        upperBits &= 0xffffffff00000000;
+
+        for (int rounds = 0; rounds < 16; rounds++) {
+          // Use subkeys 0-15 for stages 1 and 3, subkeys 31-16 for stage 2
+          keyIdx = (stage == 1) ? ((15 - rounds) + 16) : rounds;
+
+          tempValue = lowerBits;
+          lowerBits = remapBits(tempValue);
+          substitutionResult = applySBoxSubstitution((lowerBits ^ subkeys[keyIdx]) >> 16);
+          lowerBits = permuteBits(substitutionResult);
+          lowerBits ^= upperBits;
+          upperBits = tempValue;
+        }
+        // Prepare data for the next stage / do the final transformation
+        tempValue = transposeNonLinearBits(lowerBits | (tempValue >> 32));
+      }
+
+      encryptedData[j] = tempValue;
+      encKey = tempValue;
+    }
+
+    // Base64 encode the argument
+    outputArgs[i + 1] = malloc(strlen(currentArg) * sizeof(char));
+    base64Encode(outputArgs[i + 1], (char *)encryptedData, alignedLength);
+
+    // Obfuscate the string
+    applyROT13(outputArgs[i + 1]);
+  }
+
+  *argc = nargc;
   return outputArgs;
 }
 
@@ -367,8 +465,8 @@ void generateSubkeys(uint64_t *output_array, uint64_t key) {
   }
 }
 
-// Deobfuscates base64-encoded argument string in-place using ROT13
-int deobfuscateString(char *input) {
+// Transforms the string in-place using ROT13
+int applyROT13(char *input) {
   int length = 0;
   // Process each character until we hit a null terminator
   do {
@@ -445,4 +543,33 @@ int base64Decode(char *output, const char *input, int inputSize) {
   *output = '\0';
 
   return outputSize;
+}
+
+// Converts any arbitrary data to Base64
+int base64Encode(char *output, const char *input, int inputLength) {
+  static const char base64Table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                                     'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+                                     's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
+
+  int encodedLength = 0;
+  unsigned int buffer;
+
+  while (inputLength > 0) {
+    uint8_t byte1 = *input++;
+    uint8_t byte2 = inputLength > 1 ? *input++ : 0;
+    uint8_t byte3 = inputLength > 2 ? *input++ : 0;
+
+    buffer = (byte1 << 16) | (byte2 << 8) | byte3;
+
+    *output++ = base64Table[(buffer >> 18) & 0x3F];
+    *output++ = base64Table[(buffer >> 12) & 0x3F];
+    *output++ = inputLength > 1 ? base64Table[(buffer >> 6) & 0x3F] : '=';
+    *output++ = inputLength > 2 ? base64Table[buffer & 0x3F] : '=';
+
+    inputLength -= 3;
+    encodedLength += 4;
+  }
+
+  *output = '\0'; // Null-terminate the output string
+  return encodedLength;
 }

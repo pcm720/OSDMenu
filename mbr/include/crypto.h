@@ -4,4 +4,7 @@
 // Decrypts PSBBN MBRBOOT arguments
 char **decryptMBRBOOTArgs(int *argc, char **argv);
 
+// Encrypts arguments for PSBBN osdboot.elf
+char **encryptOSDBOOTArgs(int *argc, char **argv);
+
 #endif
