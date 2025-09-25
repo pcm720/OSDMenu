@@ -6,7 +6,10 @@
 #include "history.h"
 #include "loader.h"
 #include <cdrom.h>
+#include <iopcontrol.h>
+#include <libsecr.h>
 #include <ps2sdkapi.h>
+#include <sifrpc.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,10 +18,6 @@
 #define NEWLIB_PORT_AWARE
 #include <fileio.h>
 #include <io_common.h>
-
-#include <iopcontrol.h>
-#include <libsecr.h>
-#include <sifrpc.h>
 
 // Attribute area header structs
 #define AA_HEADER_MAGIC "PS2ICON3D"
@@ -45,74 +44,48 @@ typedef struct {
 // Attempts to parse the title from the full boot path and update the history file
 void updateLaunchHistory(char *bootPath);
 
-// Loads the ELF file from the partition attribute area
-int handlePATINFO(int partFd, AttributeAreaFile elf, int argc, char *argv[]) {
-  DPRINTF("PATINFO: seeking to ELF location\n");
-  int res = fioLseek(partFd, elf.offset, FIO_SEEK_SET);
+// Addresses for PATINFO files
+#define PATINFO_ELF_MEM_ADDR 0x1000000
+#define PATINFO_IOPRP_MEM_ADDR 0x1f00000
+
+int readPATINFOFile(void *dst, int partFd, AttributeAreaFile file, int decrypt) {
+  DPRINTF("PATINFO: seeking to file location\n");
+  int res = fioLseek(partFd, file.offset, FIO_SEEK_SET);
   if (res < 0) {
     fioClose(partFd);
-    DPRINTF("Failed to lseek: %d\n", res);
+    DPRINTF("PATINFO: failed to lseek: %d\n", res);
     return res;
   }
 
   // Allocate the memory ensuring the buffer is 64-byte aligned and is multiple of 512 bytes
-  int bufSize = elf.size;
+  int bufSize = file.size;
   if (bufSize % 0x200)
     bufSize = (bufSize + 0x200) & ~0x1FF;
 
-  uint8_t *elfMem = (uint8_t *)0x1000000;
-  DPRINTF("PATINFO: reading ELF into memory buffer of size %x @ %p\n", bufSize, elfMem);
-  if (!elfMem) {
-    fioClose(partFd);
-    DPRINTF("Failed to allocate %x bytes\n", bufSize);
-    return -ENOMEM;
-  }
-
-  res = fioRead(partFd, elfMem, bufSize);
+  DPRINTF("PATINFO: reading ELF into memory buffer of size %x @ %p\n", bufSize, dst);
+  res = fioRead(partFd, dst, bufSize);
   fioClose(partFd);
-  if (res < elf.size) {
-    DPRINTF("Failed to read ELF data: %x\n", res);
+  if (res < file.size) {
+    DPRINTF("PATINFO: failed to read the file data: %x\n", res);
     return res;
   }
 
-  if (*(uint32_t *)(&elfMem[0]) != 0x464c457f) {
-    DPRINTF("PATINFO: trying to decrypt KELF using SECRMAN\n");
+  if (decrypt && (*(uint32_t *)dst != 0x464c457f)) {
+    DPRINTF("PATINFO: trying to decrypt the file using SECRMAN\n");
     if (!(res = SecrInit())) {
-      DPRINTF("Failed to init libsecr: %x\n", res);
+      msg("PATINFO: failed to init libsecr: %x\n", res);
       return res;
     }
-    elfMem = SecrDiskBootFile(elfMem);
-    if (!elfMem) {
-      DPRINTF("Failed to decrypt\n");
+    dst = SecrDiskBootFile(dst);
+    if (!dst) {
+      msg("PATINFO: failed to decrypt\n");
       return -1;
     }
     SecrDeinit();
   }
 
-  // TODO: pass this to the embedded loader instead:
-  // mem:<address>:<size> as argv[0]?
-  DPRINTF("Loaded to %p\n", elfMem);
-  for (int i = 0; i < 100; i++)
-    DPRINTF("%02x ", elfMem[i]);
-
-  DPRINTF("\n");
-
-  DPRINTF("Rebooting IOP\n");
-  sceSifInitRpc(0);
-  while (!SifIopReset("", 0)) {
-  };
-  while (!SifIopSync()) {
-  };
-  sceSifInitRpc(0);
-
-  char *nargv[1] = {argv[2]};
-  LoadOptions opts = {
-      .elfMem = elfMem,
-      .elfSize = elf.size,
-      .argc = 1,
-      .argv = nargv,
-  };
-  return loadELF(&opts);
+  DPRINTF("PATINFO: loaded to %p\n", dst);
+  return 0;
 }
 
 // Starts HDD application using data from the partition attribute area header
@@ -157,50 +130,107 @@ int startHDDApplication(int argc, char *argv[]) {
   DPRINTF("Reading CNF into memory\n");
   res = fioRead(fd, buf, 512);
   if (res < header.systemCNF.size) {
-    DPRINTF("Failed to read CNF: %x\n", res);
-    return res;
+    fioClose(fd);
+    bootFail("Failed to read SYSTEM.CNF\n");
   }
 
   // Open memory buffer as stream
   FILE *file = fmemopen(buf, header.systemCNF.size, "r");
   if (file == NULL) {
-    DPRINTF("Failed to open SYSTEM.CNF for reading\n");
-    return -ENOENT;
+    fioClose(fd);
+    bootFail("Failed to open SYSTEM.CNF for reading\n");
   }
 
-  // TODO: check whether we need to handle IOPRP arguments
+  // Parse SYSTEM.CNF file from the attribute area
   char bootPath[CNF_MAX_STR];
   char dev9Power[CNF_MAX_STR];
   char ioprpPath[CNF_MAX_STR];
+  bootPath[0] = '\0';
+  dev9Power[0] = '\0';
+  ioprpPath[0] = '\0';
   ExecType eType = parseSystemCNF(file, bootPath, NULL, dev9Power, ioprpPath);
   fclose(file);
-  if (eType == ExecType_Error)
-    DPRINTF("Failed to parse SYSTEM.CNF\n");
+  if (eType == ExecType_Error) {
+    fioClose(fd);
+    msg("Failed to parse SYSTEM.CNF\n");
+    return -EINVAL;
+  }
 
-  printf("bootPath: %s\ndev9Power: %s\nioprpPath: %s\n", bootPath, dev9Power, ioprpPath);
+  DPRINTF("====\nSYSTEM.CNF:\nBoot path: %s\nDEV9 power: %s\nIOPRP Path: %s\n====\n", bootPath, dev9Power, ioprpPath);
 
+  if (bootPath[0] == '\0') {
+    fioClose(fd);
+    bootFail("Invalid boot path\n");
+  }
+
+  // Parse the options
+  LoadOptions opts = {0};
+
+  // DEV9
+  if (dev9Power[0] != '\0') {
+    if (!strcmp(dev9Power, "NIC"))
+      opts.dev9ShutdownType = ShutdownType_HDD;
+    else if (!strcmp(dev9Power, "NICHDD"))
+      opts.dev9ShutdownType = ShutdownType_None;
+  }
+
+  // IOPRP
+  if (ioprpPath[0] != '\0') {
+    if (strcmp(ioprpPath, "PATINFO"))
+      opts.ioprpPath = ioprpPath;
+    else {
+      // Load the IOPRP image into memory
+      if (readPATINFOFile((void *)PATINFO_IOPRP_MEM_ADDR, fd, header.ioprp, 0)) {
+        fioClose(fd);
+        bootFail("Failed to read IOPRP image into memory\n");
+      }
+
+      opts.ioprpMem = (void *)PATINFO_IOPRP_MEM_ADDR;
+      opts.ioprpSize = header.ioprp.size;
+    }
+  }
+
+  // ELF
   if (!strncmp(bootPath, "cdrom", 5)) {
+    fioClose(fd);
     updateLaunchHistory(bootPath);
     handlePS2Disc(bootPath);
   }
 
-  updateLaunchHistory(argv[2]);
+  opts.argc = argc - 2;
+  if (opts.argc < 1)
+    opts.argc = 1;
+
+  opts.argv = malloc(opts.argc * sizeof(char *));
+
+  // Copy additional arguments
+  if (opts.argc > 1)
+    for (int i = 1; i < opts.argc; i++)
+      opts.argv[i] = argv[i];
+
   if (!strcmp(bootPath, "PATINFO")) {
-    return handlePATINFO(fd, header.elf, argc, argv);
-  }
+    // Load ELF into memory
+    if (readPATINFOFile((void *)PATINFO_ELF_MEM_ADDR, fd, header.elf, 1)) {
+      fioClose(fd);
+      bootFail("Failed to read the ELF file into memory\n");
+    }
 
-  // TODO: finish PFS handling
-  if (!strncmp(bootPath, "pfs", 3)) {
-    // Build the full path
-    sprintf("%s:%s", bootPath, argv[2], bootPath);
-    LoadOptions opts = {
-        .argc = argc,
-        .argv = argv,
-    };
-    return loadELF(&opts);
-  }
+    opts.elfMem = (void *)PATINFO_ELF_MEM_ADDR;
+    opts.elfSize = header.elf.size;
+    opts.argv[0] = argv[2]; // Set partition path as argv[0]
+  } else if (!strncmp(bootPath, "pfs", 3)) {
+    // Build the full path, reusing dev9Power as the string buffer
+    char *pfsPath = strchr(bootPath, '/');
+    if (pfsPath) {
+      sprintf(dev9Power, "%s:pfs:%s", argv[2], pfsPath);
+      opts.argv[0] = dev9Power;
+    }
+  } else
+    opts.argv[0] = bootPath; // Set partition path as argv[0]
 
-  return -1;
+  fioClose(fd);
+  updateLaunchHistory(argv[2]);
+  return loadELF(&opts);
 }
 
 // Starts the dnasload applcation

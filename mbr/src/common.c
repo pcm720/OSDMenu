@@ -42,7 +42,7 @@ void msg(const char *str, ...) {
 void bootFail(char *msg) {
   // Display the error message
   initScreen();
-  scr_printf("\tFatal error:\n\t%s\n", msg);
+  scr_printf("\t\nFatal error:\n\t%s\n", msg);
 
   // Shutdown dev9
   shutdownDEV9();
