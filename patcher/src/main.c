@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
     fioClose(fd);
     launchProtokernelOSDSYS();
   } else
-    launchOSDSYS();
+    launchOSDSYS(argc, argv);
 
   Exit(-1);
 }
@@ -96,14 +96,16 @@ int main(int argc, char *argv[]) {
   memcpy(relocAddr, (void *)launcher_elf, size_launcher_elf);
   launcher_elf_addr = relocAddr;
 
-  if ((argc < 2) || strcmp(argv[1], "-mbrboot")) {
-    // If argc < 2 or argv[1] is not "-mbrboot", do the full init
+  if ((argc > 1) && !strcmp(argv[argc - 1], "-mbrboot")) {
+    // Skip the full init and just initialize fileXio if the last argument is -mbrboot
+    shortInit();
+    argc--;
+  } else {
+    // Else, do the full init
     if (initModules())
       // Launch recovery payload on fail
       launchPayload(RECOVERY_PAYLOAD_PATH);
-  } else
-    // Skip the full init and just initialize fileXio
-    shortInit();
+  }
 
   // Set FMCB & OSDSYS default settings for configurable items
   initConfig();
@@ -139,7 +141,7 @@ int main(int argc, char *argv[]) {
     haveOSD = checkFile("pfs0:/osd100/OSDSYS_A.XLF");
 
   if (haveOSD >= 0)
-    launchOSDSYS();
+    launchOSDSYS(argc, argv);
 
   // Fallback to RECOVERY_PAYLOAD_PATH
   fileXioUmount("pfs0:");
