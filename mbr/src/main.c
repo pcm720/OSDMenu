@@ -1,12 +1,12 @@
 #include "common.h"
 #include "config.h"
+#include "crypto.h"
+#include "defaults.h"
 #include "disc.h"
 #include "dprintf.h"
 #include "hdd.h"
 #include "init.h"
 #include "loader.h"
-#include "mbrboot.h"
-#include "mbrboot_crypto.h"
 #include <debug.h>
 #include <kernel.h>
 #include <libpad.h>
@@ -36,14 +36,20 @@ __attribute__((noreturn)) void __entrypoint() {
 
 // Initiailizes the pad library and returns the button pressed
 TriggerType readPad();
-// Handles arguments supported by the PSBBN MBR
-int handlePSBBNArgs(int argc, char *argv[]);
+
+// Handles arguments supported by the HDD-OSD/PSBBN MBR
+int handleOSDArgs(int argc, char *argv[]);
+
+// Starts the executable pointed to by argv[0]
+int handleConfigPath(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
   // Initialize IOP modules
   int res = 0;
   if ((res = initModules())) {
-    bootFail("Failed to initialize IOP modules");
+    fatalMsg("Failed to initialize IOP modules");
+    char *args[] = {"BootError"};
+    ExecOSD(1, args);
     return res;
   }
 
@@ -54,77 +60,76 @@ int main(int argc, char *argv[]) {
 
   // Check if filesystems need checking
   if ((argc > 1) && strcmp(argv[1], "SkipFsck")) {
-    switch ((res = isFsckRequired())) {
-    case -1:
+    res = isFsckRequired();
+    if (res != 0) {
+      if (res < 0)
+        fatalMsg("Failed to launch the fsck utility to check the hard drive for errors");
+      else {
+        // Run fsck
+        runFsck();
+        // Fail to OSD
+        fatalMsg("Failed to launch the fsck utility to check the hard drive for errors");
+      }
+
       // Fail to OSDSYS
-      bootFail("Failed to check the hard drive for errors");
-      break;
-    case 1:
-      // Run fsck
-      runFsck();
-      // Fail to OSDSYS
-      bootFail("Failed to launch the fsck utility to check the hard drive for errors");
-      break;
+      shutdownDEV9();
+      char *args[] = {"BootError"};
+      ExecOSD(1, args);
     }
   }
 
   if ((res = loadConfig()))
     printf("WARN: Failed to load the config file: %d, will use defaults\n", res);
 
-  DPRINTF("flags: %x\n", settings.flags);
+  if ((!strcmp(argv[0], "rom0:MBRBOOT") || !strcmp(argv[0], "rom0:HDDBOOT")) && argc > 1)
+    handleOSDArgs(argc, argv);
+
+  TriggerType trigger = readPad();
+
+  // Handle paths
   launchPath *lpath = settings.paths;
   linkedStr *lstr;
+  int argIdx = 0;
   while (lpath != NULL) {
+    if (lpath->trigger != trigger) {
+      lpath = lpath->next;
+      continue;
+    }
     lstr = lpath->paths;
+
+    DPRINTF("Found an entry for trigger %d: argc is %d\n", lpath->trigger, lpath->argCount);
+
+    // Assemble argv
+    char **args = malloc(lpath->argCount + 2); // Reserve two more for argv[0] and possible HOSDMenu -mbrboot flag
+    if (lpath->argCount > 0) {
+      linkedStr *arg = lpath->args;
+      argIdx = 1;
+      while (arg != NULL) {
+        DPRINTF("argv[%d]: %s\n", argIdx, arg->str);
+        args[argIdx++] = arg->str;
+        arg = arg->next;
+      }
+    }
+
+    // Try all defined paths
     while (lstr != NULL) {
-      DPRINTF("trigger %d: path %s\n", lpath->trigger, lstr->str);
+      DPRINTF("Trying path %s\n", lstr->str);
+      args[0] = lstr->str;
+
+      argIdx = handleConfigPath(lpath->argCount + 1, args);
+      DPRINTF("Failed to start: %d\n", argIdx);
+
       lstr = lstr->next;
     }
-    lstr = lpath->args;
-    while (lstr != NULL) {
-      DPRINTF("trigger %d: arg %s\n", lpath->trigger, lstr->str);
-      lstr = lstr->next;
-    }
+
+    free(args);
     lpath = lpath->next;
   }
 
-  if (!strcmp(argv[0], "rom0:MBRBOOT"))
-    handlePSBBNArgs(argc, argv);
-
-  switch (readPad()) {
-  case TRIGGER_TYPE_START:
-    printf("Start\n");
-    break;
-  case TRIGGER_TYPE_SQUARE:
-    printf("Square\n");
-    break;
-  case TRIGGER_TYPE_CROSS:
-    printf("Cross\n");
-    break;
-  case TRIGGER_TYPE_CIRCLE:
-    printf("Circle\n");
-    break;
-  case TRIGGER_TYPE_TRIANGLE:
-    printf("Triangle\n");
-    break;
-  default:
-    printf("Default\n");
-    break;
-  }
-
-  // #ifdef HOSDMENU
-  //   char **nargv = malloc(2 * sizeof(char *));
-  //   nargv[0] = "hosdmenu";
-  //   nargv[1] = "-mbrboot";
-  //   LoadEmbeddedELF(0, (uint8_t *)payload_elf, 2, nargv);
-  // #else
-  //   LoadEmbeddedELF(0, (uint8_t *)payload_elf, 0, NULL);
-  // #endif
-
-  int ret = 0x20000000;
-  while (ret--)
-    asm("nop\nnop\nnop\nnop");
-  __builtin_trap();
+  // Fallback to loading HOSDMenu/HOSDSYS/PSBBN
+  DPRINTF("All paths were tried, falling back to OSD\n");
+  char *args[] = {"SkipHdd"};
+  execOSD(1, args);
 }
 
 // Initiailizes the pad library and returns the button pressed
@@ -143,57 +148,56 @@ TriggerType readPad() {
   }
 
   int retries = 10;
+  TriggerType t = TRIGGER_TYPE_AUTO;
   while (retries--) {
     if (padRead(0, 0, &buttons) != 0) {
       uint32_t paddata = 0xffff ^ buttons.btns;
-      if (paddata & PAD_START)
-        return TRIGGER_TYPE_START;
-      if (paddata & PAD_TRIANGLE)
-        return TRIGGER_TYPE_TRIANGLE;
-      if (paddata & PAD_CIRCLE)
-        return TRIGGER_TYPE_CIRCLE;
-      if (paddata & PAD_CROSS)
-        return TRIGGER_TYPE_CROSS;
-      if (paddata & PAD_SQUARE)
-        return TRIGGER_TYPE_SQUARE;
+      if (paddata & PAD_START) {
+        t = TRIGGER_TYPE_START;
+        break;
+      }
+      if (paddata & PAD_TRIANGLE) {
+        t = TRIGGER_TYPE_TRIANGLE;
+        break;
+      }
+      if (paddata & PAD_CIRCLE) {
+        t = TRIGGER_TYPE_CIRCLE;
+        break;
+      }
+      if (paddata & PAD_CROSS) {
+        t = TRIGGER_TYPE_CROSS;
+        break;
+      }
+      if (paddata & PAD_SQUARE) {
+        t = TRIGGER_TYPE_SQUARE;
+        break;
+      }
     }
   }
+  padPortClose(0, 0);
   padEnd();
-  return TRIGGER_TYPE_AUTO;
+  return t;
 }
 
-// Handles arguments supported by the PSBBN MBR
-int handlePSBBNArgs(int argc, char *argv[]) {
-  if (!strcmp(argv[1], "BootError")) {
-    char *nargv[1] = {"BootError"};
-    ExecOSD(1, nargv);
-  } else if (!strcmp(argv[1], "BootClock")) {
-    char *nargv[1] = {"BootClock"};
-    ExecOSD(1, nargv);
-  } else if (!strcmp(argv[1], "BootBrowser")) {
-    char *nargv[1] = {"BootBrowser"};
-    ExecOSD(1, nargv);
-  } else if (!strcmp(argv[1], "BootCdPlayer")) {
-    char *nargv[1] = {"BootCdPlayer"};
-    ExecOSD(1, nargv);
-  } else if (!strcmp(argv[1], "BootOpening")) {
-    char *nargv[1] = {"BootOpening"};
-    ExecOSD(1, nargv);
-  } else if (!strcmp(argv[1], "BootWarning")) {
-    char *nargv[1] = {"BootWarning"};
-    ExecOSD(1, nargv);
-  } else if (!strcmp(argv[1], "BootIllegal")) {
-    char *nargv[1] = {"BootIllegal"};
-    ExecOSD(1, nargv);
-  } else if (!strcmp(argv[1], "Initialize")) {
-    char *nargv[1] = {"Initialize"};
-    ExecOSD(1, nargv);
+// Handles arguments supported by the HDD-OSD/PSBBN MBR
+int handleOSDArgs(int argc, char *argv[]) {
+  int res = 0;
+
+  if (!strcmp(argv[1], "BootError") || !strcmp(argv[1], "BootClock") || !strcmp(argv[1], "BootBrowser") || !strcmp(argv[1], "BootCdPlayer") ||
+      !strcmp(argv[1], "BootOpening") || !strcmp(argv[1], "BootWarning") || !strcmp(argv[1], "BootIllegal") || !strcmp(argv[1], "Initialize")) {
+    // Execute OSD
+    argc--;
+    argv = &argv[1];
+    execOSD(argc, argv);
   } else if ((!strcmp(argv[1], "BootPs1Cd")) || (!strcmp(argv[1], "BootPs2Cd")) || (!strcmp(argv[1], "BootPs2Dvd")))
-    return startGameDisc();
+    res = startGameDisc();
   else if (!strcmp(argv[1], "BootDvdVideo"))
-    return startDVDVideo();
+    res = startDVDVideo();
   else if (!strcmp(argv[1], "BootHddApp")) {
-    return startHDDApplication(argc, argv);
+    // Adjust argv to start from the partition path
+    int nargc = argc - 2;
+    char **nargv = &argv[2];
+    res = startHDDApplication(nargc, nargv);
   } else if (!strcmp(argv[1], "DnasPs1Emu"))
     startDNAS(argc, argv);
   else if (!strcmp(argv[1], "DnasPs2Native"))
@@ -201,5 +205,115 @@ int handlePSBBNArgs(int argc, char *argv[]) {
   else if (!strcmp(argv[1], "DnasPs2Hdd"))
     startDNAS(argc, argv);
 
+  msg("Failed to execute %s: %d\n", argv[1], res);
+  argv[1] = "BootError";
+  bootFailWithArgs("Failed to handle the argument\n", argc, argv);
   return -1;
+}
+
+// Starts the executable pointed to by argv[0]
+// Supports the following paths:
+// $HOSDSYS — will run HOSDMenu or HDD-OSD. Make sure argv has space for the additional -mbrboot argument.
+// $PSBBN — will run PSBBN without encrypting the arguments
+// hdd0:<partition path>:PATINFO — will boot from HDD partition attribute area
+// hdd0:<partition path>:pfs:<PFS path> — ELF from the HDD
+// mc?: — ELF from the memory card
+// cdrom — CD/DVD
+// dvd — DVD Player
+int handleConfigPath(int argc, char *argv[]) {
+  if (!strcmp(argv[0], "cdrom"))
+    // Start the CD/DVD
+    return startGameDisc();
+
+  if (!strcmp(argv[0], "dvd"))
+    // Start the DVD Player
+    return startDVDVideo();
+
+  if (!strcmp(argv[0], "$HOSDSYS")) {
+    // Start HOSDMenu or HOSDSYS
+    if (mountPFS(SYSTEM_PARTITION))
+      return -ENODEV;
+
+    return startHOSDSYS(argc, argv);
+  }
+
+  if (!strcmp(argv[0], "$PSBBN")) {
+    // Start PSBBN osdboot.elf
+    if (mountPFS(SYSTEM_PARTITION))
+      return -ENODEV;
+
+    if (checkFile("pfs0:" OSDBOOT_PFS_PATH) < 0) {
+      umountPFS();
+      return -ENOENT;
+    }
+
+    umountPFS();
+
+    argv[0] = SYSTEM_PARTITION ":pfs:" OSDBOOT_PFS_PATH;
+    goto start;
+  }
+
+  if (!strncmp(argv[0], "mc", 2)) {
+    // Run executable from the memory card
+    // Make sure the file exists
+    if (argv[0][2] == '?') {
+      argv[0][2] = '0';
+      if (checkFile(argv[0]) < 0)
+        argv[0][2] = '1';
+    }
+
+    if (checkFile(argv[0]) < 0)
+      return -EINVAL;
+
+    goto start;
+  }
+
+  if (!strncmp(argv[0], "hdd0:", 5)) {
+    // Run executable from the HDD
+    if (strstr(argv[0], "PATINFO"))
+      // Handle PATINFO
+      return startHDDApplication(argc, argv);
+
+    // Handle PFS path
+    if (mountPFS(argv[0]))
+      return -ENODEV;
+
+    // Extract the PFS path
+    char *pfsPath = strstr(argv[0], ":pfs:");
+    if (pfsPath) {
+      pfsPath = pfsPath + 5;
+    } else {
+      char *pfsPath = strchr(argv[0], '/');
+      if (pfsPath)
+        pfsPath = pfsPath;
+    }
+    if (!pfsPath) {
+      umountPFS();
+      return -EINVAL;
+    }
+
+    char *filePath = malloc(6 + strlen(pfsPath));
+    sprintf(filePath, "pfs0:%s", pfsPath);
+
+    // Make sure the path exists
+    int res = checkFile(filePath);
+    umountPFS();
+    free(filePath);
+
+    if (res < 0)
+      return -ENOENT;
+
+    goto start;
+  }
+
+  // Fallback to just checking if file exists and attempting to execute it
+  if (checkFile(argv[0]) < 0)
+    return -ENOENT;
+
+start:
+  LoadOptions opts = {
+      .argc = argc,
+      .argv = argv,
+  };
+  return loadELF(&opts);
 }

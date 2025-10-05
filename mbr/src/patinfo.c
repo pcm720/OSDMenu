@@ -89,16 +89,17 @@ int readPATINFOFile(void *dst, int partFd, AttributeAreaFile file, int decrypt) 
 }
 
 // Starts HDD application using data from the partition attribute area header
+// Assumes argv[0] is the partition path
 int startHDDApplication(int argc, char *argv[]) {
   // Terminate the path at partition name
   char *v;
-  if ((strlen(argv[2]) > 5) && (v = strchr(&argv[2][5], ':')))
+  if ((strlen(argv[0]) > 5) && (v = strchr(&argv[0][5], ':')))
     *v = '\0';
 
   // Using fileio functions here because fileXio can't seem to read the extended attribute area
-  int fd = fioOpen(argv[2], FIO_O_RDONLY);
+  int fd = fioOpen(argv[0], FIO_O_RDONLY);
   if (fd < 0) {
-    DPRINTF("Failed to open %s: %d\n", argv[2], fd);
+    DPRINTF("Failed to open %s: %d\n", argv[0], fd);
     return fd;
   }
 
@@ -158,7 +159,7 @@ int startHDDApplication(int argc, char *argv[]) {
 
   DPRINTF("====\nSYSTEM.CNF:\nBoot path: %s\nDEV9 power: %s\nIOPRP Path: %s\n====\n", bootPath, dev9Power, ioprpPath);
 
-  if (bootPath[0] == '\0') {
+  if (bootPath[0] == '\0' || !strcmp(bootPath, "NOBOOT") || !strcmp(ioprpPath, "NOBOOT")) {
     fioClose(fd);
     bootFail("Invalid boot path\n");
   }
@@ -217,7 +218,7 @@ int startHDDApplication(int argc, char *argv[]) {
 
     opts.elfMem = (void *)PATINFO_ELF_MEM_ADDR;
     opts.elfSize = header.elf.size;
-    opts.argv[0] = argv[2]; // Set partition path as argv[0]
+    opts.argv[0] = argv[0]; // Set partition path as argv[0]
   } else if (!strncmp(bootPath, "pfs", 3)) {
     // Build the full path, reusing dev9Power as the string buffer
     char *pfsPath = strchr(bootPath, '/');
@@ -226,7 +227,7 @@ int startHDDApplication(int argc, char *argv[]) {
       opts.argv[0] = dev9Power;
     }
   } else
-    opts.argv[0] = bootPath; // Set partition path as argv[0]
+    opts.argv[0] = bootPath; // Pass the bootPath as-is
 
   fioClose(fd);
   updateLaunchHistory(argv[2]);

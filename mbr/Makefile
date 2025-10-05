@@ -10,7 +10,7 @@ EE_LINKFILE = linkfile
 
 EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include  -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include  -Iinclude -I../common/include
 EE_LIBS = -lpatches -ldma -ldebug -lfileXio -lsecr -lpad -lgskit -ldmakit -lmc
-EE_OBJS =  main.o init.o config.o mbrboot_crypto.o loader.o hdd.o hdd_start.o common.o disc.o
+EE_OBJS =  main.o init.o config.o crypto.o loader.o hdd.o patinfo.o common.o disc.o
 ELF_FILES = loader.elf ps1vn.elf
 IRX_FILES = iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd-osd.irx ps2fs.irx secrsif.irx
 
@@ -21,7 +21,7 @@ RES_FILES += icon_A.sys icon_C.sys icon_J.sys
 # C compiler flags
 EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
 EE_CFLAGS = -D_EE -Os -G0 -Wall -Werror -fdata-sections -ffunction-sections $(EE_INCS)
-EE_LDFLAGS += -Wl,-zmax-page-size=128 -Wl,--gc-sections # -s
+EE_LDFLAGS += -Wl,-zmax-page-size=128 -Wl,--gc-sections -s
 EE_LDFLAGS += -L$(PS2DEV)/gsKit/lib
 
 # Reduce binary size by using newlib-nano
@@ -32,18 +32,8 @@ EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
 
-ifeq ($(PAYLOAD),patcher.elf)
-	EE_CFLAGS += -DHOSDMENU
-endif
-
 ifeq ($(ENABLE_PRINTF), 1)
  EE_CFLAGS += -DENABLE_PRINTF
-endif
-
-ifneq (,$(findstring ELF,$(PAYLOAD)))
-	EE_OBJS += $(PAYLOAD:.ELF=_ELF.o)
-else
-	EE_OBJS += $(PAYLOAD:.elf=_elf.o)
 endif
 
 EE_OBJS += $(IRX_FILES:.irx=_irx.o)
@@ -65,19 +55,6 @@ clean:
 
 %ps2hdd-osd_irx.c:
 	$(BIN2C) $(PS2SDK)/iop/irx/ps2hdd-osd.irx $@ $(*:$(EE_SRC_DIR)%=%)ps2hdd_osd_irx
-
-# HOSDMenu payload
-%patcher_elf.c:
-	$(MAKE) -C ../patcher clean
-	$(MAKE) -C ../patcher HOSD=1
-	$(BIN2C) ../patcher/patcher.elf $@ payload_elf
-
-# Custom payload
-%_elf.c:
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=%).elf $@ payload_elf
-
-%_ELF.c:
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=%).ELF $@ payload_elf
 
 # ELF loader
 loader.elf:

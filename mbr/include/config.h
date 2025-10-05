@@ -10,6 +10,7 @@ typedef enum {
   FLAG_PS1DRV_FAST = (1 << 3),    // If set, will force PS1DRV fast disc speed
   FLAG_PS1DRV_SMOOTH = (1 << 4),  // If set, will force PS1DRV texture smoothing
   FLAG_PS1DRV_USE_VN = (1 << 5),  // If set, run PS1DRV via the PS1DRV Video Mode Negator
+  FLAG_PREFER_BBN = (1 << 6),     // If set, will attempt to run PSBBN instead of HOSDSYS on OSD errors
 } Flags;
 
 typedef enum {
@@ -31,12 +32,13 @@ typedef struct launchPath {
   TriggerType trigger;
   linkedStr *paths;
   linkedStr *args;
+  int argCount;
   struct launchPath *next;
 } launchPath;
 
 // Settings struct, contains option flags and paths
 typedef struct {
-  uint8_t flags;    // Flags
+  uint8_t flags;     // Flags
   launchPath *paths; // Launch paths
 } Settings;
 

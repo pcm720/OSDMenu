@@ -125,6 +125,7 @@ int loadConfig() {
         newPath->trigger = btn;
         newPath->paths = NULL;
         newPath->args = NULL;
+        newPath->argCount = 0;
 
         // Insert the path into the list
         if (currentPath)
@@ -136,10 +137,11 @@ int loadConfig() {
         settings.paths = currentPath;
 
       // Check if the option has an _arg suffix
-      if ((optPtr = strrchr(lineBuffer, '_')) && !strncmp(++optPtr, "arg", 3))
+      if ((optPtr = strrchr(lineBuffer, '_')) && !strncmp(++optPtr, "arg", 3)) {
         // Add the argument
         currentPath->args = addStr(currentPath->args, valuePtr);
-      else
+        currentPath->argCount++;
+      } else
         // Add the path
         currentPath->paths = addStr(currentPath->paths, valuePtr);
 
@@ -187,6 +189,13 @@ int loadConfig() {
         settings.flags |= FLAG_PS1DRV_USE_VN;
       else
         settings.flags &= ~(FLAG_PS1DRV_USE_VN);
+      continue;
+    }
+    if (!strncmp(lineBuffer, "prefer_bbn", 10)) {
+      if (atoi(valuePtr))
+        settings.flags |= FLAG_PREFER_BBN;
+      else
+        settings.flags &= ~(FLAG_PREFER_BBN);
       continue;
     }
   }
