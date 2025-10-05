@@ -5,6 +5,12 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifdef HOSD
+#define OSDMENU_TITLE "HOSDMenu"
+#else
+#define OSDMENU_TITLE "OSDMenu"
+#endif
+
 //
 // Version info menu patch
 // Injects custon strings into Version submenu
@@ -43,12 +49,12 @@ char *getPatchVersion() { return "\ar0.80" GIT_VERSION "\ar0.00"; }
 // Table for custom menu entries
 // Supports dynamic variables that will be updated every time the version menu opens
 customVersionEntry entries[] = {
-    {"Video Mode", NULL, getVideoMode, getVideoMode},               //
-    {"OSDMenu", NULL, getPatchVersion, getPatchVersionProto}, //
-    {"ROM", romverValue, NULL},                                     //
-    {"Emotion Engine", eeRevision, NULL},                           //
-    {"Graphics Synthesizer", NULL, getGSRevision, getGSRevision},   //
-    {"MechaCon", NULL, getMechaConRevision, getMechaConRevision},   //
+    {"Video Mode", NULL, getVideoMode, getVideoMode},             //
+    {OSDMENU_TITLE, NULL, getPatchVersion, getPatchVersionProto}, //
+    {"ROM", romverValue, NULL},                                   //
+    {"Emotion Engine", eeRevision, NULL},                         //
+    {"Graphics Synthesizer", NULL, getGSRevision, getGSRevision}, //
+    {"MechaCon", NULL, getMechaConRevision, getMechaConRevision}, //
 };
 
 // This function will be called every time the version menu opens
