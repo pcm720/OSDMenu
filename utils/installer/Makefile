@@ -37,7 +37,7 @@ $(EE_BIN_PKD): $(EE_BIN)
 	ps2-packer $< $@
 
 clean:
-	$(MAKE) -C ../mbr clean
+	$(MAKE) -C ../../mbr clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD) res/*
 
 BIN2C = $(PS2SDK)/bin/bin2c
@@ -51,13 +51,13 @@ BIN2C = $(PS2SDK)/bin/bin2c
 	$(BIN2C) $(PS2SDK)/iop/irx/ps2hdd-osd.irx $@ ps2hdd_irx
 
 # Payload to inject
-%payload.bin:
-	$(MAKE) -C ../mbr
+%mbr.bin:
+	$(MAKE) -C ../../mbr
 
 # Sign the payload and wrap it into a .c file
-%payload_bin.c: ../mbr/payload.bin
+%payload_bin.c: ../../mbr/mbr.bin
 	@mkdir -p res
-	./kelftool/kelftool encrypt mbr ../mbr/payload.bin res/payload.bin
+	./kelftool/kelftool encrypt mbr ../../mbr/mbr.bin res/payload.bin
 	$(BIN2C) res/payload.bin $@ payload_bin
 
 $(EE_ASM_DIR):
