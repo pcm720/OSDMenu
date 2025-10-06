@@ -1,1 +1,51 @@
 # OSDMenu MBR
+
+A custom `__mbr` payload designed for HOSDMenu, HDD-OSD and PSBBN.  
+Supports running arbitrary paths from the HDD and memory cards.  
+
+## Installation
+
+1. Edit the [OSDMBR.CNF](../examples/OSDMBR.CNF) as you see fit and copy it to `hdd0:__sysconf/osdmenu/OSDMENU.CNF`
+2. Install the payload into the `__mbr` of your HDD using the [OSDMenu MBR Installer](../utils/installer/README.md) or any other way.
+
+## Configuration
+
+The OSDMenu MBR can be configured with the `OSDMBR.CNF` file located at `hdd0:__sysconf/osdmenu/OSDMBR.CNF`.  
+See the [OSDMBR.CNF](../examples/OSDMBR.CNF) example configuration file for hints on how to configure the MBR.
+
+### Configuration options
+
+1. `boot_auto` — default boot paths
+2. `boot_auto_arg` — arguments for the default boot path
+3. `boot_start` — paths to run when the Start button is being pressed during boot
+4. `boot_start_arg` — arguments for the Start boot path
+5. `boot_triangle` — paths to run when the Triangle button is being pressed during boot
+6. `boot_triangle_arg` — arguments for the Triangle boot path
+7. `boot_circle` — paths to run when the Circle button is being pressed during boot
+8. `boot_circle_arg` — arguments for the Circle boot path
+9. `boot_cross` — paths to run when the Cross button is being pressed during boot
+10. `boot_cross_arg` — arguments for the Cross boot path
+11. `boot_square` — paths to run when the Square button is being pressed during boot
+12. `boot_square_arg` — arguments for the Square boot path
+13. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`
+14. `cdrom_disable_gameid` — disables or enables visual Game ID
+15. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
+16. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
+17. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
+18. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
+19. `prefer_bbn` — makes the MBR to fallback to PSBBN instead of HOSDMenu/HDD-OSD on errors
+
+Multiple paths and arguments are supported.
+
+### Supported paths
+
+- `$HOSDSYS` — executes HOSDMenu or HDD-OSD from the following locations:
+   - `hdd0:__system/osdmenu/hosdmenu.elf` — HOSDMenu
+   - `hdd0:__system/osd100/hosdsys.elf` — HDD-OSD
+   - `hdd0:__system/osd100/OSDSYS_A.XLF` — HDD-OSD (alternative path)
+- `$PSBBN` — executes PlayStation Broadband Navigator from `hdd0:__system/p2lboot/osdboot.elf`
+- `hdd0:<partition name>:PATINFO` — will boot using SYSTEM.CNF from the HDD partition attribute area
+- `hdd0:<partition name>:pfs:<path to ELF>` — will boot the ELF from the PFS partition
+- `mc?:<PATH>` — executes the ELF from the memory card. Use `?` to make the MBR to try both memory cards
+- `cdrom` — boots the PS1/PS2 CD/DVD disc
+- `dvd` — starts the DVD Player.
