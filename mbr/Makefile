@@ -46,7 +46,8 @@ EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
 all: $(EE_BIN_RAW)
 
 clean:
-	$(MAKE) -C ../patcher clean
+	$(MAKE) -C ../utils/loader clean
+	$(MAKE) -C ../utils/ps1vn clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_RAW)
 
 # IRX files
