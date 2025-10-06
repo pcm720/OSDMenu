@@ -23,7 +23,7 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
    Copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` _(optional)_ 
 3. Edit `hdd0:__sysconf/osdmenu/OSDMENU.CNF` [as you see fit](#osdmenucnf)
 4. Configure your bootloader to launch `hdd0:__system/osdmenu/hosdmenu.elf` or launch it manually from anywhere  
-   You can also install HOSDMenu as `__mbr` payload to get quicker boot times, see [installer](utils/installer/README.md) for details.  
+   You can also install OSDMenu MBR as `__mbr` payload to get quicker boot times, see the MBR [README](mbr/README.md) for more details.  
 
 ## Key differences from FMCB 1.8:
 - All initialization code is removed in favor of using a separate bootloader to start the patcher (e.g. [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader))
@@ -75,7 +75,7 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
   Note that HDD OSD will not see more than 1048448 MB. For larger drives, [APA Jail](https://www.psx-place.com/threads/apa-jail.34847/) is recommended.  
   You can also check out [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) for more automated APA Jail experience and easy-to-use HDD OSD+Broadband Navigator setup.
 
-  HOSDMenu will skip the full IOP initialization when it receives `-mbrboot` as `argv[1]`, improving boot times when running from a compatible `__mbr`.
+  HOSDMenu will skip the full IOP initialization when it receives `-mbrboot` as the last argument (`argv[argc - 1]`), improving boot times when running from a compatible `__mbr`.
 
 Patches not supported/limited on protokernel systems:
 - Automatic disc launch bypass
@@ -90,18 +90,11 @@ Patches not supported/limited on protokernel systems:
 See the list for supported `OSDMENU.CNF` options [here](#osdmenucnf).  
 OSDMenu will run the embedded launcher and pass the menu index to it for every menu item and disc launch.
 
-### Running as `__mbr`
+## OSDMenu MBR
 
-**HOSDMenu** supports [running from `__mbr`](utils/installer/README.md) on your hard drive, making the boot process essentially seamless.
-
-It can also run a custom payload from `hdd0:__system` if `path_custom_payload` is set and the Cross button is held during HOSDMenu initialization. The valid path formats for `path_custom_payload` are:
-- `hdd0:__system/<path to payload on __system>`
-- `hdd0:__system:pfs:<path to payload on __system>`
-
-If `boot_custom_payload` is enabled, the custom payload will be launched by default.
-To load HDD OSD with this option enabled, simply hold the Cross button.
-
-To improve reliability and avoid potential boot loops when neither HDD OSD nor the custom payload exist, HOSDMenu will attempt to run `RECOVERY.ELF` from USB.
+OSDMenu comes with the fully-featured MBR that supports running HOSDMenu, HDD-OSD and PSBBN natively.  
+It also supports running arbitrary paths from the HDD and memory cards.  
+See the MBR [README](mbr/README.md) for more details.
 
 ## Launcher
 
