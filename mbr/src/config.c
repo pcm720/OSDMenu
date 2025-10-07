@@ -1,4 +1,5 @@
 #include "config.h"
+#include "common.h"
 #include "defaults.h"
 #include "hdd.h"
 #include <ctype.h>
@@ -19,6 +20,9 @@ char configPath[] = "pfs0:" HOSDMBR_CONF_PATH;
 // Adds a new string to linkedStr and returns
 linkedStr *addStr(linkedStr *lstr, char *str) {
   linkedStr *newLstr = malloc(sizeof(linkedStr));
+  if (!newLstr)
+    bootFail("Failed to allocate memory for a string");
+
   newLstr->str = strdup(str);
   newLstr->next = NULL;
 
@@ -55,7 +59,8 @@ void freeLinkedStr(linkedStr *lstr) {
 
 int loadConfig() {
   // Mount the config partition
-  mountPFS(HOSD_CONF_PARTITION);
+  if (mountPFS(HOSD_CONF_PARTITION))
+    return -ENODEV;
 
   // Open the config file
   FILE *file = fopen(configPath, "rb");
@@ -122,10 +127,14 @@ int loadConfig() {
       if (!currentPath || currentPath->trigger != btn) {
         // If it doesn't exist, initialize the path
         launchPath *newPath = malloc(sizeof(launchPath));
+        if (!newPath)
+          bootFail("Failed to allocate memory for a path");
+
         newPath->trigger = btn;
         newPath->paths = NULL;
         newPath->args = NULL;
         newPath->argCount = 0;
+        newPath->next = NULL;
 
         // Insert the path into the list
         if (currentPath)

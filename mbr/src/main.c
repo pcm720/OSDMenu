@@ -53,37 +53,41 @@ int main(int argc, char *argv[]) {
     return res;
   }
 
-  if (!strcmp(argv[0], "rom0:MBRBOOT")) {
-    DPRINTF("Decrypting PSBBN MBR arguments\n");
-    argv = decryptMBRBOOTArgs(&argc, argv);
-  }
+  if (argc > 1) {
+    if (!strcmp(argv[0], "rom0:MBRBOOT")) {
+      DPRINTF("Decrypting PSBBN MBR arguments\n");
+      argv = decryptMBRBOOTArgs(&argc, argv);
+    }
 
-  // Check if filesystems need checking
-  if ((argc > 1) && strcmp(argv[1], "SkipFsck")) {
-    res = isFsckRequired();
-    if (res != 0) {
-      if (res < 0)
-        fatalMsg("Failed to launch the fsck utility to check the hard drive for errors");
-      else {
-        // Run fsck
-        runFsck();
-        // Fail to OSD
-        fatalMsg("Failed to launch the fsck utility to check the hard drive for errors");
+    // Check if filesystems need checking
+    if (strcmp(argv[1], "SkipFsck")) {
+      res = isFsckRequired();
+      if (res != 0) {
+        if (res < 0)
+          fatalMsg("Failed to launch the fsck utility to check the hard drive for errors");
+        else {
+          // Run fsck
+          runFsck();
+          // Fail to OSD
+          fatalMsg("Failed to launch the fsck utility to check the hard drive for errors");
+        }
+
+        // Fail to OSDSYS
+        shutdownDEV9();
+        char *args[] = {"BootError"};
+        ExecOSD(1, args);
       }
-
-      // Fail to OSDSYS
-      shutdownDEV9();
-      char *args[] = {"BootError"};
-      ExecOSD(1, args);
     }
   }
 
   if ((res = loadConfig()))
-    printf("WARN: Failed to load the config file: %d, will use defaults\n", res);
+    DPRINTF("WARN: Failed to load the config file: %d, will use defaults\n", res);
 
-  if ((!strcmp(argv[0], "rom0:MBRBOOT") || !strcmp(argv[0], "rom0:HDDBOOT")) && argc > 1)
-    handleOSDArgs(argc, argv);
+  // Handle OSD arguments when there are any additional arguments when running as rom0:MBRBOOT or rom0:HDDBOOT
+  if ((argc > 1) && (!strcmp(argv[0], "rom0:MBRBOOT") || !strcmp(argv[0], "rom0:HDDBOOT")))
+    return handleOSDArgs(argc, argv);
 
+  // Else, read controller inputs
   TriggerType trigger = readPad();
 
   // Handle paths
@@ -126,7 +130,7 @@ int main(int argc, char *argv[]) {
     lpath = lpath->next;
   }
 
-  // Fallback to loading HOSDMenu/HOSDSYS/PSBBN
+  // Fallback to loading HOSDMenu/HOSDSYS/PSBBN, skipping the HDD Update check to prevent boot loops
   DPRINTF("All paths were tried, falling back to OSD\n");
   char *args[] = {"SkipHdd"};
   execOSD(1, args);
@@ -206,8 +210,9 @@ int handleOSDArgs(int argc, char *argv[]) {
     startDNAS(argc, argv);
 
   msg("Failed to execute %s: %d\n", argv[1], res);
+  argc--;
   argv[1] = "BootError";
-  bootFailWithArgs("Failed to handle the argument\n", argc, argv);
+  bootFailWithArgs("Failed to handle the argument\n", argc, &argv[1]);
   return -1;
 }
 

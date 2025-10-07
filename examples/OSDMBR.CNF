@@ -2,7 +2,7 @@ boot_auto = $PSBBN
 boot_auto = $HOSDSYS
 boot_auto_arg1 =
 boot_start = hdd0:__common:pfs:/Apps/APP_NHDDL/nhddl.elf
-boot_start = mc0:/APP_NHDDL/nhddl.elf
+boot_start = mc?:/APP_NHDDL/nhddl.elf
 boot_start_arg1 = -mode=mmce
 boot_start_arg2 = -video=480p
 boot_triangle = hdd0:__common/Apps/BOOT/BOOT.ELF

@@ -48,7 +48,10 @@ void updateLaunchHistory(char *bootPath);
 #define PATINFO_ELF_MEM_ADDR 0x1000000
 #define PATINFO_IOPRP_MEM_ADDR 0x1f00000
 
-int readPATINFOFile(void *dst, int partFd, AttributeAreaFile file, int decrypt) {
+// Attempts to read the embedded file from the partition attribute area.
+// If decryptAddr is not NULL, will attempt to decrypt the file and set the location of the decrypted ELF.
+// decryptAddr will be set to 0 if decryption was not required.
+int readPATINFOFile(void *dst, int partFd, AttributeAreaFile file, uint32_t *decryptAddr) {
   DPRINTF("PATINFO: seeking to file location\n");
   int res = fioLseek(partFd, file.offset, FIO_SEEK_SET);
   if (res < 0) {
@@ -70,20 +73,24 @@ int readPATINFOFile(void *dst, int partFd, AttributeAreaFile file, int decrypt) 
     return res;
   }
 
-  if (decrypt && (*(uint32_t *)dst != 0x464c457f)) {
-    DPRINTF("PATINFO: trying to decrypt the file using SECRMAN\n");
-    if (!(res = SecrInit())) {
-      msg("PATINFO: failed to init libsecr: %x\n", res);
-      return res;
-    }
-    dst = SecrDiskBootFile(dst);
-    if (!dst) {
-      msg("PATINFO: failed to decrypt\n");
-      return -1;
-    }
-    SecrDeinit();
-  }
+  if (decryptAddr) {
+    if (*(uint32_t *)dst != 0x464c457f) {
+      DPRINTF("PATINFO: trying to decrypt the file using SECRMAN\n");
+      if (!(res = SecrInit())) {
+        msg("PATINFO: failed to init libsecr: %x\n", res);
+        return res;
+      }
+      dst = SecrDiskBootFile(dst);
+      if (!dst || (*(uint32_t *)dst != 0x464c457f)) {
+        msg("PATINFO: failed to decrypt\n");
+        return -1;
+      }
+      SecrDeinit();
 
+      *decryptAddr = (uint32_t)dst;
+    } else
+      *decryptAddr = 0;
+  }
   DPRINTF("PATINFO: loaded to %p\n", dst);
   return 0;
 }
@@ -181,7 +188,7 @@ int startHDDApplication(int argc, char *argv[]) {
       opts.ioprpPath = ioprpPath;
     else {
       // Load the IOPRP image into memory
-      if (readPATINFOFile((void *)PATINFO_IOPRP_MEM_ADDR, fd, header.ioprp, 0)) {
+      if (readPATINFOFile((void *)PATINFO_IOPRP_MEM_ADDR, fd, header.ioprp, NULL)) {
         fioClose(fd);
         bootFail("Failed to read IOPRP image into memory\n");
       }
@@ -211,12 +218,17 @@ int startHDDApplication(int argc, char *argv[]) {
 
   if (!strcmp(bootPath, "PATINFO")) {
     // Load ELF into memory
-    if (readPATINFOFile((void *)PATINFO_ELF_MEM_ADDR, fd, header.elf, 1)) {
+    uint32_t decryptAddr = 0;
+    if (readPATINFOFile((void *)PATINFO_ELF_MEM_ADDR, fd, header.elf, &decryptAddr)) {
       fioClose(fd);
       bootFail("Failed to read the ELF file into memory\n");
     }
 
-    opts.elfMem = (void *)PATINFO_ELF_MEM_ADDR;
+    if (decryptAddr != 0) {
+      opts.elfMem = (void *)decryptAddr;
+    } else
+      opts.elfMem = (void *)PATINFO_ELF_MEM_ADDR;
+
     opts.elfSize = header.elf.size;
     opts.argv[0] = argv[0]; // Set partition path as argv[0]
   } else if (!strncmp(bootPath, "pfs", 3)) {
@@ -230,7 +242,7 @@ int startHDDApplication(int argc, char *argv[]) {
     opts.argv[0] = bootPath; // Pass the bootPath as-is
 
   fioClose(fd);
-  updateLaunchHistory(argv[2]);
+  updateLaunchHistory(argv[0]);
   return loadELF(&opts);
 }
 

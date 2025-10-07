@@ -117,9 +117,11 @@ void execOSD(int argc, char *argv[]) {
       nargv[i + 1] = argv[i];
 
   if ((settings.flags & FLAG_PREFER_BBN) && (checkFile("pfs0:" OSDBOOT_PFS_PATH) >= 0)) {
+    umountPFS();
+
     // Start PSBBN
     nargv[0] = SYSTEM_PARTITION ":pfs:" OSDBOOT_PFS_PATH;
-    if (argc > 1) // Encrypt arguments
+    if (nargc > 1) // Encrypt arguments
       nargv = encryptOSDBOOTArgs(&nargc, nargv);
 
     LoadOptions opts = {

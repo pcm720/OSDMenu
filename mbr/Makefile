@@ -1,9 +1,9 @@
 # If enabled, will print additional debug text to stdout
-ENABLE_PRINTF ?= 1
+ENABLE_PRINTF ?= 0
 
 PAYLOAD ?= patcher.elf
 
-EE_BIN = hosdmbr.elf
+EE_BIN = osdmbr.elf
 EE_BIN_RAW = mbr.bin
 
 EE_LINKFILE = linkfile

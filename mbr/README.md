@@ -5,7 +5,7 @@ Supports running arbitrary paths from the HDD and memory cards.
 
 ## Installation
 
-1. Edit the [OSDMBR.CNF](../examples/OSDMBR.CNF) as you see fit and copy it to `hdd0:__sysconf/osdmenu/OSDMENU.CNF`
+1. Edit the [OSDMBR.CNF](../examples/OSDMBR.CNF) as you see fit and copy it to `hdd0:__sysconf/osdmenu/OSDMBR.CNF`
 2. Install the payload into the `__mbr` of your HDD using the [OSDMenu MBR Installer](../utils/installer/README.md) or any other way.
 
 ## Configuration
