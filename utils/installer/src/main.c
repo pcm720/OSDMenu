@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <fileXio_rpc.h>
 #include <hdd-ioctl.h>
+#include <io_common.h>
 #include <kernel.h>
 #include <libpwroff.h>
 #include <ps2sdkapi.h>
@@ -25,6 +26,8 @@ void poweroff(void *arg);
 // MBR payload
 extern char payload_bin[];
 extern int size_payload_bin;
+extern char osdmbrcnf_bin[];
+extern int size_osdmbrcnf_bin;
 
 int main(int argc, char *argv[]) {
   init_scr();
@@ -39,11 +42,39 @@ int main(int argc, char *argv[]) {
 
   scr_printf("\tInjecting the payload into hdd0:__mbr:\n");
   res = writeMBR(payload_bin, size_payload_bin);
-  if (res < 0)
+  if (res < 0) {
     scr_printf("\n\n\tFailed: %d\n", res);
-  else
-    scr_printf("\n\n\tDone\n");
+    fileXioDevctl("dev9x:", DDIOC_OFF, NULL, 0, NULL, 0);
+    goto done;
+  }
 
+  // Mount the __sysconf partition
+  res = fileXioMount("pfs0:", "hdd0:__sysconf", FIO_MT_RDWR);
+  if (res >= 0) {
+    // Check if file exists
+    int fd = fileXioOpen("pfs0:/osdmenu/OSDMBR.CNF", FIO_O_RDONLY);
+    if (fd >= 0)
+      fileXioClose(fd);
+    else {
+      // If not, create the directory and copy the config file
+      fileXioMkdir("pfs0:/osdmenu", 0777);
+      scr_printf("\tCopying the OSDMenu MBR configuration file\n");
+      fd = fileXioOpen("pfs0:/osdmenu/OSDMBR.CNF", FIO_O_RDWR | FIO_O_CREAT);
+      if (fd < 0)
+        scr_printf("\tFailed to create the config file: %d\n", fd);
+      else {
+        res = fileXioWrite(fd, osdmbrcnf_bin, size_osdmbrcnf_bin);
+        if (res < size_osdmbrcnf_bin)
+          scr_printf("\tFailed to write the config file: %d\n", res);
+
+        fileXioClose(fd);
+      }
+    }
+    fileXioUmount("pfs0:");
+  } else
+    scr_printf("\tFailed to mount the hdd0:__sysconf partition: %d\n", res);
+
+  scr_printf("\n\n\tDone\n");
   fileXioDevctl("dev9x:", DDIOC_OFF, NULL, 0, NULL, 0);
 
 done:

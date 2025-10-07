@@ -1,14 +1,14 @@
 # ELF file name
-EE_BIN_PKD = hosd_installer.elf
-EE_BIN = hosd_installer_unc.elf
+EE_BIN_PKD = osdmbr_installer.elf
+EE_BIN = osdmbr_installer_unc.elf
 
 # Base object files
 EE_OBJS = main.o init.o
 
 # Base modules
 IRX_FILES += iomanX.irx fileXio.irx
-IRX_FILES += ps2dev9.irx ps2atad.irx ps2hdd.irx
-RES_FILES = payload.bin
+IRX_FILES += ps2dev9.irx ps2atad.irx ps2hdd.irx ps2fs.irx
+RES_FILES = payload.bin osdmbrcnf.bin
 
 # C compiler flags
 EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
@@ -59,6 +59,9 @@ BIN2C = $(PS2SDK)/bin/bin2c
 	@mkdir -p res
 	./kelftool/kelftool encrypt mbr ../../mbr/mbr.bin res/payload.bin
 	$(BIN2C) res/payload.bin $@ payload_bin
+
+%osdmbrcnf_bin.c:
+	$(BIN2C) config/osdmbr.cnf $@ osdmbrcnf_bin
 
 $(EE_ASM_DIR):
 	@mkdir -p $@

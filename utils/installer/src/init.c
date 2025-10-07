@@ -29,6 +29,7 @@ IRX_DEFINE(fileXio);
 IRX_DEFINE(ps2dev9);
 IRX_DEFINE(ps2atad);
 IRX_DEFINE(ps2hdd);
+IRX_DEFINE(ps2fs);
 
 // Loads IOP modules
 int initModules(void) {
@@ -53,6 +54,7 @@ int initModules(void) {
   IRX_LOAD(ps2dev9, 0, NULL)
   IRX_LOAD(ps2atad, 0, NULL)
   IRX_LOAD(ps2hdd, 0, NULL)
+  IRX_LOAD(ps2fs, 0, NULL)
 
   fileXioInit();
 
