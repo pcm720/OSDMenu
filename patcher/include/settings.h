@@ -13,7 +13,7 @@ extern uint32_t size_embedded_cnf;
 extern uint8_t *embedded_cnf_addr;
 #endif
 
-#define CUSTOM_ITEMS 250 // Max number of items in custom menu
+#define CUSTOM_ITEMS 200 // Max number of items in custom menu
 #define NAME_LEN 80      // Max menu item length (incl. the string terminator)
 
 typedef enum {
