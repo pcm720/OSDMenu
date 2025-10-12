@@ -13,7 +13,8 @@ This argument should begin with `-la=`, followed by one or more letters that mod
 - `D` — keep both the HDD and DEV9 powered on (`HDDUNITPOWER = NICHDD`)
 - `I` — the `argv[argc-2]` argument contains IOPRP image path (for HDD, the path must be a pfs: path on the same partition as the ELF file)
 - `E` — the `argv[argc-2]` argument contains ELF memory location to use instead of `argv[0]`
-- `G` — force video mode via eGSM. The `argv[argc-2]` argument contains eGSM arguments
+- `G` — force video mode via eGSM. The `argv[argc-2]` argument contains eGSM arguments  
+
 Note:
   - `D` and `N` are mutually exclusive; if both are specified, only the last one will take effect.
   - When using arguments that require `argv[argc-2]` together, the arguments are interpreted in the order they appear.
