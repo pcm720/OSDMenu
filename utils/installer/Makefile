@@ -1,14 +1,14 @@
 # ELF file name
-EE_BIN_PKD = hosd_installer.elf
-EE_BIN = hosd_installer_unc.elf
+EE_BIN_PKD = osdmbr_installer.elf
+EE_BIN = osdmbr_installer_unc.elf
 
 # Base object files
 EE_OBJS = main.o init.o
 
 # Base modules
 IRX_FILES += iomanX.irx fileXio.irx
-IRX_FILES += ps2dev9.irx ps2atad.irx ps2hdd.irx
-RES_FILES = payload.bin
+IRX_FILES += ps2dev9.irx ps2atad.irx ps2hdd.irx ps2fs.irx
+RES_FILES = payload.bin osdmbrcnf.bin
 
 # C compiler flags
 EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
@@ -37,7 +37,7 @@ $(EE_BIN_PKD): $(EE_BIN)
 	ps2-packer $< $@
 
 clean:
-	$(MAKE) -C ../mbr clean
+	$(MAKE) -C ../../mbr clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD) res/*
 
 BIN2C = $(PS2SDK)/bin/bin2c
@@ -51,14 +51,17 @@ BIN2C = $(PS2SDK)/bin/bin2c
 	$(BIN2C) $(PS2SDK)/iop/irx/ps2hdd-osd.irx $@ ps2hdd_irx
 
 # Payload to inject
-%payload.bin:
-	$(MAKE) -C ../mbr
+%mbr.bin:
+	$(MAKE) -C ../../mbr
 
 # Sign the payload and wrap it into a .c file
-%payload_bin.c: ../mbr/payload.bin
+%payload_bin.c: ../../mbr/mbr.bin
 	@mkdir -p res
-	./kelftool/kelftool encrypt mbr ../mbr/payload.bin res/payload.bin
+	./kelftool/kelftool encrypt mbr ../../mbr/mbr.bin res/payload.bin
 	$(BIN2C) res/payload.bin $@ payload_bin
+
+%osdmbrcnf_bin.c:
+	$(BIN2C) config/osdmbr.cnf $@ osdmbrcnf_bin
 
 $(EE_ASM_DIR):
 	@mkdir -p $@

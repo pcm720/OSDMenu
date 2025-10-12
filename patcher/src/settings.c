@@ -15,6 +15,10 @@ char cnfPath[] = CONF_PATH;
 char cnfPath[] = "pfs0:" HOSD_CONF_PATH;
 #endif
 
+#ifdef EMBED_CNF
+uint8_t *embedded_cnf_addr = embedded_cnf;
+#endif
+
 // getCNFString is the main CNF parser called for each CNF variable in a CNF file.
 // Input and output data is handled via its pointer parameters.
 // The return value flags 'false' when no variable is found. (normal at EOF)
@@ -69,7 +73,19 @@ nextLine:
 
 // Loads config file from the memory card
 int loadConfig(void) {
+  // Load CNF at a fixed address, guaranteed not to be used by OSDMenu
+  // because the memory range is limited to <0x100000 in the linker script
+  char *cnfPos = (void *)0x100000;
+
+#ifdef EMBED_CNF
+  // Embedded config file.
+  // Copy it to cnfPos to avoid the parser mangling the config
+  memcpy(cnfPos, embedded_cnf_addr, size_embedded_cnf);
+  size_t cnfSize = size_embedded_cnf;
+#else
+// Read config from the HDD or one of the memory cards
 #ifndef HOSD
+
   if (settings.mcSlot == 1)
     cnfPath[2] = '1';
   else
@@ -94,19 +110,12 @@ int loadConfig(void) {
     return -1;
 #endif
 
+  // Read the CNF as one long string
   size_t cnfSize = fioLseek(fd, 0, FIO_SEEK_END);
   fioLseek(fd, 0, FIO_SEEK_SET);
-
-  char *pCNF = (char *)malloc(cnfSize);
-
-  char *cnfPos = pCNF;
-  if (cnfPos == NULL) {
-    fioClose(fd);
-    return -1;
-  }
-
-  fioRead(fd, cnfPos, cnfSize); // Read CNF as one long string
+  fioRead(fd, cnfPos, cnfSize);
   fioClose(fd);
+#endif
   cnfPos[cnfSize] = '\0'; // Terminate the CNF string
 
   char *name, *value;
@@ -203,21 +212,6 @@ int loadConfig(void) {
         continue; // Accept only memory card paths
 
       strncpy(settings.dkwdrvPath, value, (sizeof(settings.dkwdrvPath) / sizeof(char)) - 1);
-      continue;
-    }
-#else
-    if (!strcmp(name, "path_custom_payload")) {
-      if (strlen(value) < 13 || strncmp(value, "hdd0:__system", 13))
-        continue; // Accept only HDD paths on __system partition
-
-      strncpy(settings.customPayload, value, (sizeof(settings.customPayload) / sizeof(char)) - 1);
-      continue;
-    }
-    if (!strcmp(name, "boot_custom_payload")) {
-      if (atoi(value))
-        settings.patcherFlags |= FLAG_BOOT_PAYLOAD;
-      else
-        settings.patcherFlags &= ~(FLAG_BOOT_PAYLOAD);
       continue;
     }
 #endif
@@ -321,9 +315,6 @@ int loadConfig(void) {
     }
   }
 
-  if (pCNF != NULL)
-    free(pCNF);
-
   return 0;
 }
 
@@ -372,8 +363,6 @@ void initConfig(void) {
 #ifndef HOSD
   settings.dkwdrvPath[0] = '\0'; // Can be null
   settings.mcSlot = 0;
-#else
-  settings.customPayload[0] = '\0';
 #endif
 
   initVariables();

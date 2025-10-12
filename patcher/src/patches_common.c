@@ -51,7 +51,7 @@ char *findString(const char *string, char *buf, uint32_t bufsize) {
 }
 
 // Applies patches and executes OSDSYS
-void patchExecuteOSDSYS(void *epc, void *gp) {
+void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   if (settings.patcherFlags & FLAG_CUSTOM_MENU) {
     // If hacked OSDSYS is enabled, apply menu patch
     patchMenu((uint8_t *)epc);
@@ -89,10 +89,23 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
   // Apply disc launch patch to forward disc launch to the launcher
   patchDiscLaunch((uint8_t *)epc);
 
-#ifndef HOSD
+  // Find OSDSYS deinit function
+  uint8_t *ptr =
+      findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternOSDSYSDeinit, (uint8_t *)patternOSDSYSDeinit_mask, sizeof(patternOSDSYSDeinit));
+  if (ptr)
+    osdsysDeinit = (void *)ptr;
+
   int n = 0;
-  char *args[5];
-  args[n++] = "rom0:";
+  char *args[10];
+#ifndef HOSD
+  // OSDSYS
+  args[n++] = "rom0:OSDSYS";
+
+  if (argc > 1)
+    // Passthrough the original arguments
+    for (int i = 1; i < argc; i++)
+      args[n++] = strdup(argv[i]);
+
   if (settings.patcherFlags & FLAG_BOOT_BROWSER)
     args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
   else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))
@@ -100,15 +113,33 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
 
   if (findString("SkipMc", (char *)epc, 0x100000)) // Pass SkipMc argument
     args[n++] = "SkipMc";                          // Skip mc?:/BREXEC-SYSTEM/osdxxx.elf update on v5 and above
+  else
+    // Mangle system update paths to prevent OSDSYS from loading system updates (for ROMs not supporting SkipMc)
+    while ((ptr = (uint8_t *)findString("EXEC-SYSTEM", (char *)epc, 0x100000)))
+      ptr[2] = '\0';
 
   if (findString("SkipHdd", (char *)epc, 0x100000)) // Pass SkipHdd argument if the ROM supports it
     args[n++] = "SkipHdd";                          // Skip HDDLOAD on v5 and above
   else
     patchSkipHDD((uint8_t *)epc); // Skip HDD patch for earlier ROMs
+
+  // Replace function calls with no-ops?
+  // Not sure what it does, but leaving it here just in case
+  if (_lw(0x202d78) == 0x0c080898 && _lw(0x202b40) == 0x0c080934 && _lw(0x20ffa0) == 0x0c080934) {
+    _sw(0x00000000, 0x202d78); // replace jal 0x0080898 with nop
+    _sw(0x24020000, 0x202b40); // replace jal 0x0080934 with addiu 0, v0, 0
+    _sw(0x24020000, 0x20ffa0); // replace jal 0x0080934 with addiu 0, v0, 0
+  }
+
 #else
-  int n = 0;
-  char *args[3];
-  args[n++] = "hdd0:__system:pfs:" HOSD_HDDOSD_PATH;
+  // HDD OSD
+  args[n++] = "hdd0:__system:pfs:/osd100/hosdsys.elf";
+
+  if (argc > 1)
+    // Passthrough the original arguments
+    for (int i = 1; i < argc; i++)
+      args[n++] = strdup(argv[i]);
+
   if (settings.patcherFlags & FLAG_BOOT_BROWSER)
     args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
   else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))
@@ -116,14 +147,7 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
 
   // Update atad
   patchATAD();
-#endif
 
-  // Find OSDSYS deinit function
-  uint8_t *ptr =
-      findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternOSDSYSDeinit, (uint8_t *)patternOSDSYSDeinit_mask, sizeof(patternOSDSYSDeinit));
-  if (ptr)
-    osdsysDeinit = (void *)ptr;
-#ifdef HOSD
   // Find sceRemove function
   ptr = findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternSCERemove, (uint8_t *)patternSCERemove_mask, sizeof(patternSCERemove));
   if (ptr)
@@ -134,20 +158,8 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
     sceUmount = (void *)ptr;
 
   // Relocate the embedded launcher to avoid HDD OSD overwriting it
-  memcpy((void *)USER_MEM_START_ADDR, launcher_elf, size_launcher_elf);
+  memcpy((void *)USER_MEM_START_ADDR, launcher_elf_addr, size_launcher_elf);
   launcher_elf_addr = (uint8_t *)USER_MEM_START_ADDR;
-#else
-  // Replace function calls with no-ops?
-  // Not sure what it does, but leaving it here just in case
-  if (_lw(0x202d78) == 0x0c080898 && _lw(0x202b40) == 0x0c080934 && _lw(0x20ffa0) == 0x0c080934) {
-    _sw(0x00000000, 0x202d78); // replace jal 0x0080898 with nop
-    _sw(0x24020000, 0x202b40); // replace jal 0x0080934 with addiu 0, v0, 0
-    _sw(0x24020000, 0x20ffa0); // replace jal 0x0080934 with addiu 0, v0, 0
-  }
-
-  // Mangle system update paths to prevent OSDSYS from loading system updates (for ROMs not supporting SkipMc)
-  while ((ptr = (uint8_t *)findString("EXEC-SYSTEM", (char *)epc, 0x100000)))
-    ptr[2] = '\0';
 #endif
 
   FlushCache(0);
@@ -157,7 +169,7 @@ void patchExecuteOSDSYS(void *epc, void *gp) {
 }
 
 // Loads OSDSYS from ROM and handles the patching
-void launchOSDSYS() {
+void launchOSDSYS(int argc, char *argv[]) {
   uint8_t *ptr;
   t_ExecData exec;
 
@@ -165,8 +177,9 @@ void launchOSDSYS() {
   if (SifLoadElf("rom0:OSDSYS", &exec) || (exec.epc < 0))
     return;
 #else
-  if (SifLoadElfEncrypted("pfs0:" HOSD_HDDOSD_PATH, &exec) || (exec.epc < 0))
-    return;
+  if (SifLoadElfEncrypted("pfs0:/osd100/hosdsys.elf", &exec) || (exec.epc < 0))
+    if (SifLoadElfEncrypted("pfs0:/osd100/OSDSYS_A.XLF", &exec) || (exec.epc < 0))
+      return;
 
   fileXioUmount("pfs0:");
 #endif
@@ -185,7 +198,7 @@ void launchOSDSYS() {
 
   // Execute the OSD unpacker. If the above patching was successful it will
   // call the patchExecuteOSDSYS() function after unpacking.
-  ExecPS2((void *)exec.epc, (void *)exec.gp, 0, NULL);
+  ExecPS2((void *)exec.epc, (void *)exec.gp, argc, argv);
   Exit(-1);
 }
 
@@ -270,7 +283,7 @@ void launchProtokernelOSDSYS() {
 
   int n = 0;
   char *args[2];
-  args[n++] = "rom0:";
+  args[n++] = "rom0:OSDSYS";
   if (settings.patcherFlags & FLAG_BOOT_BROWSER)
     args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
   else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))

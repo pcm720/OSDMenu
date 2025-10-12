@@ -1,0 +1,22 @@
+boot_auto = $PSBBN
+boot_auto = $HOSDSYS
+boot_auto_arg1 =
+boot_start = hdd0:__common:pfs:/Apps/APP_NHDDL/nhddl.elf
+boot_start = mc?:/APP_NHDDL/nhddl.elf
+boot_start_arg1 = -mode=mmce
+boot_start_arg2 = -video=480p
+boot_triangle = hdd0:__common/Apps/BOOT/BOOT.ELF
+boot_triangle_arg1 =
+boot_circle = mc?:/BOOT/BOOT.elf
+boot_circle_arg1 =
+boot_cross = cdrom
+boot_cross_arg1 =
+boot_square = rom0:OSDSYS
+boot_square_arg1 =
+cdrom_skip_ps2logo = 1
+cdrom_disable_gameid = 0
+cdrom_use_dkwdrv = 0
+ps1drv_enable_fast = 0
+ps1drv_enable_smooth = 0
+ps1drv_use_ps1vn = 0
+prefer_bbn = 0

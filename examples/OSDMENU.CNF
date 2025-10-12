@@ -28,8 +28,6 @@ cdrom_use_dkwdrv = 0
 ps1drv_enable_fast = 0
 ps1drv_enable_smooth = 0
 ps1drv_use_ps1vn = 0
-# path_custom_payload = hdd0:__system:pfs:/p2lboot/PSBBN.ELF
-# boot_custom_payload = 1
 # path_DKWDRV_ELF = mc?:/BOOT/DKWDRV.ELF
 # --------------------------------------------------
 name_OSDSYS_ITEM_1 = Launch Disc

@@ -23,12 +23,17 @@ typedef enum {
   //
   Device_PFS = (1 << 8),
   Device_CDROM = (1 << 9),
+  Device_ROM = (1 << 10),
 } DeviceType;
 
-typedef enum {
-  PAL_640_512_32,
-  NTSC_640_448_32
-} GSVideoMode;
+// Defines global launcher options
+typedef struct {
+  DeviceType deviceHint; // The device the launcher has been launched from. Only HDD and memory cards are supported
+  int mcHint;            // Memory card number when the deviceHint is Device_MemoryCard
+  char *gsmArgument;     // eGSM argument
+} launcherOptions;
+
+extern launcherOptions globalOptions;
 
 // A simple linked list for paths and arguments
 typedef struct linkedStr {
@@ -61,18 +66,12 @@ linkedStr *addStr(linkedStr *lstr, char *str);
 void freeLinkedStr(linkedStr *lstr);
 
 // Initializes APA-formatted HDD and mounts the partition
-int initPFS(char *path, int clearSPU);
+int initPFS(char *path, int clearSPU, DeviceType additionalDevices);
 
 // Mounts the partition specified in path
 int mountPFS(char *path);
 
 // Unmounts the partition
 void deinitPFS();
-
-#ifdef ENABLE_PRINTF
-    #define DPRINTF(x...) printf(x)
-#else
-    #define DPRINTF(x...)
-#endif
 
 #endif

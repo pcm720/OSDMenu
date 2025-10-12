@@ -7,13 +7,15 @@ ENABLE_SPLASH ?= 1
 
 # If enabled, will build HOSDMenu instead of the OSDMenu
 HOSD ?= 0
+# If set to CNF path, will build the OSDMenu patcher with the embedded config file
+CNF_FILE ?= 0
 
 GIT_VERSION := $(shell git describe --always --dirty --tags --exclude nightly)
 
 EE_BIN_PKD = patcher.elf
 EE_BIN = patcher_unc.elf
 
-EE_INCS = -I../common -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include
+EE_INCS = -I../common/include -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include
 
 EE_LINKFILE = linkfile
 EE_LIBS = -lpatches -ldma
@@ -33,9 +35,16 @@ NEWLIB_NANO = 1
 
 ifeq ($(HOSD), 1)
  EE_CFLAGS += -DHOSD
- EE_LINKFILE = linkfile.hosd
- EE_LIBS += -lfileXio -lpad
+ EE_LIBS += -lfileXio
  IRX_FILES += iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd-osd.irx ps2fs.irx legacy_ps2atad.irx
+endif
+
+ifneq ($(HOSD), 1)
+# Embedded CNF file is not supported by HOSDMenu
+ifneq ($(CNF_FILE), 0)
+ EE_CFLAGS += -DEMBED_CNF
+ EE_OBJS += $(CNF_FILE).o
+endif
 endif
 
 ifeq ($(ENABLE_SPLASH), 1)
@@ -90,6 +99,15 @@ iop/atad/ps2atad.irx: iop/atad
 %legacy_ps2atad_irx.c: iop/atad/ps2atad.irx
 	$(BIN2C) iop/atad/$(*:$(EE_SRC_DIR)%=%)ps2atad.irx $@ $(*:$(EE_SRC_DIR)%=%)legacy_ps2atad_irx
 
+# Embedded CNF file
+%.CNF.c:
+	$(BIN2C) $(CNF_FILE) $@ embedded_cnf
+	sed -i 's/= {/__attribute__((section("._cnf"))) = {/' $@
+%.cnf.c:
+	$(BIN2C) $(CNF_FILE) $@ embedded_cnf
+	sed -i 's/= {/__attribute__((section("._cnf"))) = {/' $@
+
+
 # Launcher
 launcher.elf:
 	$(MAKE) -C ../launcher/$<
@@ -97,7 +115,9 @@ launcher.elf:
 %launcher_elf.c: launcher.elf
 	$(BIN2C) $(*:$(EE_SRC_DIR)%=../launcher/%)launcher.elf $@ $(*:$(EE_SRC_DIR)%=%)launcher_elf
 # Patch bin2c output to force launcher_elf section
+ifeq ($(HOSD), 1)
 	sed -i 's/= {/__attribute__((section("._launcher"))) = {/' $@
+endif
 
 $(EE_ASM_DIR):
 	@mkdir -p $@

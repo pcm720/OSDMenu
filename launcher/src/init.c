@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <iopcontrol.h>
 #include <kernel.h>
+#include <libcdvd.h>
 #include <libpwroff.h>
 #include <loadfile.h>
 #include <ps2sdkapi.h>
@@ -172,7 +173,7 @@ static DeviceType currentDevice = Device_None;
 
 // Initializes IOP modules for given device type
 int initModules(DeviceType device, int clearSPU) {
-  if (currentDevice == device)
+  if (currentDevice & device)
     // Do nothing if the drivers are already loaded
     return 0;
 
@@ -239,8 +240,8 @@ int initModules(DeviceType device, int clearSPU) {
   return 0;
 }
 
-// Reboots the console
-void rebootPS2() {
+// Reboots the IOP and executes a path from ROM via LoadExecPS2
+void execROMPath(int argc, char *argv[]) {
   sceSifInitRpc(0);
   while (!SifIopReset("", 0)) {
   };
@@ -248,7 +249,9 @@ void rebootPS2() {
   };
   sceSifExitRpc();
   SifLoadFileInit();
-  LoadExecPS2("rom0:OSDSYS", 0, NULL);
+
+  argc--;
+  LoadExecPS2(argv[0], argc, &argv[1]);
 }
 
 #ifdef FMCB
@@ -256,6 +259,7 @@ void rebootPS2() {
 // Needs initModules(Device_Basic, 0) to be called first
 void shutdownPS2() {
   sceSifInitRpc(0);
+  sceCdInit(SCECdINoD);
   SifExecModuleBuffer(poweroff_irx, size_poweroff_irx, 0, NULL, NULL);
   poweroffShutdown();
 }
@@ -264,11 +268,7 @@ void shutdownPS2() {
 #ifdef CDROM
 // Sets IOP emulation flags for Deckard consoles
 // Needs initModules(Device_Basic, 0) to be called first
-void applyXPARAM(char *gameID) {
-  sceSifInitRpc(0);
-  SifExecModuleBuffer(xparam_irx, size_xparam_irx, strlen(gameID) + 1, gameID, NULL);
-  sceSifExitRpc();
-}
+void applyXPARAM(char *gameID) { SifExecModuleBuffer(xparam_irx, size_xparam_irx, strlen(gameID) + 1, gameID, NULL); }
 #endif
 
 // Argument functions

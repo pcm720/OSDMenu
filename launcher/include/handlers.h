@@ -11,14 +11,18 @@ int handleBDM(DeviceType device, int argc, char *argv[]);
 // handler_cdrom.c
 //
 // Launches the disc while displaying the visual game ID and writing to the history file
-int handleCDROM(int argc, char *argv[]);
-int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath);
+#define CDROM_PS1_FAST 0x1
+#define CDROM_PS1_SMOOTH 0x10
+#define CDROM_PS1_VN 0xFF00
 
-// handler_fmcb.c
+int handleCDROM(int argc, char *argv[]);
+int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath, int skipInit);
+
+// handler_osdm.c
 //
 // Loads ELF specified in OSDMENU.CNF on the memory card or on the APA partition specified in HOSD_CONF_PARTITION
 // APA-formatted HDD handling requires the path to start with pfs...
-int handleFMCB(int argc, char *argv[]);
+int handleOSDM(int argc, char *argv[]);
 
 // handler_mc.c
 //

@@ -10,7 +10,7 @@ typedef struct {
 } sceGsGParam;
 
 // Loads OSDSYS from ROM and handles the patching
-void launchOSDSYS();
+void launchOSDSYS(int argc, char *argv[]);
 
 // Calls OSDSYS deinit function
 void deinitOSDSYS();

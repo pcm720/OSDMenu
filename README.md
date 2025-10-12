@@ -12,8 +12,8 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
 
 ### HOSDMenu — OSDMenu for HDD OSD
 1. Install HDD OSD 1.10U  
-   Make sure HDD OSD binaries are installed into `hdd0:__system/osd100/` and `OSDSYS_A.XLF` is present.  
-   SHA-256 hashes of `OSDSYS_A.XLF` known to work:
+   Make sure HDD OSD binaries are installed into `hdd0:__system/osd100/` and `hosdsys.elf`/`OSDSYS_A.XLF` is present.  
+   SHA-256 hashes of `hosdsys.elf`/`OSDSYS_A.XLF` known to work:
    - `acc905233f79678b9d7c1de99b0aee2409136197d13e7d78bf8978cd85b736ae` — original binary from the official HDD Utility Disc Version 1.10
    - `65360a6c210b36def924770f23d5565382b5fa4519ef0bb8ddf5c556531eec14` — cracked HDD OSD with 48-bit LBA support from the Sony Utility Disc Compilation 4 disc
 
@@ -21,9 +21,9 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
    to change the MagicGate region to 0xff (region free).
 2. Copy `hosdmenu.elf` to `hdd0:__system/osdmenu/`  
    Copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` _(optional)_ 
-3. Edit `hdd0:__sysconf/OSDMENU/OSDMENU.CNF` [as you see fit](#osdmenucnf)
+3. Edit `hdd0:__sysconf/osdmenu/OSDMENU.CNF` [as you see fit](#osdmenucnf)
 4. Configure your bootloader to launch `hdd0:__system/osdmenu/hosdmenu.elf` or launch it manually from anywhere  
-   You can also install HOSDMenu as `__mbr` payload to get quicker boot times, see [installer](utils/installer/README.md) for details.  
+   You can also install OSDMenu MBR as `__mbr` payload to get quicker boot times, see the MBR [README](mbr/README.md) for more details.  
 
 ## Key differences from FMCB 1.8:
 - All initialization code is removed in favor of using a separate bootloader to start the patcher (e.g. [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader))
@@ -53,11 +53,17 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
 - Force GS video mode to PAL, NTSC, 1080i or line-doubled 480p (with half the vertical resolution).  
   _Due to how to OSDSYS renders everything, "true" 480p can't be implemented easily_
 - HDD update check bypass
-- Override PS1 and PS2 disc launch functions with custom code that starts the launcher
+- Integrated Neutrino GSM
+- Override PS1 and PS2 disc launch functions with the launcher, bringing the following features to OSDSYS/HDD-OSD:
+  - Skip the PlayStation 2 logo
+  - Display the visual Game ID for the PixelFX RetroGM
+  - Run disc-based games via the embedded Neutrino GSM (eGSM)
+  - Run PS1 discs via the PS1 Video Mode Negator or DKWDRV
 - Additional system information in version submenu (Video mode, ROM version, EE, GS and MechaCon revision)  
 - Set PS1 driver options to values from `OSDMENU.CNF` on every boot
 
 **OSDMenu**:
+- The OSDMenu configuration file can be embedded into the patcher at compile time for memory card-independent setups and faster boot times
 - Launch SAS-compatible applications from the memory card browser if directory name is   
   `BOOT`, `<3-letter SAS prefix>_<appname>` or if file name ends with `.ELF` or `.elf`.  
   This patch swaps around the "Enter" and "Options" menus and substitutes file properties submenu with the launcher.  
@@ -74,31 +80,28 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
   Note that HDD OSD will not see more than 1048448 MB. For larger drives, [APA Jail](https://www.psx-place.com/threads/apa-jail.34847/) is recommended.  
   You can also check out [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) for more automated APA Jail experience and easy-to-use HDD OSD+Broadband Navigator setup.
 
+  HOSDMenu will skip the full IOP initialization when it receives `-mbrboot` as the last argument (`argv[argc - 1]`), improving boot times when running from a compatible `__mbr`.
+
 Patches not supported/limited on protokernel systems:
 - Automatic disc launch bypass
 - Button prompt customization
 - PAL video mode
 
-**OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` and patches the `rom0:OSDSYS` binary.  
-**HOSDMenu** version reads settings from `hdd0:__sysconf/OSDMENU/OSDMENU.CNF` and patches the `hdd0:__system/osd100/OSDSYS_A.XLF`
+**OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` (if the config file is not embedded) and patches the `rom0:OSDSYS` binary.  
+**HOSDMenu** version reads settings from `hdd0:__sysconf/osdmenu/OSDMENU.CNF` and patches the `hdd0:__system/osd100/OSDSYS_A.XLF`
 
 ### Configuration
 
 See the list for supported `OSDMENU.CNF` options [here](#osdmenucnf).  
 OSDMenu will run the embedded launcher and pass the menu index to it for every menu item and disc launch.
 
-### Running as `__mbr`
+The embedded Neutrino GSM (eGSM) can be configured using the `OSDGSM.CNF` file, see the additional information [here](#osdgsmcnf).  
 
-**HOSDMenu** supports [running from `__mbr`](utils/installer/README.md) on your hard drive, making the boot process essentially seamless.
+## OSDMenu MBR
 
-It can also run a custom payload from `hdd0:__system` if `path_custom_payload` is set and the Cross button is held during HOSDMenu initialization. The valid path formats for `path_custom_payload` are:
-- `hdd0:__system/<path to payload on __system>`
-- `hdd0:__system:pfs:<path to payload on __system>`
-
-If `boot_custom_payload` is enabled, the custom payload will be launched by default.
-To load HDD OSD with this option enabled, simply hold the Cross button.
-
-To improve reliability and avoid potential boot loops when neither HDD OSD nor the custom payload exist, HOSDMenu will attempt to run `RECOVERY.ELF` from USB.
+OSDMenu comes with the fully-featured MBR that supports running HOSDMenu, HDD-OSD and PSBBN natively.  
+It also supports running arbitrary paths from the HDD and memory cards.  
+See the MBR [README](mbr/README.md) for more details.
 
 ## Launcher
 
@@ -114,10 +117,19 @@ Supported paths are:
 - `ilink:` — i.Link mass storage (supported via BDM)
 - `udpbd:` — UDPBD (supported via BDM)
 - `hdd0:` — internal APA-formatted HDD
+- `rom?:` — ROM binaries
 - `cdrom` — CD/DVD discs
-- `fmcb` — special path for the patcher
+- `osdm` — special path for the patcher
 
 Device support can be enabled and disabled by changing build-time configuration options (see [Makefile](launcher/Makefile))
+
+### Global arguments
+
+The launcher supports the following global arguments:
+
+- `-gsm=<>` — runs the target ELF via the [embedded Neutrino GSM](utils/egsm/).  
+  See [this README](utils/loader/README.md#egsm) for more information on the argument format.   
+  Must always be the last argument. Does not apply to `rom?:` paths.
 
 ### `udpbd` handler
 
@@ -138,9 +150,17 @@ Supports the following arguments:
 For PS1 CDs with generic executable name (e.g. `PSX.EXE`), attempts to guess the game ID using the volume creation date
 stored in the Primary Volume Descriptor, based on the table from [TonyHax International](https://github.com/alex-free/tonyhax/blob/master/loader/gameid-psx-exe.c).
 
-### `fmcb` handler
-When the launcher receives `fmcb0:<idx>`, `fmcb1:<idx>` or `fmcb9:<idx>`  path as `argv[0]`, it reads `OSDMENU.CNF` from the respective memory card or the hard drive (`fmcb9`),
+For PS2 CDs/DVDs, the `cdrom` handler will look for the embedded Neutrino GSM setting in
+- `mc?:/SYS-CONF/OSDGSM.CNF`
+- `hdd0:__sysconf/osdmenu/OSDGSM.CNF` (only when running from HDD)  
+
+See [this](#osdgsmcnf) for more details.
+
+### `osdm` handler
+When the launcher receives `osdm:d0:<idx>`, `osdm:d1:<idx>` or `osdm:d9:<idx>`  path as `argv[0]`, it reads `OSDMENU.CNF` from the respective memory card or the hard drive (`osdm:d9`),
 searches for `path?_OSDSYS_ITEM_<idx>` and `arg_OSDSYS_ITEM_<idx>` entries and attempts to launch the ELF.
+
+Additionally, the launcher supports parsing the configuration from an arbitrary address when receiving `osdm:a<address>:<CNF file size>:<idx>` as `argv[0]`.
 
 Respects `cdrom_skip_ps2logo`, `cdrom_disable_gameid` and `cdrom_use_dkwdrv` for `cdrom` paths.
 
@@ -176,7 +196,7 @@ Most of `OSDMENU.CNF` settings are directly compatible with those from FMCB 1.8 
 
 ### Character limits
 
-OSDMenu supports up to 250 custom menu entries, each up to 79 characters long.  
+OSDMenu supports up to 200 custom menu entries, each up to 79 characters long.  
 Note that left and right cursors are limited to 19 characters and top and bottom delimiters are limited to 79 characters.  
 DKWDRV and custom payload paths are limited to 49 characters.
 
@@ -221,10 +241,14 @@ Options exclusive to OSDMenu:
 
 32. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
 
-Options exclusive to HOSDMenu (mostly for running from `__mbr`):
+## OSDGSM.CNF
 
-32. `path_custom_payload` — full path to custom payload on `hdd0:__system`, will be run when the Cross button is pressed during initialization
-33. `boot_custom_payload` — if enabled, will invert the original behavior and run custom payload by default
+OSDMenu supports running disc-based PS2 games via the embedded [Neutrino GSM](utils/egsm/).
+
+**OSDMenu** loads the per-title options from `mc?:/SYS-CONF/OSDGSM.CNF`.  
+**HOSDMenu** loads the per-title options from `hdd0:__sysconf/osdmenu/OSDGSM.CNF`, with fallback to `mc?:/SYS-CONF/OSDGSM.CNF` if the file on the HDD doesn't exist.
+
+See the sample configuraton [here](examples/OSDGSM.CNF) and [this](utils/loader/README.md#egsm) README for more information on the argument format.
 
 ## Credits
 

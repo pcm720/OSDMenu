@@ -21,7 +21,7 @@ CDROM ?= 1
 # Size reduction options
 # If enabled, will use SIO2MAN, MCMAN and MCSERV from rom0 instead of PS2SDK modules
 USE_ROM_MODULES ?= 0
-# If enabled, will print additional debug test to stdout
+# If enabled, will print additional debug text to stdout
 ENABLE_PRINTF ?= 0
 
 # End of configurable section
@@ -41,7 +41,7 @@ ELF_FILES += loader.elf
 ifeq ($(FMCB), 1)
  CDROM = 1
  EE_CFLAGS += -DFMCB
- EE_OBJS += handler_fmcb.o
+ EE_OBJS += handler_osdm.o
  IRX_FILES += poweroff.irx
 endif
 
@@ -94,7 +94,7 @@ endif
 
 ifeq ($(CDROM),1)
  EE_CFLAGS += -DCDROM
- EE_OBJS += handler_cdrom.o history.o game_id.o
+ EE_OBJS += handler_cdrom.o history.o game_id.o cdrom.o
  RES_FILES += icon_A.sys icon_C.sys icon_J.sys
  IRX_FILES += xparam.irx
  ELF_FILES += ps1vn.elf
@@ -143,7 +143,7 @@ EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
 EE_LIBS = -lcdvd -lpatches -lkernel -ldebug -lfileXio -lgskit -ldmakit -lmc -lpoweroff
-EE_INCS = -I../common -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include -I$(PS2DEV)/gsKit/include
+EE_INCS = -I../common/include -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include -I$(PS2DEV)/gsKit/include
 EE_LDFLAGS += -L$(PS2DEV)/gsKit/lib -s
 
 EE_OBJS += $(IRX_FILES:.irx=_irx.o)
@@ -163,9 +163,8 @@ $(EE_BIN_PKD): $(EE_BIN)
 	ps2-packer $< $@
 
 clean:
-	$(MAKE) -C loader clean
-	$(MAKE) -C ps1vn clean
-	$(MAKE) -C iop/xparam clean
+	$(MAKE) -C ../utils/loader clean
+	$(MAKE) -C ../utils/ps1vn clean
 	$(MAKE) -C iop/smap_udpbd clean
 	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD)
 
@@ -185,34 +184,35 @@ iop/smap_udpbd/smap_udpbd.irx: iop/smap_udpbd
 %smap_udpbd_irx.c: iop/smap_udpbd/smap_udpbd.irx
 	$(BIN2C) iop/smap_udpbd/$(*:$(EE_SRC_DIR)%=%)smap_udpbd.irx $@ $(*:$(EE_SRC_DIR)%=%)smap_udpbd_irx
 
-# xparam.irx
-iop/xparam/xparam.irx: iop/xparam
-	$(MAKE) -C $<
-
-%xparam_irx.c: iop/xparam/xparam.irx
-	$(BIN2C) iop/xparam/$(*:$(EE_SRC_DIR)%=%)xparam.irx $@ $(*:$(EE_SRC_DIR)%=%)xparam_irx
-
 # mmceman module, temporary override until it lands in the SDK
 %mmceman_irx.c:
 	$(BIN2C) iop/mmceman/mmceman.irx $@ $(*:$(EE_SRC_DIR)%=%)mmceman_irx
 
 # ELF loader
 loader.elf:
-	$(MAKE) -C loader/$<
+	$(MAKE) -C ../utils/loader/$<
 
 %loader_elf.c: loader.elf
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=loader/%)loader.elf $@ $(*:$(EE_SRC_DIR)%=%)loader_elf
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=../utils/loader/%)loader.elf $@ $(*:$(EE_SRC_DIR)%=%)loader_elf
+
+# Common CDROM files
+$(EE_OBJS_DIR)history.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/history.c -o $@
+$(EE_OBJS_DIR)game_id.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/game_id.c -o $@
+$(EE_OBJS_DIR)cdrom.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/cdrom.c -o $@
 
 # PS1 Video Mode Negator
 ps1vn.elf:
-	$(MAKE) -C ps1vn/$<
+	$(MAKE) -C ../utils/ps1vn/$<
 
 %ps1vn_elf.c: ps1vn.elf
-	$(BIN2C) $(*:$(EE_SRC_DIR)%=ps1vn/%)ps1vn.elf $@ $(*:$(EE_SRC_DIR)%=%)ps1vn_elf
+	$(BIN2C) $(*:$(EE_SRC_DIR)%=../utils/ps1vn/%)ps1vn.elf $@ $(*:$(EE_SRC_DIR)%=%)ps1vn_elf
 
 # Resource files
 %_sys.c:
-	$(BIN2C) res/$(*:$(EE_SRC_DIR)%=%).sys $@ $(*:$(EE_SRC_DIR)%=%)_sys
+	$(BIN2C) ../common/res/$(*:$(EE_SRC_DIR)%=%).sys $@ $(*:$(EE_SRC_DIR)%=%)_sys
 
 $(EE_ASM_DIR):
 	@mkdir -p $@

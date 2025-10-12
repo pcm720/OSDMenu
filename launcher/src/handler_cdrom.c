@@ -1,7 +1,9 @@
+#include "cdrom.h"
 #include "common.h"
 #include "defaults.h"
+#include "dprintf.h"
 #include "game_id.h"
-#include "game_id_table.h"
+#include "handlers.h"
 #include "history.h"
 #include "init.h"
 #include "loader.h"
@@ -17,24 +19,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum {
-  DiscType_PS1,
-  DiscType_PS2,
-} DiscType;
-
 // PS1 Video Mode Negator variables
 extern uint8_t ps1vn_elf[];
 extern int size_ps1vn_elf;
 
-#define CDROM_PS1_FAST 0x1
-#define CDROM_PS1_SMOOTH 0x10
-#define CDROM_PS1_VN 0xFF00
-
-const char *getPS1GenericTitleID();
-int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion);
-int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath);
-
-#define MAX_STR 256
+// Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
+char *getOSDGSMArgument(char *titleID);
 
 // Launches the disc while displaying the visual game ID and writing to the history file
 int handleCDROM(int argc, char *argv[]) {
@@ -76,14 +66,24 @@ int handleCDROM(int argc, char *argv[]) {
   if (useDKWDRV && !dkwdrvPath)
     dkwdrvPath = strdup(DKWDRV_PATH);
 
-  return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath);
+  return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath, 0);
 }
 
-int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath) {
+int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath, int skipInit) {
   // Always reset IOP to a known state
-  int res = initModules(Device_MemoryCard, 0);
-  if (res)
-    return res;
+  if (!skipInit) {
+    int res = 0;
+#ifdef APA
+    if (globalOptions.deviceHint == Device_PFS)
+      res = initPFS(HOSD_CONF_PARTITION, 0, Device_CDROM);
+    else
+#endif
+      res = initModules(Device_CDROM, 0);
+    if (res) {
+      msg("CDROM ERROR: Failed to initialize modules\n");
+      return res;
+    }
+  }
 
   if (!sceCdInit(SCECdINIT)) {
     msg("CDROM ERROR: Failed to initialize libcdvd\n");
@@ -123,9 +123,9 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   }
 
   // Parse SYSTEM.CNF
-  char *bootPath = calloc(sizeof(char), MAX_STR);
+  char *bootPath = calloc(sizeof(char), CNF_MAX_STR);
   char *titleID = calloc(sizeof(char), 12);
-  char *titleVersion = calloc(sizeof(char), MAX_STR);
+  char *titleVersion = calloc(sizeof(char), CNF_MAX_STR);
   discType = parseDiscCNF(bootPath, titleID, titleVersion);
   if (discType < 0) {
     msg("CDROM ERROR: Failed to parse SYSTEM.CNF\n");
@@ -136,6 +136,14 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   }
 
   if (titleID[0] != '\0') {
+    // Apply eGSM arguments when launching PS2 discs
+    if (discType == ExecType_PS2) {
+      if (!globalOptions.gsmArgument)
+        globalOptions.gsmArgument = getOSDGSMArgument(titleID);
+      if (globalOptions.gsmArgument)
+        DPRINTF("CDROM: Using eGSM to force the video mode: %s\n", globalOptions.gsmArgument);
+    }
+
     // Update history file and display game ID
     updateHistoryFile(titleID);
     if (displayGameID)
@@ -148,9 +156,11 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
     strcpy(titleVersion, "???");
 
   sceCdInit(SCECdEXIT);
+  if (globalOptions.deviceHint == Device_PFS)
+    deinitPFS();
 
   switch (discType) {
-  case DiscType_PS1:
+  case ExecType_PS1:
     if (dkwdrvPath) {
       DPRINTF("Starting DKWDRV\n");
       free(bootPath);
@@ -172,7 +182,6 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
 
       if (ps1drvFlags & CDROM_PS1_VN) {
         DPRINTF("Starting PS1DRV via PS1VModeNeg with title ID %s and version %s\n", argv[0], argv[1]);
-        sceSifExitCmd();
         LoadEmbeddedELF(ps1vn_elf, 2, argv);
       } else {
         char *argv[] = {titleID, titleVersion};
@@ -182,21 +191,20 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       }
     }
     break;
-  case DiscType_PS2:
+  case ExecType_PS2:
     if (skipPS2LOGO) {
       // Apply IOP emulation flags for Deckard consoles
       // (simply returns on PGIF consoles)
       if (titleID[0] != '\0')
         applyXPARAM(titleID);
 
-      sceSifExitCmd();
       // Launch PS2 game directly
-      LoadExecPS2(bootPath, 0, NULL);
-    } else {
-      sceSifExitCmd();
-      // Launch PS2 game with rom0:PS2LOGO
       char *argv[] = {bootPath};
-      LoadExecPS2("rom0:PS2LOGO", 1, argv);
+      LoadELFFromFile(1, argv);
+    } else {
+      // Launch PS2 game with rom0:PS2LOGO
+      char *argv[] = {"rom0:PS2LOGO", bootPath};
+      LoadELFFromFile(2, argv);
     }
     break;
   default:
@@ -206,58 +214,39 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   return -1;
 }
 
-// Parses SYSTEM.CNF on disc into bootPath, titleID and titleVersion
-// Returns disc type or a negative number if an error occurs
-int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion) {
-  // Open SYSTEM.CNF
-  int fd = open("cdrom0:\\SYSTEM.CNF;1", O_RDONLY);
-  if (fd < 0) {
-    // Apparently not all PS1 titles have SYSTEM.CNF
-    // Try to guess the title ID from the disc PVD
-    const char *tID = getPS1GenericTitleID();
-    if (tID) {
-      DPRINTF("Guessed the title ID from disc PVD: %s\n", tID);
-      strncpy(titleID, tID, 11);
-      return DiscType_PS1;
+// Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
+char *getOSDGSMArgument(char *titleID) {
+  DPRINTF("CDROM: Trying to load the eGSM config file\n");
+  FILE *gsmConf = NULL;
+#ifdef APA
+  if (globalOptions.deviceHint == Device_PFS)
+    // Check the internal HDD for the eGSM config file
+    gsmConf = fopen(PFS_MOUNTPOINT HOSDGSM_CONF_PATH, "r");
+#endif
+  if (!gsmConf) {
+    // Check both for memory cards for the eGSM config file
+    char cnfPath[sizeof(GSM_CONF_PATH) + 1];
+    strcpy(cnfPath, GSM_CONF_PATH);
+    cnfPath[2] = globalOptions.mcHint + '0';
+    gsmConf = fopen(cnfPath, "r");
+    if (!gsmConf) {
+      cnfPath[2] = (globalOptions.mcHint == 1) ? '0' : '1';
+      gsmConf = fopen(cnfPath, "r");
     }
-    return -ENOENT;
   }
+  if (!gsmConf)
+    return NULL;
 
-  // Get the file size
-  int size = lseek(fd, 0, SEEK_END);
-  if (size <= 0) {
-    msg("CDROM ERROR: Bad SYSTEM.CNF size\n");
-    close(fd);
-    return -EIO;
-  }
-  lseek(fd, 0, SEEK_SET);
-
-  // Read file into memory
-  char *cnf = malloc(size * sizeof(char));
-  if (read(fd, cnf, size) != size) {
-    msg("CDROM ERROR: Failed to read SYSTEM.CNF\n");
-    close(fd);
-    free(cnf);
-    return -EIO;
-  }
-  close(fd);
-
-  // Open memory buffer as stream
-  FILE *file = fmemopen(cnf, size, "r");
-  if (file == NULL) {
-    msg("CDROM ERROR: Failed to open SYSTEM.CNF for reading\n");
-    free(cnf);
-    return -ENOENT;
-  }
-
-  char lineBuffer[255] = {0};
+  char *defaultArg = NULL;
+  char *titleArg = NULL;
+  char lineBuffer[30] = {0};
   char *valuePtr = NULL;
-  DiscType type = -1;
-  while (fgets(lineBuffer, sizeof(lineBuffer), file)) { // fgets returns NULL if EOF or an error occurs
+  while (fgets(lineBuffer, sizeof(lineBuffer), gsmConf)) { // fgets returns NULL if EOF or an error occurs
     // Find the start of the value
     valuePtr = strchr(lineBuffer, '=');
     if (!valuePtr)
       continue;
+    *valuePtr = '\0';
 
     // Trim whitespace and terminate the value
     do {
@@ -265,78 +254,25 @@ int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion) {
     } while (isspace((int)*valuePtr));
     valuePtr[strcspn(valuePtr, "\r\n")] = '\0';
 
-    if (!strncmp(lineBuffer, "BOOT2", 5)) { // PS2 title
-      type = DiscType_PS2;
-      strncpy(bootPath, valuePtr, MAX_STR);
-      continue;
+    if (!strncmp(lineBuffer, titleID, 11)) {
+      DPRINTF("CDROM: eGSM will use the title-specific config\n");
+      titleArg = strdup(valuePtr);
+      break;
     }
-    if (!strncmp(lineBuffer, "BOOT", 4)) { // PS1 title
-      type = DiscType_PS1;
-      strncpy(bootPath, valuePtr, MAX_STR);
-      continue;
-    }
-    if (!strncmp(lineBuffer, "VER", 3)) { // Title version
-      strncpy(titleVersion, valuePtr, MAX_STR);
-      continue;
-    }
-  }
-  fclose(file);
-  free(cnf);
 
-  // Get the start of the executable path
-  valuePtr = strchr(bootPath, '\\');
-  if (!valuePtr) {
-    valuePtr = strchr(bootPath, ':'); // PS1 CDs don't have \ in the path
-    if (!valuePtr) {
-      DPRINTF("CDROM: Failed to parse the executable for the title ID\n");
-      return type;
-    }
-  }
-  valuePtr++;
-
-  // Do a basic sanity check.
-  // Some PS1 titles might have an off-by-one error in executable name (SLPS_11.111 instead of SLPS_111.11)
-  if ((strlen(valuePtr) > 11) && (valuePtr[4] == '_') && ((valuePtr[7] == '.') || (valuePtr[8] == '.')))
-    strncpy(titleID, valuePtr, 11);
-  else {
-    // Try to guess the title ID from the disc PVD
-    const char *tID = getPS1GenericTitleID();
-    if (tID) {
-      DPRINTF("Guessed the title ID from disc PVD: %s\n", tID);
-      strncpy(titleID, tID, 11);
-    }
+    if (!strncmp(lineBuffer, "default", 7))
+      defaultArg = strdup(valuePtr);
   }
 
-  return type;
-}
+  fclose(gsmConf);
 
-// Attempts to guess PS1 title ID from volume creation date stored in PVD
-const char *getPS1GenericTitleID() {
-  char sectorData[2048] = {0};
+  if (titleArg) {
+    // If there's a title-specific argument free the defaultArg and set the defaultArg to titleArg
+    if (defaultArg)
+      free(defaultArg);
 
-  sceCdRMode mode = {
-      .trycount = 3,
-      .spindlctrl = SCECdSpinNom,
-      .datapattern = SCECdSecS2048,
-  };
-
-  // Read sector 16 (Primary Volume Descriptor)
-  if (!sceCdRead(16, 1, &sectorData, &mode) || sceCdSync(0)) {
-    DPRINTF("Failed to read PVD\n");
-    return NULL;
+    defaultArg = titleArg;
   }
 
-  // Make sure the PVD is valid
-  if (strncmp(&sectorData[1], "CD001", 5)) {
-    DPRINTF("Invalid PVD\n");
-    return NULL;
-  }
-
-  // Try to match the volume creation date at offset 0x32D against the table
-  for (size_t i = 0; i < sizeof(gameIDTable) / sizeof(gameIDTable[0]); ++i) {
-    if (strncmp(&sectorData[0x32D], gameIDTable[i].volumeTimestamp, 16) == 0) {
-      return gameIDTable[i].gameID;
-    }
-  }
-  return NULL;
+  return defaultArg;
 }

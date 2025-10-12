@@ -9,6 +9,7 @@
 #include "settings.h"
 #include <kernel.h>
 #include <loadfile.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -24,7 +25,6 @@ struct OSDMenuInfo {
 
 static struct OSDMenuInfo *menuInfo = NULL;
 #define OSD_MAGIC 0x39390000 // arbitrary number to identify added menu items
-char item[10] = {0};
 
 // Handles custom menu entries
 int handleMenuEntry(int selected) {
@@ -34,40 +34,27 @@ int handleMenuEntry(int selected) {
   if (selected >= 2 + settings.menuItemCount)
     return 0;
 
-  if (selected - 2 >= 0) {
-    // Build 'fmcb<mc slot>:<idx>' string for the launcher
-    int idx = settings.menuItemIdx[selected - 2];
+  if (selected - 2 < 0)
+    return 0;
 
-    item[0] = 'f';
-    item[1] = 'm';
-    item[2] = 'c';
-    item[3] = 'b';
-#ifndef HOSD
-    item[4] = '0' + settings.mcSlot;
+  // Build the item string for the launcher
+  int idx = settings.menuItemIdx[selected - 2];
+
+  char item[28] = {0};
+#ifdef EMBED_CNF
+  // osdm:a<8-char address>:<8-char CNF size>:<3-char idx>
+  sprintf(item, "osdm:a%08lX:%08lX:%d", (uint32_t)embedded_cnf_addr, (uint32_t)size_embedded_cnf, idx);
 #else
-    item[4] = '9';
+  // osdm:d<1-char slot>:<3-char idx>
+#ifndef HOSD
+  int slot = settings.mcSlot;
+#else
+  int slot = 9;
 #endif
-    item[5] = ':';
+  sprintf(item, "osdm:d%d:%d", slot, idx);
+#endif
 
-    if (idx < 10) {
-      // For single-digit numbers
-      item[6] = '0' + idx;
-      item[7] = '\0';
-    } else if (idx < 100) {
-      // For two-digit numbers
-      item[6] = '0' + (idx / 10);
-      item[7] = '0' + (idx % 10);
-      item[8] = '\0';
-    } else {
-      // For three-digit numbers
-      item[6] = '0' + (idx / 100);
-      item[7] = '0' + ((idx / 10) % 10);
-      item[8] = '0' + (idx % 10);
-      item[9] = '\0';
-    }
-
-    launchItem(item);
-  }
+  launchItem(item);
   return 0;
 }
 

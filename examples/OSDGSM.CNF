@@ -1,0 +1,5 @@
+# DO NOT COPY AND PASTE THIS FILE
+# Optional default mode applies to all titles without the title-specific option
+default = fp:fp1:3
+# Title ID-specific option
+SLUS_200.02 = fp:fp2:2

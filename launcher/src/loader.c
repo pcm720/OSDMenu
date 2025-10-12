@@ -1,3 +1,5 @@
+#include "common.h"
+#include "dprintf.h"
 #include <kernel.h>
 #include <sifrpc.h>
 #include <stdint.h>
@@ -12,7 +14,26 @@ extern int size_loader_elf;
 
 int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]);
 
-int LoadELFFromFile(int argc, char *argv[]) { return LoadEmbeddedELF(loader_elf, argc, argv); }
+int LoadELFFromFile(int argc, char *argv[]) {
+  char **nargv = argv;
+  // Process global arguments
+  if (globalOptions.gsmArgument) {
+    // Add eGSM argument
+    nargv = malloc((argc + 2) * sizeof(char *));
+    for (int i = 0; i < argc; i++)
+      nargv[i] = argv[i];
+
+    argc += 2;
+    nargv[argc - 1] = "-la=G";
+    nargv[argc - 2] = globalOptions.gsmArgument;
+  }
+
+  DPRINTF("Starting the embedded ELF loader with argc = %d\n", argc);
+  for (int i = 0; i < argc; i++)
+    DPRINTF("argv[%d] = %s\n", i, nargv[i]);
+
+  return LoadEmbeddedELF(loader_elf, argc, nargv);
+}
 
 typedef struct {
   uint8_t ident[16]; // struct definition for ELF object header
@@ -72,7 +93,8 @@ int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]) {
     memcpy(eph[i].vaddr, pdata, eph[i].filesz);
   }
 
-  SifExitRpc();
+  sceSifExitCmd();
+  sceSifExitRpc();
   FlushCache(0);
   FlushCache(2);
 
