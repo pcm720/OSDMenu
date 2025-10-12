@@ -53,7 +53,12 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
 - Force GS video mode to PAL, NTSC, 1080i or line-doubled 480p (with half the vertical resolution).  
   _Due to how to OSDSYS renders everything, "true" 480p can't be implemented easily_
 - HDD update check bypass
-- Override PS1 and PS2 disc launch functions with custom code that starts the launcher
+- Integrated Neutrino GSM
+- Override PS1 and PS2 disc launch functions with the launcher, bringing the following features to OSDSYS/HDD-OSD:
+  - Skip the PlayStation 2 logo
+  - Display the visual Game ID for the PixelFX RetroGM
+  - Run disc-based games via the embedded Neutrino GSM (eGSM)
+  - Run PS1 discs via the PS1 Video Mode Negator or DKWDRV
 - Additional system information in version submenu (Video mode, ROM version, EE, GS and MechaCon revision)  
 - Set PS1 driver options to values from `OSDMENU.CNF` on every boot
 
@@ -90,6 +95,8 @@ Patches not supported/limited on protokernel systems:
 See the list for supported `OSDMENU.CNF` options [here](#osdmenucnf).  
 OSDMenu will run the embedded launcher and pass the menu index to it for every menu item and disc launch.
 
+The embedded Neutrino GSM (eGSM) can be configured using the `OSDGSM.CNF` file, see the additional information [here](#osdgsmcnf).  
+
 ## OSDMenu MBR
 
 OSDMenu comes with the fully-featured MBR that supports running HOSDMenu, HDD-OSD and PSBBN natively.  
@@ -116,6 +123,14 @@ Supported paths are:
 
 Device support can be enabled and disabled by changing build-time configuration options (see [Makefile](launcher/Makefile))
 
+### Global arguments
+
+The launcher supports the following global arguments:
+
+- `-gsm=<>` — runs the target ELF via the [embedded Neutrino GSM](utils/egsm/).  
+  See [this README](utils/loader/README.md#egsm) for more information on the argument format.   
+  Must always be the last argument. Does not apply to `rom?:` paths.
+
 ### `udpbd` handler
 
 Reads PS2 IP address from `mc?:/SYS-CONF/IPCONFIG.DAT`
@@ -134,6 +149,12 @@ Supports the following arguments:
 
 For PS1 CDs with generic executable name (e.g. `PSX.EXE`), attempts to guess the game ID using the volume creation date
 stored in the Primary Volume Descriptor, based on the table from [TonyHax International](https://github.com/alex-free/tonyhax/blob/master/loader/gameid-psx-exe.c).
+
+For PS2 CDs/DVDs, the `cdrom` handler will look for the embedded Neutrino GSM setting in
+- `mc?:/SYS-CONF/OSDGSM.CNF`
+- `hdd0:__sysconf/osdmenu/OSDGSM.CNF` (only when running from HDD)  
+
+See [this](#osdgsmcnf) for more details.
 
 ### `osdm` handler
 When the launcher receives `osdm:d0:<idx>`, `osdm:d1:<idx>` or `osdm:d9:<idx>`  path as `argv[0]`, it reads `OSDMENU.CNF` from the respective memory card or the hard drive (`osdm:d9`),
@@ -175,7 +196,7 @@ Most of `OSDMENU.CNF` settings are directly compatible with those from FMCB 1.8 
 
 ### Character limits
 
-OSDMenu supports up to 250 custom menu entries, each up to 79 characters long.  
+OSDMenu supports up to 200 custom menu entries, each up to 79 characters long.  
 Note that left and right cursors are limited to 19 characters and top and bottom delimiters are limited to 79 characters.  
 DKWDRV and custom payload paths are limited to 49 characters.
 
@@ -219,6 +240,15 @@ New to OSDMenu/HOSDMenu:
 Options exclusive to OSDMenu:
 
 32. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
+
+## OSDGSM.CNF
+
+OSDMenu supports running disc-based PS2 games via the embedded [Neutrino GSM](utils/egsm/).
+
+**OSDMenu** loads the per-title options from `mc?:/SYS-CONF/OSDGSM.CNF`.  
+**HOSDMenu** loads the per-title options from `hdd0:__sysconf/osdmenu/OSDGSM.CNF`, with fallback to `mc?:/SYS-CONF/OSDGSM.CNF` if the file on the HDD doesn't exist.
+
+See the sample configuraton [here](examples/OSDGSM.CNF) and [this](utils/loader/README.md#egsm) README for more information on the argument format.
 
 ## Credits
 
