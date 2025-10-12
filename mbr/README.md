@@ -55,5 +55,5 @@ Multiple paths and arguments are supported.
 OSDMenu MBR supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/egsm/) by automatically loading and applying the per-title options from `hdd0:__sysconf/osdmenu/OSDGSM.CNF`.  
 Additionally, it will run the target ELF from the `OSDMBR.CNF` via the [embedded Neutrino GSM](utils/egsm/) when the last argument is `-gsm=<>`.
 
-See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/loader/README.md#egsm) README for more information on the eSGM argument format.
+See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/loader/README.md#egsm) README for more information on the eGSM argument format.
 
