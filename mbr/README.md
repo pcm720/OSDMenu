@@ -49,3 +49,11 @@ Multiple paths and arguments are supported.
 - `mc?:<PATH>` — executes the ELF from the memory card. Use `?` to make the MBR try both memory cards
 - `cdrom` — boots the PS1/PS2 CD/DVD disc
 - `dvd` — starts the DVD Player.
+
+### Embedded Neutrino GSM (eGSM)
+
+OSDMenu MBR supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/egsm/) by automatically loading and applying the per-title options from `hdd0:__sysconf/osdmenu/OSDGSM.CNF`.  
+Additionally, it will run the target ELF from the `OSDMBR.CNF` via the [embedded Neutrino GSM](utils/egsm/) when the last argument is `-gsm=<>`.
+
+See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/loader/README.md#egsm) README for more information on the eSGM argument format.
+

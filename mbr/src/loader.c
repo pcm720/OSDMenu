@@ -84,7 +84,7 @@ int executeLoader(int argc, char *argv[]) {
 int loadELF(LoadOptions *options) {
   int argPos = 4; // Account for "-la="
   int argc = 0;
-  char loaderArg[9] = "-la=\0\0\0\0\0";
+  char loaderArg[10] = "-la=\0\0\0\0\0\0";
   char elfMemArg[22] = {0};
   char ioprpMemArg[22] = {0};
 
@@ -118,6 +118,12 @@ int loadELF(LoadOptions *options) {
     sprintf(elfMemArg, "mem:%08lX:%08lX", (uint32_t)options->elfMem, (uint32_t)options->elfSize);
   }
 
+  // eGSM
+  if (options->eGSM) {
+    loaderArg[argPos++] = 'G';
+    argc = (argc == 0) ? 2 : argc + 1;
+  }
+
   char **argv = options->argv;
   if (argc != 0) {
     argv = malloc((argc + options->argc) * sizeof(char *));
@@ -125,7 +131,7 @@ int loadELF(LoadOptions *options) {
     for (int i = 0; i < options->argc; i++)
       argv[i] = options->argv[i];
 
-    // Add loader arguments (ELF and IOPRP argument order is important)
+    // Add loader arguments (ELF, IOPRP and GSM argument order is important)
     int argvOffset = argc;
     argc += options->argc;
 
@@ -138,6 +144,10 @@ int loadELF(LoadOptions *options) {
       argv[argc - (argvOffset--)] = ioprpMemArg;
     else if (options->ioprpPath)
       argv[argc - (argvOffset--)] = options->ioprpPath;
+
+    // GSM argument
+    if (options->eGSM)
+      argv[argc - (argvOffset--)] = options->eGSM;
 
     // Loader arguments
     argv[argc - argvOffset] = loaderArg;

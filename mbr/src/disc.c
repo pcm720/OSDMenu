@@ -7,6 +7,7 @@
 #include "hdd.h"
 #include "history.h"
 #include "loader.h"
+#include <ctype.h>
 #include <fcntl.h>
 #include <kernel.h>
 #include <libcdvd.h>
@@ -27,8 +28,10 @@ extern int size_ps1vn_elf;
 
 // Boots PS1 disc using PS1DRV or DKWDRV
 void handlePS1Disc(char *titleID, char *titleVersion);
+// Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
+char *getOSDGSMArgument(char *titleID);
 // Boots PS2 disc directly or via PS2LOGO
-void handlePS2Disc(char *bootPath);
+void handlePS2Disc(char *bootPath, char *eGSMArgument);
 
 // Boots PS1/PS2 game CD/DVD
 int startGameDisc() {
@@ -82,6 +85,8 @@ int startGameDisc() {
     return -ENOENT;
   }
 
+  DPRINTF("====\nSYSTEM.CNF:\nBoot path: %s\nTitle ID: %s\nTitle version: %s\n====\n", bootPath, titleID, titleVersion);
+
   if (titleID[0] != '\0') {
     // Update history file and display game ID
     updateHistoryFile(titleID);
@@ -102,7 +107,7 @@ int startGameDisc() {
     handlePS1Disc(titleID, titleVersion);
     break;
   case ExecType_PS2:
-    handlePS2Disc(bootPath);
+    handlePS2Disc(bootPath, getOSDGSMArgument(titleID));
     break;
   default:
     bootFail("CDROM ERROR: unknown disc type\n");
@@ -113,6 +118,7 @@ int startGameDisc() {
 
 // Boots PS1 disc using PS1DRV or DKWDRV
 void handlePS1Disc(char *titleID, char *titleVersion) {
+  char **argv = malloc(2 * sizeof(char *));
   if (settings.flags & FLAG_USE_DKWDRV) {
     // Mount the partition and make sure DKWDRV ELF exists
     mountPFS(HOSD_DKWDRV_PATH);
@@ -124,7 +130,7 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
       DPRINTF("Starting DKWDRV\n");
       free(titleID);
       free(titleVersion);
-      char *argv[] = {HOSD_DKWDRV_PATH};
+      argv[0] = HOSD_DKWDRV_PATH;
       LoadOptions opts = {
           .argc = 1,
           .argv = argv,
@@ -137,7 +143,8 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
 
   // Else, use PS1DRV
   shutdownDEV9();
-  char *argv[] = {titleID, titleVersion};
+  argv[0] = titleID;
+  argv[1] = titleVersion;
 
   // Set PS1DRV flags
   if (settings.flags & (FLAG_PS1DRV_FAST | FLAG_PS1DRV_SMOOTH)) {
@@ -163,26 +170,84 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
     loadELF(&opts);
     return;
   } else {
-    char *argv[] = {titleID, titleVersion};
     DPRINTF("Starting PS1DRV with title ID %s and version %s\n", argv[0], argv[1]);
     sceSifExitCmd();
     LoadExecPS2("rom0:PS1DRV", 2, argv);
   }
 }
 
-// Boots PS2 disc directly or via PS2LOGO
-void handlePS2Disc(char *bootPath) {
-  shutdownDEV9();
-  if (settings.flags & FLAG_SKIP_PS2_LOGO) {
-    sceSifExitCmd();
-    // Launch PS2 game directly
-    LoadExecPS2(bootPath, 0, NULL);
-  } else {
-    sceSifExitCmd();
-    // Launch PS2 game with rom0:PS2LOGO
-    char *argv[] = {bootPath};
-    LoadExecPS2("rom0:PS2LOGO", 1, argv);
+// Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
+char *getOSDGSMArgument(char *titleID) {
+  DPRINTF("Trying to load the eGSM config file\n");
+  if (mountPFS(HOSD_CONF_PARTITION))
+    return NULL;
+
+  FILE *gsmConf = fopen("pfs0:" HOSDGSM_CONF_PATH, "r");
+  if (!gsmConf)
+    return NULL;
+
+  char *defaultArg = NULL;
+  char *titleArg = NULL;
+  char lineBuffer[30] = {0};
+  char *valuePtr = NULL;
+  while (fgets(lineBuffer, sizeof(lineBuffer), gsmConf)) { // fgets returns NULL if EOF or an error occurs
+    // Find the start of the value
+    valuePtr = strchr(lineBuffer, '=');
+    if (!valuePtr)
+      continue;
+    *valuePtr = '\0';
+
+    // Trim whitespace and terminate the value
+    do {
+      valuePtr++;
+    } while (isspace((int)*valuePtr));
+    valuePtr[strcspn(valuePtr, "\r\n")] = '\0';
+
+    if (!strncmp(lineBuffer, titleID, 11)) {
+      DPRINTF("eGSM will use the title-specific config\n");
+      titleArg = strdup(valuePtr);
+      break;
+    }
+
+    if (!strncmp(lineBuffer, "default", 7))
+      defaultArg = strdup(valuePtr);
   }
+
+  fclose(gsmConf);
+  umountPFS();
+
+  if (titleArg) {
+    // If there's a title-specific argument free the defaultArg and set the defaultArg to titleArg
+    if (defaultArg)
+      free(defaultArg);
+
+    defaultArg = titleArg;
+  }
+
+  return defaultArg;
+}
+
+// Boots PS2 disc directly or via PS2LOGO
+void handlePS2Disc(char *bootPath, char *eGSMArgument) {
+  char **argv = malloc(2 * sizeof(char *));
+  LoadOptions opts = {0};
+  if (settings.flags & FLAG_SKIP_PS2_LOGO) {
+    argv[0] = bootPath;
+    opts.argv = argv;
+    opts.argc = 1;
+  } else {
+    argv[0] = "rom0:PS2LOGO";
+    argv[1] = bootPath;
+    opts.argv = argv;
+    opts.argc = 2;
+  }
+
+  if (eGSMArgument) {
+    DPRINTF("CDROM: Using eGSM to force the video mode: %s\n", eGSMArgument);
+    opts.eGSM = eGSMArgument;
+  }
+
+  loadELF(&opts);
 }
 
 static char dvdPlayerPath[] = "mcX:/BXEXEC-DVDPLAYER/dvdplayer.elf";

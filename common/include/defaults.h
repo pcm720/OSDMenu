@@ -12,6 +12,10 @@
 #define CONF_PATH "mc0:/SYS-CONF/OSDMENU.CNF"
 #endif
 
+#ifndef GSM_CONF_PATH
+#define GSM_CONF_PATH "mc0:/SYS-CONF/OSDGSM.CNF"
+#endif
+
 #ifndef DKWDRV_PATH
 #define DKWDRV_PATH "mc0:/BOOT/DKWDRV.ELF"
 #endif
@@ -39,6 +43,11 @@
 // Path relative to HOSD_CONF_PARTITION root
 #ifndef HOSDMBR_CONF_PATH
 #define HOSDMBR_CONF_PATH "/osdmenu/OSDMBR.CNF"
+#endif
+
+// Path relative to HOSD_CONF_PARTITION root
+#ifndef HOSDGSM_CONF_PATH
+#define HOSDGSM_CONF_PATH "/osdmenu/OSDGSM.CNF"
 #endif
 
 // Full path to DKWDRV, including the partition

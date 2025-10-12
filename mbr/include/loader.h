@@ -18,6 +18,7 @@ typedef struct {
   char *ioprpPath; // Optional: Path to the IOPRP binary. Will be ignored when ioprpMem is set
   void *ioprpMem;  // Optional: Memory location of the IOPRP binary when loading IOPRP image from memory
   int ioprpSize;   // Optional: Size of the IOPRP binary in memory
+  char *eGSM;      // Optional: eGSM argument
 
   int resetIOP;                  // Indicates if IOP reset is needed (1 = yes). If used with IOPRP, it will be ignored
   ShutdownType dev9ShutdownType; // Type of shutdown to perform for DEV9

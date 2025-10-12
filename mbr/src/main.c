@@ -316,9 +316,13 @@ int handleConfigPath(int argc, char *argv[]) {
     return -ENOENT;
 
 start:
-  LoadOptions opts = {
-      .argc = argc,
-      .argv = argv,
-  };
+  LoadOptions opts = {};
+  if (argc > 1 && !strncmp(argv[argc - 1], "-gsm=", 5)) {
+    opts.eGSM = strdup(&argv[argc - 1][5]);
+    argc--;
+  }
+
+  opts.argc = argc;
+  opts.argv = argv;
   return loadELF(&opts);
 }
