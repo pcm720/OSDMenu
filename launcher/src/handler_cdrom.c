@@ -23,6 +23,9 @@
 extern uint8_t ps1vn_elf[];
 extern int size_ps1vn_elf;
 
+// Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
+char *getOSDGSMArgument(char *titleID);
+
 // Launches the disc while displaying the visual game ID and writing to the history file
 int handleCDROM(int argc, char *argv[]) {
   // Parse arguments
@@ -63,14 +66,24 @@ int handleCDROM(int argc, char *argv[]) {
   if (useDKWDRV && !dkwdrvPath)
     dkwdrvPath = strdup(DKWDRV_PATH);
 
-  return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath);
+  return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath, 0);
 }
 
-int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath) {
+int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath, int skipInit) {
   // Always reset IOP to a known state
-  int res = initModules(Device_MemoryCard, 0);
-  if (res)
-    return res;
+  if (!skipInit) {
+    int res = 0;
+#ifdef APA
+    if (globalOptions.deviceHint == Device_PFS)
+      res = initPFS(HOSD_CONF_PARTITION, 0, Device_CDROM);
+    else
+#endif
+      res = initModules(Device_CDROM, 0);
+    if (res) {
+      msg("CDROM ERROR: Failed to initialize modules\n");
+      return res;
+    }
+  }
 
   if (!sceCdInit(SCECdINIT)) {
     msg("CDROM ERROR: Failed to initialize libcdvd\n");
@@ -123,6 +136,14 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   }
 
   if (titleID[0] != '\0') {
+    // Apply eGSM arguments when launching PS2 discs
+    if (discType == ExecType_PS2) {
+      if (!globalOptions.gsmArgument)
+        globalOptions.gsmArgument = getOSDGSMArgument(titleID);
+      if (globalOptions.gsmArgument)
+        DPRINTF("CDROM: Using eGSM to force the video mode: %s\n", globalOptions.gsmArgument);
+    }
+
     // Update history file and display game ID
     updateHistoryFile(titleID);
     if (displayGameID)
@@ -135,6 +156,8 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
     strcpy(titleVersion, "???");
 
   sceCdInit(SCECdEXIT);
+  if (globalOptions.deviceHint == Device_PFS)
+    deinitPFS();
 
   switch (discType) {
   case ExecType_PS1:
@@ -159,7 +182,6 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
 
       if (ps1drvFlags & CDROM_PS1_VN) {
         DPRINTF("Starting PS1DRV via PS1VModeNeg with title ID %s and version %s\n", argv[0], argv[1]);
-        sceSifExitCmd();
         LoadEmbeddedELF(ps1vn_elf, 2, argv);
       } else {
         char *argv[] = {titleID, titleVersion};
@@ -176,14 +198,13 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       if (titleID[0] != '\0')
         applyXPARAM(titleID);
 
-      sceSifExitCmd();
       // Launch PS2 game directly
-      LoadExecPS2(bootPath, 0, NULL);
-    } else {
-      sceSifExitCmd();
-      // Launch PS2 game with rom0:PS2LOGO
       char *argv[] = {bootPath};
-      LoadExecPS2("rom0:PS2LOGO", 1, argv);
+      LoadELFFromFile(1, argv);
+    } else {
+      // Launch PS2 game with rom0:PS2LOGO
+      char *argv[] = {"rom0:PS2LOGO", bootPath};
+      LoadELFFromFile(2, argv);
     }
     break;
   default:
@@ -191,4 +212,67 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   }
 
   return -1;
+}
+
+// Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
+char *getOSDGSMArgument(char *titleID) {
+  DPRINTF("CDROM: Trying to load the eGSM config file\n");
+  FILE *gsmConf = NULL;
+#ifdef APA
+  if (globalOptions.deviceHint == Device_PFS)
+    // Check the internal HDD for the eGSM config file
+    gsmConf = fopen(PFS_MOUNTPOINT HOSDGSM_CONF_PATH, "r");
+#endif
+  if (!gsmConf) {
+    // Check both for memory cards for the eGSM config file
+    char cnfPath[sizeof(GSM_CONF_PATH) + 1];
+    strcpy(cnfPath, GSM_CONF_PATH);
+    cnfPath[2] = globalOptions.mcHint + '0';
+    gsmConf = fopen(cnfPath, "r");
+    if (!gsmConf) {
+      cnfPath[2] = (globalOptions.mcHint == 1) ? '0' : '1';
+      gsmConf = fopen(cnfPath, "r");
+    }
+  }
+  if (!gsmConf)
+    return NULL;
+
+  char *defaultArg = NULL;
+  char *titleArg = NULL;
+  char lineBuffer[30] = {0};
+  char *valuePtr = NULL;
+  while (fgets(lineBuffer, sizeof(lineBuffer), gsmConf)) { // fgets returns NULL if EOF or an error occurs
+    // Find the start of the value
+    valuePtr = strchr(lineBuffer, '=');
+    if (!valuePtr)
+      continue;
+    *valuePtr = '\0';
+
+    // Trim whitespace and terminate the value
+    do {
+      valuePtr++;
+    } while (isspace((int)*valuePtr));
+    valuePtr[strcspn(valuePtr, "\r\n")] = '\0';
+
+    if (!strncmp(lineBuffer, titleID, 11)) {
+      DPRINTF("CDROM: eGSM will use the title-specific config\n");
+      titleArg = strdup(valuePtr);
+      break;
+    }
+
+    if (!strncmp(lineBuffer, "default", 7))
+      defaultArg = strdup(valuePtr);
+  }
+
+  fclose(gsmConf);
+
+  if (titleArg) {
+    // If there's a title-specific argument free the defaultArg and set the defaultArg to titleArg
+    if (defaultArg)
+      free(defaultArg);
+
+    defaultArg = titleArg;
+  }
+
+  return defaultArg;
 }

@@ -173,7 +173,7 @@ static DeviceType currentDevice = Device_None;
 
 // Initializes IOP modules for given device type
 int initModules(DeviceType device, int clearSPU) {
-  if (currentDevice == device)
+  if (currentDevice & device)
     // Do nothing if the drivers are already loaded
     return 0;
 
@@ -268,11 +268,7 @@ void shutdownPS2() {
 #ifdef CDROM
 // Sets IOP emulation flags for Deckard consoles
 // Needs initModules(Device_Basic, 0) to be called first
-void applyXPARAM(char *gameID) {
-  sceSifInitRpc(0);
-  SifExecModuleBuffer(xparam_irx, size_xparam_irx, strlen(gameID) + 1, gameID, NULL);
-  sceSifExitRpc();
-}
+void applyXPARAM(char *gameID) { SifExecModuleBuffer(xparam_irx, size_xparam_irx, strlen(gameID) + 1, gameID, NULL); }
 #endif
 
 // Argument functions

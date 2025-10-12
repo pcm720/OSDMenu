@@ -26,6 +26,15 @@ typedef enum {
   Device_ROM = (1 << 10),
 } DeviceType;
 
+// Defines global launcher options
+typedef struct {
+  DeviceType deviceHint; // The device the launcher has been launched from. Only HDD and memory cards are supported
+  int mcHint;            // Memory card number when the deviceHint is Device_MemoryCard
+  char *gsmArgument;     // eGSM argument
+} launcherOptions;
+
+extern launcherOptions globalOptions;
+
 // A simple linked list for paths and arguments
 typedef struct linkedStr {
   char *str;
@@ -57,7 +66,7 @@ linkedStr *addStr(linkedStr *lstr, char *str);
 void freeLinkedStr(linkedStr *lstr);
 
 // Initializes APA-formatted HDD and mounts the partition
-int initPFS(char *path, int clearSPU);
+int initPFS(char *path, int clearSPU, DeviceType additionalDevices);
 
 // Mounts the partition specified in path
 int mountPFS(char *path);

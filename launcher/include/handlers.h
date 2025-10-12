@@ -16,9 +16,9 @@ int handleBDM(DeviceType device, int argc, char *argv[]);
 #define CDROM_PS1_VN 0xFF00
 
 int handleCDROM(int argc, char *argv[]);
-int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath);
+int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath, int skipInit);
 
-// handler_fmcb.c
+// handler_osdm.c
 //
 // Loads ELF specified in OSDMENU.CNF on the memory card or on the APA partition specified in HOSD_CONF_PARTITION
 // APA-formatted HDD handling requires the path to start with pfs...

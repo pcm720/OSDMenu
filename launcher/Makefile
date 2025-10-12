@@ -41,7 +41,7 @@ ELF_FILES += loader.elf
 ifeq ($(FMCB), 1)
  CDROM = 1
  EE_CFLAGS += -DFMCB
- EE_OBJS += handler_fmcb.o
+ EE_OBJS += handler_osdm.o
  IRX_FILES += poweroff.irx
 endif
 

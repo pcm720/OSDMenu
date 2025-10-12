@@ -53,8 +53,10 @@ int handleOSDM(int argc, char *argv[]) {
     file = fmemopen((void *)target, targetSize, "r");
   } else {
     if (target == 9) {
+      globalOptions.deviceHint = Device_PFS;
+
       // Handle HOSDMenu launch
-      if ((res = initPFS(HOSD_CONF_PARTITION, 1)))
+      if ((res = initPFS(HOSD_CONF_PARTITION, 1, Device_CDROM)))
         return res;
 
       // Build path to OSDMENU.CNF
@@ -62,7 +64,7 @@ int handleOSDM(int argc, char *argv[]) {
       strcat(cnfPath, HOSD_CONF_PATH);
     } else if (target < 2) {
       // Handle OSDMenu launch
-      int res = initModules(Device_MemoryCard, 1);
+      int res = initModules(Device_CDROM, 1);
       if (res)
         return res;
 
@@ -73,8 +75,11 @@ int handleOSDM(int argc, char *argv[]) {
       if (argv[0][4] == '1') {
         // If path is osdm1:, try to get config from mc1 first
         cnfPath[2] = '1';
-        if (tryFile(cnfPath)) // If file is not found, revert to mc0
+        globalOptions.mcHint = 1;
+        if (tryFile(cnfPath)) { // If file is not found, revert to mc0
           cnfPath[2] = '0';
+          globalOptions.mcHint = 0;
+        }
       }
     } else {
       msg("OSDM: unexpected device index %d\n", target);
@@ -225,7 +230,7 @@ int handleOSDM(int argc, char *argv[]) {
       free(dkwdrvPath);
       dkwdrvPath = NULL;
     }
-    return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath);
+    return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath, 1);
   }
 
   if (dkwdrvPath)
