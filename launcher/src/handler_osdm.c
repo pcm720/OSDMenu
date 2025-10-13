@@ -71,9 +71,9 @@ int handleOSDM(int argc, char *argv[]) {
       // Build path to OSDMENU.CNF
       strcpy(cnfPath, CONF_PATH);
 
-      // Get memory card slot from argv[0] (osdm0/1)
-      if (argv[0][4] == '1') {
-        // If path is osdm1:, try to get config from mc1 first
+      // Get memory card slot from argv[0] (osdm:d0/d1)
+      if (target == 1) {
+        // If path is osdm:d1:, try to get config from mc1 first
         cnfPath[2] = '1';
         globalOptions.mcHint = 1;
         if (tryFile(cnfPath)) { // If file is not found, revert to mc0
