@@ -327,3 +327,17 @@ int startDVDVideo() {
   LoadExecPS2("moduleload2 rom1:UDNL rom1:DVDCNF", 3, argv);
   return -1;
 }
+
+// Executes the sceCdAutoAdjustCtrl call
+void cdAutoAdjust(int mode) {
+  if (!sceCdInit(SCECdINIT))
+    return;
+
+  int res;
+  uint32_t result;
+  do {
+    res = sceCdAutoAdjustCtrl(mode, (u32 *)&result);
+  } while ((res == 0) && (result & 0x80) != 0);
+
+  sceCdInit(SCECdEXIT);
+}

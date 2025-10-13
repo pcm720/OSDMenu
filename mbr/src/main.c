@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
     DPRINTF("WARN: Failed to load the config file: %d, will use defaults\n", res);
 
   // Handle OSD arguments when there are any additional arguments when running as rom0:MBRBOOT or rom0:HDDBOOT
-  if ((argc > 1) && (!strcmp(argv[0], "rom0:MBRBOOT") || !strcmp(argv[0], "rom0:HDDBOOT")))
+  if ((argc > 1) && (!strcmp(argv[0], "rom0:MBRBOOT") || !strcmp(argv[0], "rom0:HDDBOOT")) && (strlen(argv[1]) > 0))
     return handleOSDArgs(argc, argv);
 
   // Else, read controller inputs
@@ -183,9 +183,48 @@ TriggerType readPad() {
   return t;
 }
 
+// Handles the PSBBN Opt00000000 argument.
+// It seems this argument is only used to pass the mode option to the sceCdAutoAdjustCtrl call.
+void handleOpt(char *arg) {
+  int mode = -1;
+  int res = sscanf(arg, "Opt%x", &mode);
+  if (res == 1) {
+    mode = mode >> 8 & 0x7;
+    switch (mode) {
+    case 7:
+      mode = 3;
+      break;
+    case 6:
+      mode = 2;
+      break;
+    case 5:
+      mode = 1;
+      break;
+    case 4:
+      mode = 0;
+      break;
+    default:
+      mode = -1;
+    }
+  }
+
+  if (mode != -1) {
+    DPRINTF("Calling the sceCdAutoAdjustCtrl with mode %d\n", mode);
+    cdAutoAdjust(mode);
+  }
+}
+
 // Handles arguments supported by the HDD-OSD/PSBBN MBR
 int handleOSDArgs(int argc, char *argv[]) {
   int res = 0;
+
+  if (!strncmp(argv[1], "Opt", 3)) {
+    // PSBBN may pass the "Opt%x" argument as argv[1], with the subsequent arguments containing the actual args.
+    handleOpt(argv[1]);
+    argc--;
+    argv[1] = argv[0];
+    argv = &argv[1];
+  }
 
   if (!strcmp(argv[1], "BootError") || !strcmp(argv[1], "BootClock") || !strcmp(argv[1], "BootBrowser") || !strcmp(argv[1], "BootCdPlayer") ||
       !strcmp(argv[1], "BootOpening") || !strcmp(argv[1], "BootWarning") || !strcmp(argv[1], "BootIllegal") || !strcmp(argv[1], "Initialize")) {
@@ -209,7 +248,9 @@ int handleOSDArgs(int argc, char *argv[]) {
   else if (!strcmp(argv[1], "DnasPs2Hdd"))
     startDNAS(argc, argv);
 
-  msg("Failed to execute %s: %d\n", argv[1], res);
+  msg("Failed to execute %s: %d\nAdditional information:\n", argv[1], res);
+  for (int i = 0; i < argc; i++)
+    msg("\targv[%i] = %s\n", i, argv[i]);
   argc--;
   argv[1] = "BootError";
   bootFailWithArgs("Failed to handle the argument\n", argc, &argv[1]);

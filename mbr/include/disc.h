@@ -10,4 +10,7 @@ void handlePS2Disc(char *bootPath);
 // Starts the DVD Player from a memory card or ROM
 int startDVDVideo();
 
+// Executes the sceCdAutoAdjustCtrl call
+void cdAutoAdjust(int mode);
+
 #endif
