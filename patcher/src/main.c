@@ -54,7 +54,6 @@ int main(int argc, char *argv[]) {
   // Read config file
   loadConfig();
 
-#ifdef ENABLE_SPLASH
   GSVideoMode vmode = GS_MODE_NTSC; // Use NTSC by default
 
   // Respect preferred mode
@@ -65,7 +64,11 @@ int main(int argc, char *argv[]) {
   } else if (settings.videoMode == GS_MODE_PAL)
     vmode = GS_MODE_PAL;
 
+#ifdef ENABLE_SPLASH
   gsDisplaySplash(vmode);
+#else
+  gsInit(vmode);
+  gsClearScreen();
 #endif
 
   int fd = fioOpen("rom0:MBROWS", FIO_O_RDONLY);
