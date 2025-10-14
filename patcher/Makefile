@@ -14,6 +14,8 @@ GIT_VERSION := $(shell git describe --always --dirty --tags --exclude nightly)
 
 EE_BIN_PKD = patcher.elf
 EE_BIN = patcher_unc.elf
+EE_BIN_KELF = PATCHER.KELF
+KELF_TYPE ?= fmcb
 
 EE_INCS = -I../common/include -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include
 
@@ -81,9 +83,13 @@ $(EE_BIN_PKD): $(EE_BIN)
 clean:
 	$(MAKE) -C ../launcher clean
 	$(MAKE) -C iop/atad clean
-	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD)
+	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD) $(EE_BIN_KELF)
 
 BIN2C = $(PS2SDK)/bin/bin2c
+
+# Produces a KELF payload for OSD system update
+kelf: $(EE_BIN_PKD)
+	../utils/kelf/sign.sh $(KELF_TYPE) $(EE_BIN_PKD) $(EE_BIN_KELF)
 
 # IRX files
 %_irx.c:
