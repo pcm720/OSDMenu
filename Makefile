@@ -6,20 +6,13 @@ hosdmenu: hosdmenu.elf
 osdmbr: osdmbr.elf osdmbr-installer.elf
 
 release: clean osdmenu hosdmenu osdmbr
-	mkdir -p release/kelf
-	mv osdmenu.elf release/
-	mv hosdmenu.elf release
-	mv SYS_OSDMENU.psu release/
-	cp -r examples release/
+	mkdir -p release/
 	cp README.md release/
-	cp mbr/README.md osdmbr/
-	mv osdmbr release/
-	mv OSDMENU.XLF release/kelf
-	mv release/osdmbr/OSDMBR.XLF release/kelf
+	cp mbr/README.md release/osdmbr/
+	cp -r examples release/
 
 clean:
-	rm -f osdmenu.elf hosdmenu.elf
-	rm -rf osdmbr release
+	rm -rf release
 	$(MAKE) -C launcher clean
 	$(MAKE) -C patcher clean
 	$(MAKE) -C mbr clean
@@ -29,27 +22,33 @@ clean:
 osdmenu.elf:
 	$(MAKE) -C patcher clean
 	$(MAKE) -C patcher kelf
-	cp patcher/patcher.elf osdmenu.elf
-	cp patcher/PATCHER.XLF OSDMENU.XLF
-	python3 utils/psu/makepsu.py SYS_OSDMENU.psu SYS_OSDMENU utils/psu/res osdmenu.elf
+	mkdir -p release/kelf
+# OSDMenu + PSU
+	cp patcher/patcher.elf release/osdmenu.elf
+	python3 utils/psu/makepsu.py release/SYS_OSDMENU.psu SYS_OSDMENU utils/psu/res release/osdmenu.elf
+# OSDMenu KELF
+	cp patcher/PATCHER.XLF release/kelf/OSDMENU.XLF
+	cp -r utils/icn/* release/kelf
 
 # HOSDMenu
 hosdmenu.elf:
 	$(MAKE) -C patcher clean
 	$(MAKE) -C patcher HOSD=1
-	cp patcher/patcher.elf hosdmenu.elf
+	mkdir -p release/
+	cp patcher/patcher.elf release/hosdmenu.elf
 
 # OSDMenu MBR
 osdmbr.elf:
 	$(MAKE) -C mbr clean
 	$(MAKE) -C mbr kelf
-	mkdir osdmbr
-	cp mbr/osdmbr.elf osdmbr/
-	cp mbr/osdmbr.bin osdmbr/
-	cp mbr/OSDMBR.XLF osdmbr/
+	mkdir -p release/osdmbr/payloads
+	cp mbr/OSDMBR.XLF release/osdmbr/
+	cp mbr/osdmbr.elf release/osdmbr/payloads
+	cp mbr/osdmbr.bin release/osdmbr/payloads
 
 # OSDMenu MBR Installer
 osdmbr-installer.elf:
 	$(MAKE) -C utils/installer
-	cp utils/installer/osdmbr-installer.elf osdmbr/
+	mkdir -p release/osdmbr/
+	cp utils/installer/osdmbr-installer.elf release/osdmbr/
 

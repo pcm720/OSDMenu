@@ -10,6 +10,17 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
 2. Edit `mc?:/SYS-CONF/OSDMENU.CNF` [as you see fit](#osdmenucnf)
 3. Configure PS2BBL to launch `mc?:/BOOT/osdmenu.elf` or launch it manually from anywhere
 
+### OSDMenu as the System Update
+
+You can install OSDMenu as the System Update instead of FMCB or PS2BBL to get faster boot times.  
+The release archive contains the following files:
+  - `kelf/OSDMENU.XLF` — encrypted and signed OSDMenu executable to be installed as `osd???.elf` or `osdmain.elf`
+  - `kelf/osdmenu.icn` — OSDMenu icon for the PS2 Browser
+  - `kelf/icon.sys` — icon manifest for the PS2 Browser
+
+To install OSDMenu as the System Update, you can use the [KELFBinder](https://github.com/israpps/KELFBinder).  
+Consult the KELFBinder documentation on how to use the KELFBinder to install your own payloads.
+
 ### HOSDMenu — OSDMenu for HDD OSD
 1. Install HDD OSD 1.10U  
    Make sure HDD OSD binaries are installed into `hdd0:__system/osd100/` and `hosdsys.elf`/`OSDSYS_A.XLF` is present.  
@@ -23,7 +34,17 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
    Copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` _(optional)_ 
 3. Edit `hdd0:__sysconf/osdmenu/OSDMENU.CNF` [as you see fit](#osdmenucnf)
 4. Configure your bootloader to launch `hdd0:__system/osdmenu/hosdmenu.elf` or launch it manually from anywhere  
-   You can also install OSDMenu MBR as `__mbr` payload to get quicker boot times, see the MBR [README](mbr/README.md) for more details.  
+
+### OSDMenu MBR
+
+You can install OSDMenu MBR into the `__mbr` partition of your HDD for faster HOSDMenu boot times and improved PSBBN support.  
+The release archive contains the following files:
+  - `osdmbr/OSDMBR.XLF` — encrypted and signed OSDMenu MBR executable to be installed as `__mbr`
+  - `osdmbr/osdmbr-installer.elf` — installer that will automatically install the MBR, enable the MBR boot and copy the example configuration file
+  - `osdmbr/payloads/` — encrypted binaries for advanced users
+
+See the MBR [README](mbr/README.md) for more details.  
+
 
 ## Key differences from FMCB 1.8:
 - All initialization code is removed in favor of using a separate bootloader to start the patcher (e.g. [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader))
