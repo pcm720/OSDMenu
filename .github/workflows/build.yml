@@ -18,9 +18,11 @@ jobs:
 
     - name: Compile project
       id: make
+      env:
+          KELFSERVER_API_ADDRESS: ${{ secrets.KELFSERVER_API_ADDRESS }}
+          KELFSERVER_API_KEY: ${{ secrets.KELFSERVER_API_KEY }}
       run: |
         make
-        python3 utils/psu/makepsu.py SYS_OSDMENU.psu SYS_OSDMENU utils/psu/res osdmenu.elf
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -28,11 +30,7 @@ jobs:
       with:
         name: artifacts
         path: |
-          examples/
-          osdmenu.elf
-          hosdmenu.elf
-          README.md
-          SYS_OSDMENU.psu
+          release/**
 
   release:
     needs: [build]

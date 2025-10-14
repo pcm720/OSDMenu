@@ -1,7 +1,9 @@
 obj/
 .vscode/settings.json
 *.elf
+*.kelf
 *.ELF
+*.KELF
 *.o
 *.irx
 *.yaml
@@ -12,6 +14,7 @@ obj/
 *.cnf
 *.bin
 kelftool/
+PS2KEYS.dat
 # Created by https://www.toptal.com/developers/gitignore/api/macos,windows,linux
 
 ### Linux ###
