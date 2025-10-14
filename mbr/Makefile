@@ -3,7 +3,7 @@ ENABLE_PRINTF ?= 0
 
 EE_BIN = osdmbr.elf
 EE_BIN_RAW = osdmbr.bin
-EE_BIN_KELF = OSDMBR.KELF
+EE_BIN_KELF = OSDMBR.XLF
 
 EE_LINKFILE = linkfile
 

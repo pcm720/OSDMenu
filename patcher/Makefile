@@ -14,7 +14,7 @@ GIT_VERSION := $(shell git describe --always --dirty --tags --exclude nightly)
 
 EE_BIN_PKD = patcher.elf
 EE_BIN = patcher_unc.elf
-EE_BIN_KELF = PATCHER.KELF
+EE_BIN_KELF = PATCHER.XLF
 KELF_TYPE ?= fmcb
 
 EE_INCS = -I../common/include -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include

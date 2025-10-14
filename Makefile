@@ -14,8 +14,8 @@ release: clean osdmenu hosdmenu osdmbr
 	cp README.md release/
 	cp mbr/README.md osdmbr/
 	mv osdmbr release/
-	mv OSDMENU.KELF release/kelf
-	mv release/osdmbr/OSDMBR.KELF release/kelf
+	mv OSDMENU.XLF release/kelf
+	mv release/osdmbr/OSDMBR.XLF release/kelf
 
 clean:
 	rm -f osdmenu.elf hosdmenu.elf
@@ -30,7 +30,7 @@ osdmenu.elf:
 	$(MAKE) -C patcher clean
 	$(MAKE) -C patcher kelf
 	cp patcher/patcher.elf osdmenu.elf
-	cp patcher/PATCHER.KELF OSDMENU.KELF
+	cp patcher/PATCHER.XLF OSDMENU.XLF
 	python3 utils/psu/makepsu.py SYS_OSDMENU.psu SYS_OSDMENU utils/psu/res osdmenu.elf
 
 # HOSDMenu
@@ -46,7 +46,7 @@ osdmbr.elf:
 	mkdir osdmbr
 	cp mbr/osdmbr.elf osdmbr/
 	cp mbr/osdmbr.bin osdmbr/
-	cp mbr/OSDMBR.KELF osdmbr/
+	cp mbr/OSDMBR.XLF osdmbr/
 
 # OSDMenu MBR Installer
 osdmbr-installer.elf:

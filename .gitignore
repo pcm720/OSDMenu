@@ -3,7 +3,7 @@ obj/
 *.elf
 *.kelf
 *.ELF
-*.KELF
+*.XLF
 *.o
 *.irx
 *.yaml

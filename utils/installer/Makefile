@@ -50,12 +50,12 @@ BIN2C = $(PS2SDK)/bin/bin2c
 	$(BIN2C) $(PS2SDK)/iop/irx/ps2hdd-osd.irx $@ ps2hdd_irx
 
 # Payload to inject
-%OSDMBR.KELF:
+%OSDMBR.XLF:
 	$(MAKE) -C ../../mbr kelf
 
-%payload_bin.c: ../../mbr/OSDMBR.KELF
+%payload_bin.c: ../../mbr/OSDMBR.XLF
 	@mkdir -p res
-	$(BIN2C) ../../mbr/OSDMBR.KELF $@ payload_bin
+	$(BIN2C) ../../mbr/OSDMBR.XLF $@ payload_bin
 
 %osdmbrcnf_bin.c:
 	$(BIN2C) config/osdmbr.cnf $@ osdmbrcnf_bin
