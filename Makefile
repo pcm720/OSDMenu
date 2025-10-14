@@ -44,7 +44,9 @@ osdmbr.elf:
 	$(MAKE) -C mbr clean
 	$(MAKE) -C mbr kelf
 	mkdir osdmbr
-	cp mbr/{osdmbr.elf,osdmbr.bin,OSDMBR.KELF} osdmbr/
+	cp mbr/osdmbr.elf osdmbr/
+	cp mbr/osdmbr.bin osdmbr/
+	cp mbr/OSDMBR.KELF osdmbr/
 
 # OSDMenu MBR Installer
 osdmbr-installer.elf:

@@ -89,7 +89,7 @@ BIN2C = $(PS2SDK)/bin/bin2c
 
 # Produces a KELF payload for OSD system update
 kelf: $(EE_BIN_PKD)
-	../utils/kelf/sign.sh $(KELF_TYPE) $(EE_BIN_PKD) $(EE_BIN_KELF)
+	python3 ../utils/kelf/sign.py $(KELF_TYPE) $(EE_BIN_PKD) $(EE_BIN_KELF)
 
 # IRX files
 %_irx.c:

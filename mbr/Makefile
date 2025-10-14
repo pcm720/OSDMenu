@@ -51,7 +51,7 @@ clean:
 
 # Produces KELF payload for __mbr
 kelf: $(EE_BIN_RAW)
-	../utils/kelf/sign.sh mbr $(EE_BIN_RAW) $(EE_BIN_KELF)
+	python3 ../utils/kelf/sign.py mbr $(EE_BIN_RAW) $(EE_BIN_KELF)
 
 # IRX files
 %_irx.c:
