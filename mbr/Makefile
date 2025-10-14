@@ -1,10 +1,9 @@
 # If enabled, will print additional debug text to stdout
 ENABLE_PRINTF ?= 0
 
-PAYLOAD ?= patcher.elf
-
 EE_BIN = osdmbr.elf
-EE_BIN_RAW = mbr.bin
+EE_BIN_RAW = osdmbr.bin
+EE_BIN_KELF = OSDMBR.KELF
 
 EE_LINKFILE = linkfile
 
@@ -48,7 +47,11 @@ all: $(EE_BIN_RAW)
 clean:
 	$(MAKE) -C ../utils/loader clean
 	$(MAKE) -C ../utils/ps1vn clean
-	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_RAW)
+	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_RAW) $(EE_BIN_KELF)
+
+# Produces KELF payload for __mbr
+kelf: $(EE_BIN_RAW)
+	../utils/kelf/sign.sh mbr $(EE_BIN_RAW) $(EE_BIN_KELF)
 
 # IRX files
 %_irx.c:
