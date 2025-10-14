@@ -14,6 +14,7 @@ obj/
 *.cnf
 *.bin
 kelftool/
+release/
 PS2KEYS.dat
 # Created by https://www.toptal.com/developers/gitignore/api/macos,windows,linux
 
