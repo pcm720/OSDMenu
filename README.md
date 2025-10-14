@@ -46,7 +46,7 @@ Due to memory limitations and the need to support more devices, the original FMC
 
 This is a slimmed-down and refactored version of OSDSYS patches from FMCB 1.8 for modern PS2SDK with some new patches sprinkled in.
 It patches the OSDSYS/HDD OSD binary and applies the following patches:
-- Custom OSDSYS menu with up to 250 entries
+- Custom OSDSYS menu with up to 200 entries
 - Infinite scrolling
 - Custom button prompts and menu header
 - Automatic disc launch bypass
