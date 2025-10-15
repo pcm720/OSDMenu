@@ -163,11 +163,11 @@ int main(int argc, char *argv[]) {
         // ELF loaded into memory
         elfPath = argv[argc - 2];
         argc--;
+        break;
       case 'G':
         // Force video mode via eGSM
         eGSMFlags = parseGSMFlags(argv[argc - 2]);
         argc--;
-        break;
         break;
       default:
       }
