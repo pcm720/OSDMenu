@@ -11,6 +11,7 @@ typedef enum {
   FLAG_PS1DRV_SMOOTH = (1 << 4),  // If set, will force PS1DRV texture smoothing
   FLAG_PS1DRV_USE_VN = (1 << 5),  // If set, run PS1DRV via the PS1DRV Video Mode Negator
   FLAG_PREFER_BBN = (1 << 6),     // If set, will attempt to run PSBBN instead of HOSDSYS on OSD errors
+  FLAG_APP_GAMEID = (1 << 7),     // If set, the visual Game ID will be displayed for all applications launched by the OSDMenu MBR
 } Flags;
 
 typedef enum {

@@ -160,7 +160,6 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
 
   if (settings.flags & FLAG_PS1DRV_USE_VN) {
     DPRINTF("Starting PS1DRV via PS1VModeNeg with title ID %s and version %s\n", argv[0], argv[1]);
-    sceSifExitCmd();
     LoadOptions opts = {
         .elfMem = ps1vn_elf,
         .elfSize = size_ps1vn_elf,

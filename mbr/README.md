@@ -34,6 +34,7 @@ See the [OSDMBR.CNF](../examples/OSDMBR.CNF) example configuration file for hint
 17. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
 18. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
 19. `prefer_bbn` — makes the MBR to fallback to PSBBN instead of HOSDMenu/HDD-OSD on errors
+20. `app_gameid` — if enabled, the visual Game ID will be displayed for all applications launched by the OSDMenu MBR
 
 Multiple paths and arguments are supported.
 

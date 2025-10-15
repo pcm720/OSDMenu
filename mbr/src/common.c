@@ -1,6 +1,7 @@
 #include "config.h"
 #include "crypto.h"
 #include "defaults.h"
+#include "game_id.h"
 #include "hdd.h"
 #include "loader.h"
 #include <debug.h>
@@ -93,6 +94,9 @@ int startHOSDSYS(int argc, char *argv[]) {
   }
 
   // Boot HOSDSYS
+  if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID))
+    gsDisplayGameID("Browser 2.0");
+
   LoadOptions opts = {
       .argc = argc,
       .argv = argv,
@@ -118,6 +122,9 @@ void execOSD(int argc, char *argv[]) {
 
   if ((settings.flags & FLAG_PREFER_BBN) && (checkFile("pfs0:" OSDBOOT_PFS_PATH) >= 0)) {
     umountPFS();
+
+    if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID))
+      gsDisplayGameID("SCPN_601.60");
 
     // Start PSBBN
     nargv[0] = SYSTEM_PARTITION ":pfs:" OSDBOOT_PFS_PATH;

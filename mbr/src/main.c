@@ -4,9 +4,11 @@
 #include "defaults.h"
 #include "disc.h"
 #include "dprintf.h"
+#include "game_id.h"
 #include "hdd.h"
 #include "init.h"
 #include "loader.h"
+#include <ctype.h>
 #include <debug.h>
 #include <kernel.h>
 #include <libpad.h>
@@ -141,14 +143,21 @@ TriggerType readPad() {
   struct padButtonStatus buttons;
   static char padBuf[256] __attribute__((aligned(64)));
 
-  padInit(0);
-  padPortOpen(0, 0, padBuf);
+  if (padInit(0) != 1)
+    return TRIGGER_TYPE_AUTO;
+  if (padPortOpen(0, 0, padBuf)) {
+    padEnd();
+    return TRIGGER_TYPE_AUTO;
+  }
   int padState = 0;
   while ((padState = padGetState(0, 0))) {
     if (padState == PAD_STATE_STABLE)
       break;
-    if (padState == PAD_STATE_DISCONN)
+    if (padState == PAD_STATE_DISCONN) {
+      padPortClose(0, 0);
+      padEnd();
       return TRIGGER_TYPE_AUTO;
+    }
   }
 
   int retries = 10;
@@ -257,6 +266,35 @@ int handleOSDArgs(int argc, char *argv[]) {
   return -1;
 }
 
+// Attempts to extract the title ID from path
+void extractELFName(char *path, char *dst) {
+  // Try to extract the ELF name
+  char *ext = strstr(path, ".ELF");
+  if (!ext && !(ext = strstr(path, ".elf")))
+    return;
+
+  // Find the start of the ELF name
+  char *elfName = strrchr(path, '/');
+  if (!elfName)
+    return;
+
+  // Advance to point to the actual name
+  elfName++;
+  // Temporarily terminate the string at extension,
+  // copy the first 11 characters and restore the '.'
+  *ext = '\0';
+  strncpy(dst, elfName, 11);
+  *ext = '.';
+
+  // Remove whitespace at the end
+  for (int i = 10; i >= 0; i--) {
+    if (isspace((int)dst[i])) {
+      dst[i] = '\0';
+      break;
+    }
+  }
+}
+
 // Starts the executable pointed to by argv[0]
 // Supports the following paths:
 // $HOSDSYS — will run HOSDMenu or HDD-OSD. Make sure argv has space for the additional -mbrboot argument.
@@ -283,6 +321,7 @@ int handleConfigPath(int argc, char *argv[]) {
     return startHOSDSYS(argc, argv);
   }
 
+  char titleID[12] = {0};
   if (!strcmp(argv[0], "$PSBBN")) {
     // Start PSBBN osdboot.elf
     if (mountPFS(SYSTEM_PARTITION))
@@ -296,6 +335,10 @@ int handleConfigPath(int argc, char *argv[]) {
     umountPFS();
 
     argv[0] = SYSTEM_PARTITION ":pfs:" OSDBOOT_PFS_PATH;
+
+    if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID))
+      strcpy(titleID, "SCPN_601.60");
+
     goto start;
   }
 
@@ -357,6 +400,13 @@ int handleConfigPath(int argc, char *argv[]) {
     return -ENOENT;
 
 start:
+  if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID)) {
+    if (titleID[0] == '\0')
+      extractELFName(argv[0], titleID);
+    if (titleID[0] != '\0')
+      gsDisplayGameID(titleID);
+  }
+
   LoadOptions opts = {};
   if (argc > 1 && !strncmp(argv[argc - 1], "-gsm=", 5)) {
     opts.eGSM = strdup(&argv[argc - 1][5]);

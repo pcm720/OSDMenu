@@ -308,6 +308,10 @@ void updateLaunchHistory(char *bootPath) {
         titleID[8] = '.';
         goto update;
       }
+
+      if (settings.flags & FLAG_APP_GAMEID)
+        // Display game ID even if the title ID is invalid
+        goto gameid;
     }
   }
 
@@ -318,6 +322,7 @@ fail:
 update:
   DPRINTF("Title ID is %s\n", titleID);
   updateHistoryFile(titleID);
+gameid:
   if (!(settings.flags & FLAG_DISABLE_GAMEID))
     gsDisplayGameID(titleID);
   return;

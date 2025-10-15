@@ -207,6 +207,13 @@ int loadConfig() {
         settings.flags &= ~(FLAG_PREFER_BBN);
       continue;
     }
+    if (!strncmp(lineBuffer, "app_gameid", 10)) {
+      if (atoi(valuePtr))
+        settings.flags |= FLAG_APP_GAMEID;
+      else
+        settings.flags &= ~(FLAG_APP_GAMEID);
+      continue;
+    }
   }
   fclose(file);
   umountPFS();
