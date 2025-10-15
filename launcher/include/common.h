@@ -74,4 +74,8 @@ int mountPFS(char *path);
 // Unmounts the partition
 void deinitPFS();
 
+// Parses the launcher argv for global flags.
+// Returns the new argc
+int parseGlobalFlags(int argc, char *argv[]);
+
 #endif

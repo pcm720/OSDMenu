@@ -27,10 +27,7 @@ int main(int argc, char *argv[]) {
   if (!strncmp(argv[0], "pfs", 3) || !strncmp(argv[0], "hdd", 3))
     globalOptions.deviceHint = Device_PFS;
 
-  if (argc > 1 && !strncmp(argv[argc - 1], "-gsm=", 5)) {
-    globalOptions.gsmArgument = strdup(&argv[argc - 1][5]);
-    argc--;
-  }
+  argc = parseGlobalFlags(argc, argv);
 
 #ifdef FMCB
   if (!strncmp("osdm", argv[0], 4))

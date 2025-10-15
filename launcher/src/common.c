@@ -316,3 +316,16 @@ void deinitPFS() {
   fileXioUmount(PFS_MOUNTPOINT);
 #endif
 }
+
+// Parses the launcher argv for global flags.
+// Returns the new argc
+int parseGlobalFlags(int argc, char *argv[]) {
+  if (argc > 1 && !strncmp(argv[argc - 1], "-gsm=", 5)) {
+    // eGSM argument
+    globalOptions.gsmArgument = strdup(&argv[argc - 1][5]);
+    DPRINTF("Applying eGSM options: %s\n", globalOptions.gsmArgument);
+    argc--;
+  }
+
+  return argc;
+}

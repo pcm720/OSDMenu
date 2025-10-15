@@ -222,22 +222,9 @@ int handleOSDM(int argc, char *argv[]) {
     shutdownPS2();
   }
 
-  // Handle 'cdrom' entry
-  if (!strcmp(targetPaths->str, "cdrom")) {
-    freeLinkedStr(targetPaths);
-    freeLinkedStr(targetArgs);
-    if (!useDKWDRV && dkwdrvPath) {
-      free(dkwdrvPath);
-      dkwdrvPath = NULL;
-    }
-    return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath, 1);
-  }
-
-  if (dkwdrvPath)
-    free(dkwdrvPath);
-
   // Build argv, freeing targetArgs
   char **targetArgv = malloc(targetArgc * sizeof(char *));
+  targetArgv[0] = NULL;
   linkedStr *tlstr;
   if (targetArgs) {
     tlstr = targetArgs;
@@ -249,6 +236,39 @@ int handleOSDM(int argc, char *argv[]) {
     }
     free(targetArgs);
   }
+
+  // Parse arguments for global flags
+  targetArgc = parseGlobalFlags(targetArgc, targetArgv);
+
+#ifdef ENABLE_PRINTF
+  DPRINTF("%s (argc = %d):\n", argv[0], targetArgc);
+  tlstr = targetPaths;
+  while (tlstr) {
+    DPRINTF("Paths: %s\n", tlstr->str);
+    tlstr = tlstr->next;
+  }
+  for (int i = 1; i < targetArgc; i++)
+    DPRINTF("Argument %i = %s\n", i, targetArgv[i]);
+#endif
+
+  // Handle 'cdrom' entry
+  if (!strcmp(targetPaths->str, "cdrom")) {
+    freeLinkedStr(targetPaths);
+    if (!useDKWDRV && dkwdrvPath) {
+      free(dkwdrvPath);
+      dkwdrvPath = NULL;
+    }
+
+    if (targetArgc > 1)
+      // If argc > 1, pass the arguments instead
+      return handleCDROM(targetArgc, targetArgv);
+
+    // Else, respect options set in the config file
+    return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath, 1);
+  }
+
+  if (dkwdrvPath)
+    free(dkwdrvPath);
 
   // Try every path
   tlstr = targetPaths;
