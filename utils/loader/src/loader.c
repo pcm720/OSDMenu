@@ -175,12 +175,6 @@ int main(int argc, char *argv[]) {
     argc--;
   }
 
-  // eGSMFlags = EGSM_FLAG_FLD_FP;
-
-  // Init libcdvd if argv[0] points to cdrom
-  if (!strncmp(argv[0], "cdrom", 5))
-    sceCdInit(SCECdINIT);
-
   if (!elfPath) {
     if (!strncmp(argv[0], "hdd", 3)) {
       // Mount the partition
@@ -260,6 +254,7 @@ int loadEmbeddedELF(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownTyp
     resetIOP();
 
   sceSifExitRpc();
+  sceSifExitCmd();
 
   int elfMem = 0;
   int elfSize = 0;
@@ -320,15 +315,25 @@ int loadELFFromFile(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownTyp
   static t_ExecData elfdata;
   elfdata.epc = 0;
 
+  // Init libcdvd if argv[0] points to cdrom
+  if (!strncmp(argv[0], "cdrom", 5))
+    sceCdInit(SCECdINIT);
+
   SifLoadFileInit();
-  // fails
   int ret = SifLoadElf(elfPath, &elfdata);
   if (ret && (ret = SifLoadElfEncrypted(elfPath, &elfdata)))
     return ret;
   SifLoadFileExit();
 
+  FlushCache(0);
+  FlushCache(2);
+
   // Shutdown DEV9
   shutdownDEV9(dev9ShutdownType);
+
+  // Deinit libcdvd if argv[0] points to cdrom
+  if (!strncmp(argv[0], "cdrom", 5))
+    sceCdInit(SCECdEXIT);
 
   if (ioprpPath) {
     // Load IOPRP file
@@ -338,6 +343,7 @@ int loadELFFromFile(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownTyp
     resetIOP();
 
   sceSifExitRpc();
+  sceSifExitCmd();
 
   if (ret != 0 || elfdata.epc == 0)
     return -ENOENT;
@@ -354,8 +360,6 @@ int loadELFFromFile(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownTyp
     return runeGSM(&args);
   }
 
-  FlushCache(0);
-  FlushCache(2);
   return ExecPS2((void *)elfdata.epc, (void *)elfdata.gp, argc, argv);
 }
 
