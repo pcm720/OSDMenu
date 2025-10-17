@@ -97,6 +97,10 @@ IRX_DEFINE(bdmfs_fatfs);
 IRX_DEFINE(poweroff);
 #endif
 
+#ifdef ENABLE_PRINTF
+IRX_DEFINE(smap_udptty);
+#endif
+
 // Function used to initialize module arguments.
 // Must set argLength and return non-null pointer to a argument string if successful.
 // Returned pointer must point to dynamically allocated memory
@@ -137,7 +141,10 @@ static ModuleListEntry moduleList[] = {
 #ifdef MMCE
     INT_MODULE(mmceman, NULL, Device_MMCE),
 #endif
-#ifdef DEV9
+#ifdef ENABLE_PRINTF
+    INT_MODULE(ps2dev9, NULL, Device_Basic),
+    INT_MODULE(smap_udptty, &initSMAPArguments, Device_Basic),
+#elif defined(DEV9)
     INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_PFS),
 #endif
 #ifdef BDM
@@ -220,6 +227,11 @@ int initModules(DeviceType device, int clearSPU) {
       ret = SifLoadModule(moduleList[i].path, moduleList[i].argLength, moduleList[i].argStr);
     else
       ret = SifExecModuleBuffer(moduleList[i].irx, *moduleList[i].size, moduleList[i].argLength, moduleList[i].argStr, &iopret);
+
+#ifdef ENABLE_PRINTF
+    if (!strcmp(moduleList[i].name, "smap_udptty"))
+      sleep(10);
+#endif
 
     if (ret >= 0)
       ret = 0;

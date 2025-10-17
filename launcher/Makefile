@@ -123,6 +123,7 @@ endif
 
 ifeq ($(ENABLE_PRINTF), 1)
  EE_CFLAGS += -DENABLE_PRINTF
+ IRX_FILES += smap_udptty.irx
 endif
 
 # Custom paths
@@ -183,6 +184,13 @@ iop/smap_udpbd/smap_udpbd.irx: iop/smap_udpbd
 
 %smap_udpbd_irx.c: iop/smap_udpbd/smap_udpbd.irx
 	$(BIN2C) iop/smap_udpbd/$(*:$(EE_SRC_DIR)%=%)smap_udpbd.irx $@ $(*:$(EE_SRC_DIR)%=%)smap_udpbd_irx
+
+# smap_udptty.irx
+iop/smap_udptty/smap_udptty.irx: iop/smap_udptty
+	$(MAKE) -C $<
+
+%smap_udptty_irx.c: iop/smap_udptty/smap_udptty.irx
+	$(BIN2C) iop/smap_udptty/$(*:$(EE_SRC_DIR)%=%)smap_udptty.irx $@ $(*:$(EE_SRC_DIR)%=%)smap_udptty_irx
 
 # mmceman module, temporary override until it lands in the SDK
 %mmceman_irx.c:

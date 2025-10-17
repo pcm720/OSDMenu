@@ -93,8 +93,8 @@ int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]) {
     memcpy(eph[i].vaddr, pdata, eph[i].filesz);
   }
 
-  sceSifExitCmd();
   sceSifExitRpc();
+  sceSifExitCmd();
   FlushCache(0);
   FlushCache(2);
 
