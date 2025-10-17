@@ -2,9 +2,9 @@
 // Based on code by Tony Saveski, t_saveski@yahoo.com
 #include <dmaKit.h>
 #include <gsKit.h>
+#include <kernel.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <kernel.h>
 
 //
 // GameID code based on https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher
@@ -74,4 +74,5 @@ void gsDisplayGameID(const char *gameID) {
   gsKit_queue_exec(gsGlobal);
   gsKit_finish();
   gsKit_sync_flip(gsGlobal);
+  gsKit_deinit_global(gsGlobal);
 }
