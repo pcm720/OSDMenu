@@ -12,7 +12,7 @@
 #include <sifrpc.h>
 #include <string.h>
 
-char *argv[6] = {0};
+char *argv[7] = {0};
 int argc = 0;
 int LoadELFFromFile(int argc, char *argv[]);
 
@@ -60,44 +60,43 @@ void launchItem(char *item) {
 
   // Build argv for the launcher
   if (strcmp(item, "cdrom")) {
-    argc = 1;
     if (!strncmp(item, "osdm", 4))
-      argv[0] = item;
+      argv[argc++] = item;
     else {
-      argv[0] = "";
-      argv[1] = item;
-      argc++;
+      argv[argc++] = "";
+      argv[argc++] = item;
     }
   } else {
     // Handle CDROM
-    argv[0] = item;
-    argv[1] = (settings.patcherFlags & FLAG_SKIP_PS2_LOGO) ? "-nologo" : "";
-    argv[2] = (!(settings.patcherFlags & FLAG_DISABLE_GAMEID)) ? "" : "-nogameid";
-    argc = 3;
+    argv[argc++] = item;
+    argv[argc++] = (settings.patcherFlags & FLAG_SKIP_PS2_LOGO) ? "-nologo" : "";
+    argv[argc++] = (!(settings.patcherFlags & FLAG_DISABLE_GAMEID)) ? "" : "-nogameid";
     if (settings.patcherFlags & FLAG_USE_DKWDRV) {
 #ifndef HOSD
       if (settings.dkwdrvPath[0] == '\0')
-        argv[3] = "-dkwdrv";
+        argv[argc++] = "-dkwdrv";
       else {
-        argv[3] = malloc(sizeof("-dkwdrv") + strlen(settings.dkwdrvPath) + 1);
-        argv[3][0] = '\0';
-        strcat(argv[3], "-dkwdrv=");
-        strcat(argv[3], settings.dkwdrvPath);
+        argv[argc++] = malloc(sizeof("-dkwdrv") + strlen(settings.dkwdrvPath) + 1);
+        argv[argc][0] = '\0';
+        strcat(argv[argc], "-dkwdrv=");
+        strcat(argv[argc], settings.dkwdrvPath);
       }
 #else // HOSD DKWDRV path is fixed
-      argv[3] = "-dkwdrv=" HOSD_DKWDRV_PATH;
+      argv[argc++] = "-dkwdrv=" HOSD_DKWDRV_PATH;
 #endif
       argc++;
     } else {
       // Get OSD config for PS1DRV
       ConfigParam osdConfig;
       GetOsdConfigParam(&osdConfig);
-      argv[3] = (osdConfig.ps1drvConfig & 0x1) ? "-ps1fast" : "";
-      argv[4] = (osdConfig.ps1drvConfig & 0x10) ? "-ps1smooth" : "";
-      argv[5] = (!(settings.patcherFlags & FLAG_PS1DRV_USE_VN)) ? "" : "-ps1vneg";
-      argc += 3;
+      argv[argc++] = (osdConfig.ps1drvConfig & 0x1) ? "-ps1fast" : "";
+      argv[argc++] = (osdConfig.ps1drvConfig & 0x10) ? "-ps1smooth" : "";
+      argv[argc++] = (!(settings.patcherFlags & FLAG_PS1DRV_USE_VN)) ? "" : "-ps1vneg";
     }
   }
+#ifndef HOSD
+  argv[argc++] = "-osd";
+#endif
 
 #ifndef HOSD
   // Reinitialize IOP to a known state on protokernel to avoid ExecPS2 failing
