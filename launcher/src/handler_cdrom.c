@@ -25,6 +25,8 @@ extern int size_ps1vn_elf;
 
 // Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
 char *getOSDGSMArgument(char *titleID);
+// Works around the CD/DVD loading issue on <70k consoles by cycling the tray
+void applyOSDCdQuirk();
 
 // Launches the disc while displaying the visual game ID and writing to the history file
 int handleCDROM(int argc, char *argv[]) {
@@ -44,17 +46,17 @@ int handleCDROM(int argc, char *argv[]) {
       continue;
     arg++;
 
-    if (!strcmp("nologo", arg)) {
+    if (!strcmp("nologo", arg))
       skipPS2LOGO = 1;
-    } else if (!strcmp("nogameid", arg)) {
+    else if (!strcmp("nogameid", arg))
       displayGameID = 0;
-    } else if (!strcmp("ps1fast", arg)) {
+    else if (!strcmp("ps1fast", arg))
       ps1drvFlags |= CDROM_PS1_FAST;
-    } else if (!strcmp("ps1smooth", arg)) {
+    else if (!strcmp("ps1smooth", arg))
       ps1drvFlags |= CDROM_PS1_SMOOTH;
-    } else if (!strcmp("ps1vneg", arg)) {
+    else if (!strcmp("ps1vneg", arg))
       ps1drvFlags |= CDROM_PS1_VN;
-    } else if (!strncmp("dkwdrv", arg, 6)) {
+    else if (!strncmp("dkwdrv", arg, 6)) {
       useDKWDRV = 1;
       dkwdrvPath = strchr(arg, '=');
       if (dkwdrvPath) {
@@ -113,6 +115,9 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       sleep(1);
       discType = sceCdGetDiskType();
     }
+  } else if (globalOptions.osdBoot) {
+    applyOSDCdQuirk();
+    sceCdDiskReady(0);
   }
 
   // Make sure the disc is a valid PS1/PS2 disc
@@ -275,4 +280,37 @@ char *getOSDGSMArgument(char *titleID) {
   }
 
   return defaultArg;
+}
+
+// For some reason, launching OSDSYS from homebrew software via ExecOSD or LoadExecPS2 on <70k consoles
+// breaks the CD/DVD loading when the disc is already inserted on boot.
+// This works around the issue by cycling the tray
+void applyOSDCdQuirk() {
+  uint8_t outBuffer[5] = {0};
+  uint32_t status;
+  if (!sceCdMV(outBuffer, (u32 *)&status) || (status & 0x80)) {
+    DPRINTF("CDROM OSD Quirk: Failed to get the MechaCon version\n");
+    return;
+  }
+
+  int mv = (outBuffer[0] << 8) | outBuffer[1];
+  DPRINTF("CDROM OSD Quirk: MechaCon version is %04x", mv);
+  if (mv >= 0x0600) {
+    DPRINTF("\n");
+    return;
+  }
+
+  DPRINTF(", cycling the tray\n");
+  int res = 0;
+  // Open the tray
+  do {
+    sceCdTrayReq(SCECdTrayOpen, (u32 *)&status);
+    res = sceCdStatus();
+  } while (!(res & 0x1));
+
+  // Close the tray
+  do {
+    sceCdTrayReq(SCECdTrayClose, (u32 *)&status);
+    res = sceCdStatus();
+  } while (res & 0x1);
 }

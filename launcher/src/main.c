@@ -17,6 +17,7 @@ launcherOptions globalOptions;
 
 int main(int argc, char *argv[]) {
   // Process global options
+  globalOptions.osdBoot = 0;
   globalOptions.gsmArgument = NULL;
   globalOptions.deviceHint = Device_MemoryCard;
   globalOptions.mcHint = 0;
@@ -30,8 +31,10 @@ int main(int argc, char *argv[]) {
   argc = parseGlobalFlags(argc, argv);
 
 #ifdef FMCB
-  if (!strncmp("osdm", argv[0], 4))
+  if (!strncmp("osdm", argv[0], 4)) {
+    globalOptions.osdBoot = 1;
     fail("Failed to launch %s: %d", argv[0], handleOSDM(argc, argv));
+  }
   if (!strncmp("cdrom", argv[0], 5))
     fail("Failed to launch %s: %d", argv[0], handleCDROM(argc, argv));
 #endif

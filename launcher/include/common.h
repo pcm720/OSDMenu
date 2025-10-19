@@ -30,6 +30,7 @@ typedef enum {
 
 // Defines global launcher options
 typedef struct {
+  int osdBoot;           // Whether the launcher was started from OSDMenu
   DeviceType deviceHint; // The device the launcher has been launched from. Only HDD and memory cards are supported
   int mcHint;            // Memory card number when the deviceHint is Device_MemoryCard
   char *gsmArgument;     // eGSM argument

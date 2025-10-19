@@ -320,11 +320,18 @@ void deinitPFS() {
 // Parses the launcher argv for global flags.
 // Returns the new argc
 int parseGlobalFlags(int argc, char *argv[]) {
-  if (argc > 1 && !strncmp(argv[argc - 1], "-gsm=", 5)) {
-    // eGSM argument
-    globalOptions.gsmArgument = strdup(&argv[argc - 1][5]);
-    DPRINTF("Applying eGSM options: %s\n", globalOptions.gsmArgument);
-    argc--;
+  if (argc < 2)
+    return argc;
+
+  for (int i = argc - 1; i > 0; i--) {
+    if (!strncmp(argv[i], "-gsm=", 5)) {
+      // eGSM argument
+      globalOptions.gsmArgument = strdup(&argv[i][5]);
+      DPRINTF("Applying eGSM options: %s\n", globalOptions.gsmArgument);
+      argc--;
+    }
+    if (!strcmp(argv[i], "-osd"))
+      globalOptions.osdBoot = 1;
   }
 
   return argc;
