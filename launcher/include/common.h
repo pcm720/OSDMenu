@@ -24,6 +24,8 @@ typedef enum {
   Device_PFS = (1 << 8),
   Device_CDROM = (1 << 9),
   Device_ROM = (1 << 10),
+  //
+  Device_Debug = (1 << 11),
 } DeviceType;
 
 // Defines global launcher options

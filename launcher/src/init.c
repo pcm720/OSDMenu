@@ -127,25 +127,22 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(iomanX, NULL, Device_Basic),
     INT_MODULE(fileXio, NULL, Device_Basic),
 #ifdef SIO2MAN
-    INT_MODULE(sio2man, NULL, Device_MemoryCard | Device_MMCE | Device_MX4SIO | Device_UDPBD | Device_CDROM),
+    INT_MODULE(sio2man, NULL, Device_MemoryCard | Device_MMCE | Device_MX4SIO | Device_UDPBD | Device_CDROM | Device_Debug),
 #else
-    EXT_MODULE(sio2man, "rom0:SIO2MAN", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM),
+    EXT_MODULE(sio2man, "rom0:SIO2MAN", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
 #endif
 #ifndef USE_ROM_MODULES
-    INT_MODULE(mcman, NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM),
-    INT_MODULE(mcserv, NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM),
+    INT_MODULE(mcman, NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
+    INT_MODULE(mcserv, NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
 #else
-    EXT_MODULE(mcman, "rom0:MCMAN", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM),
-    EXT_MODULE(mcserv, "rom0:MCSERV", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM),
+    EXT_MODULE(mcman, "rom0:MCMAN", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
+    EXT_MODULE(mcserv, "rom0:MCSERV", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
 #endif
 #ifdef MMCE
     INT_MODULE(mmceman, NULL, Device_MMCE),
 #endif
-#ifdef ENABLE_PRINTF
-    INT_MODULE(ps2dev9, NULL, Device_Basic),
-    INT_MODULE(smap_udptty, &initSMAPArguments, Device_Basic),
-#elif defined(DEV9)
-    INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_PFS),
+#ifdef DEV9
+    INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_PFS | Device_Debug),
 #endif
 #ifdef BDM
     INT_MODULE(bdm, NULL, Device_BDM),
@@ -165,7 +162,9 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(iLinkman, NULL, Device_iLink),
     INT_MODULE(IEEE1394_bd_mini, NULL, Device_iLink),
 #endif
-#ifdef UDPBD
+#ifdef ENABLE_PRINTF
+    INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
+#elif defined(UDPBD)
     INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD),
 #endif
 #ifdef APA
@@ -211,7 +210,11 @@ int initModules(DeviceType device, int clearSPU) {
   for (int i = 0; i < MODULE_COUNT; i++) {
     ret = 0;
     iopret = 0;
+#ifdef ENABLE_PRINTF
+    if (!(device & moduleList[i].type) && !(moduleList[i].type & (Device_Basic | Device_Debug)))
+#else
     if (!(device & moduleList[i].type) && (moduleList[i].type != Device_Basic))
+#endif
       continue;
 
     // If module has an arugment function, execute it
