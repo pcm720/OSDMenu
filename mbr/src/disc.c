@@ -340,3 +340,98 @@ void cdAutoAdjust(int mode) {
 
   sceCdInit(SCECdEXIT);
 }
+
+// Describes the first two OSD NVRAM blocks
+typedef struct {
+  // PS1DRV settings block
+  // Byte 0
+  uint8_t ps1drvDiscSpeed : 4;
+  uint8_t ps1drvTextureMapping : 4;
+  // Bytes 1-14, unused
+  uint8_t unused1[14];
+
+  // PlayStation 2 settings block
+  // Byte 0
+  uint8_t ps2SpdifDisabled : 1;
+  uint8_t ps2ScreenType : 2;
+  uint8_t ps2VideoOutput : 1;
+  uint8_t ps2OldLanguage : 1;
+  uint8_t ps2ConfigVersion : 1;
+  uint8_t ps2Reserved : 2;
+  // Byte 1
+  uint8_t ps2NewLanguage : 5;
+  uint8_t ps2MaxVersion : 3;
+  // Bytes 2-14, the rest of config block
+  uint8_t unused2[13];
+} OSDNVRAMConfig;
+
+// Updates MechaCon NVRAM config with selected PS1DRV options, screen type and language.
+void updateOSDSettings() {
+  sceCdInit(SCECdINoD);
+  int res;
+  uint32_t status;
+
+  do {
+    res = sceCdOpenConfig(1, 0, 2, (u32 *)&status);
+    if (!res)
+      return;
+  } while (status & 0x81);
+
+  uint8_t buffer[30] = {0};
+
+  do {
+    res = sceCdReadConfig(buffer, (u32 *)&status);
+  } while ((status & 0x81) || (res == 0));
+  do {
+    res = sceCdCloseConfig((u32 *)&status);
+  } while ((status & 0x81) || (res == 0));
+
+  OSDNVRAMConfig *cnf = (OSDNVRAMConfig *)buffer;
+  DPRINTF("NVRAM Settings:\nPS1DRV: disc speed: %d, mapping: %d\n", cnf->ps1drvDiscSpeed, cnf->ps1drvTextureMapping);
+  DPRINTF("OSD: SPDIF: %d, Screen: %d, Video Out: %d, Old language: %d, Config version: %d, Language: %d, Max version: %d\n", cnf->ps2SpdifDisabled,
+          cnf->ps2ScreenType, cnf->ps2VideoOutput, cnf->ps2OldLanguage, cnf->ps2ConfigVersion, cnf->ps2NewLanguage, cnf->ps2MaxVersion);
+
+  int isUpdated = 0;
+  // Set PS1DRV flags
+  if ((settings.flags & FLAG_PS1DRV_FAST) && (!cnf->ps1drvDiscSpeed)) {
+    isUpdated = 1;
+    cnf->ps1drvDiscSpeed = 1;
+  }
+  if ((settings.flags & FLAG_PS1DRV_SMOOTH) && (!cnf->ps1drvTextureMapping)) {
+    isUpdated = 1;
+    cnf->ps1drvTextureMapping = 1;
+  }
+
+  // Set OSD options
+  if ((settings.osdScreenType >= 0) && (settings.osdScreenType != cnf->ps2ScreenType)) {
+    isUpdated = 1;
+    cnf->ps2ScreenType = settings.osdScreenType;
+  }
+  if ((settings.osdLanguage >= LANGUAGE_JAPANESE) && (cnf->ps2NewLanguage != settings.osdLanguage)) {
+    isUpdated = 1;
+    cnf->ps2OldLanguage = (settings.osdLanguage == LANGUAGE_JAPANESE) ? settings.osdLanguage : LANGUAGE_ENGLISH;
+    cnf->ps2NewLanguage = settings.osdLanguage;
+  }
+
+  if (!isUpdated)
+    return;
+
+  DPRINTF("New NVRAM Settings:\nPS1DRV: disc speed: %d, mapping: %d\n", cnf->ps1drvDiscSpeed, cnf->ps1drvTextureMapping);
+  DPRINTF("OSD: SPDIF: %d, Screen: %d, Video Out: %d, Old language: %d, Config version: %d, Language: %d, Max version: %d\n", cnf->ps2SpdifDisabled,
+          cnf->ps2ScreenType, cnf->ps2VideoOutput, cnf->ps2OldLanguage, cnf->ps2ConfigVersion, cnf->ps2NewLanguage, cnf->ps2MaxVersion);
+  do {
+    res = sceCdOpenConfig(1, 1, 2, (u32 *)&status);
+    if (!res)
+      return;
+  } while (status & 0x09);
+
+  do {
+    res = sceCdWriteConfig(buffer, (u32 *)&status);
+  } while ((status & 0x09) || (res == 0));
+
+  do {
+    res = sceCdCloseConfig((u32 *)&status);
+  } while ((status & 0x09) || (res == 0));
+
+  sceCdInit(SCECdEXIT);
+}

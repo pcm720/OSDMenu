@@ -41,6 +41,8 @@ typedef struct launchPath {
 typedef struct {
   uint8_t flags;     // Flags
   launchPath *paths; // Launch paths
+  int8_t osdLanguage;
+  int8_t osdScreenType;
 } Settings;
 
 // Stores MBR settings

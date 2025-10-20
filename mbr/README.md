@@ -15,6 +15,8 @@ See the [OSDMBR.CNF](../examples/OSDMBR.CNF) example configuration file for hint
 
 ### Configuration options
 
+Multiple paths and arguments are supported for every `boot_` key.
+
 1. `boot_auto` — default boot paths
 2. `boot_auto_arg` — arguments for the default boot path
 3. `boot_start` — paths to run when the Start button is being pressed during boot
@@ -35,8 +37,25 @@ See the [OSDMBR.CNF](../examples/OSDMBR.CNF) example configuration file for hint
 18. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
 19. `prefer_bbn` — makes the MBR to fallback to PSBBN instead of HOSDMenu/HDD-OSD on errors
 20. `app_gameid` — if enabled, the visual Game ID will be displayed for all applications launched by the OSDMenu MBR
+21. `osd_screentype` — if set, will set the screen type by changing the flag in MechaCon NVRAM. Valid values are `4:3`, `16:9`, `full`
+22. `osd_language` — if set, will set the OSDSYS/HDD-OSD launguage by changing the language flag in MechaCon NVRAM.  
+  Valid values:
+    - `jap` — Japanese
+    - `eng` — English
+    - `fre` — French
+    - `spa` — Spanish
+    - `ger` — German
+    - `ita` — Italian
+    - `dut` — Dutch
+    - `por` — Portugese
+    - `rus` — Russian
+    - `kor` — Korean
+    - `tch` — Traditional Chinese
+    - `sch` — Simplified Chinese  
 
-Multiple paths and arguments are supported.
+   Note that a list of available languages depends on your PS2 revision and model.
+   For example, Japanese consoles only support Japanese and English languages and will fallback to Japanese if any other language other than English is set.
+   OSDMenu MBR does **not** check whether your console actually supports the language.  
 
 ### Supported paths
 

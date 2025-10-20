@@ -4,6 +4,7 @@
 #include "hdd.h"
 #include <ctype.h>
 #include <errno.h>
+#include <osd_config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,6 +59,10 @@ void freeLinkedStr(linkedStr *lstr) {
 }
 
 int loadConfig() {
+  // Init default values
+  settings.osdLanguage = 1;
+  settings.osdScreenType = -1;
+
   // Mount the config partition
   if (mountPFS(HOSD_CONF_PARTITION))
     return -ENODEV;
@@ -212,6 +217,42 @@ int loadConfig() {
         settings.flags |= FLAG_APP_GAMEID;
       else
         settings.flags &= ~(FLAG_APP_GAMEID);
+      continue;
+    }
+    if (!strncmp(lineBuffer, "osd_screentype", 14)) {
+      if (!strcmp(valuePtr, "4:3"))
+        settings.osdScreenType = TV_SCREEN_43;
+      else if (!strcmp(valuePtr, "16:9"))
+        settings.osdScreenType = TV_SCREEN_169;
+      else if (!strcmp(valuePtr, "full"))
+        settings.osdScreenType = TV_SCREEN_FULL;
+      continue;
+    }
+    if (!strncmp(lineBuffer, "osd_language", 12)) {
+      if (!strcmp(valuePtr, "jap"))
+        settings.osdLanguage = LANGUAGE_JAPANESE;
+      else if (!strcmp(valuePtr, "eng"))
+        settings.osdLanguage = LANGUAGE_ENGLISH;
+      else if (!strcmp(valuePtr, "fre"))
+        settings.osdLanguage = LANGUAGE_FRENCH;
+      else if (!strcmp(valuePtr, "spa"))
+        settings.osdLanguage = LANGUAGE_SPANISH;
+      else if (!strcmp(valuePtr, "ger"))
+        settings.osdLanguage = LANGUAGE_GERMAN;
+      else if (!strcmp(valuePtr, "ita"))
+        settings.osdLanguage = LANGUAGE_ITALIAN;
+      else if (!strcmp(valuePtr, "dut"))
+        settings.osdLanguage = LANGUAGE_DUTCH;
+      else if (!strcmp(valuePtr, "por"))
+        settings.osdLanguage = LANGUAGE_PORTUGUESE;
+      else if (!strcmp(valuePtr, "rus"))
+        settings.osdLanguage = LANGUAGE_RUSSIAN;
+      else if (!strcmp(valuePtr, "kor"))
+        settings.osdLanguage = LANGUAGE_KOREAN;
+      else if (!strcmp(valuePtr, "tch"))
+        settings.osdLanguage = LANGUAGE_TRAD_CHINESE;
+      else if (!strcmp(valuePtr, "sch"))
+        settings.osdLanguage = LANGUAGE_SIMPL_CHINESE;
       continue;
     }
   }

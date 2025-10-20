@@ -85,6 +85,8 @@ int main(int argc, char *argv[]) {
   if ((res = loadConfig()))
     DPRINTF("WARN: Failed to load the config file: %d, will use defaults\n", res);
 
+  updateOSDSettings();
+
   // Handle OSD arguments when there are any additional arguments when running as rom0:MBRBOOT or rom0:HDDBOOT
   if ((argc > 1) && (!strcmp(argv[0], "rom0:MBRBOOT") || !strcmp(argv[0], "rom0:HDDBOOT")) && (strlen(argv[1]) > 0))
     return handleOSDArgs(argc, argv);
@@ -236,7 +238,8 @@ int handleOSDArgs(int argc, char *argv[]) {
   }
 
   if (!strcmp(argv[1], "BootError") || !strcmp(argv[1], "BootClock") || !strcmp(argv[1], "BootBrowser") || !strcmp(argv[1], "BootCdPlayer") ||
-      !strcmp(argv[1], "BootOpening") || !strcmp(argv[1], "BootWarning") || !strcmp(argv[1], "BootIllegal") || !strcmp(argv[1], "Initialize")) {
+      !strcmp(argv[1], "BootOpening") || !strcmp(argv[1], "BootWarning") || !strcmp(argv[1], "BootIllegal") || !strcmp(argv[1], "Initialize") ||
+      !strncmp(argv[1], "Skip", 4)) {
     // Execute OSD
     argc--;
     argv = &argv[1];

@@ -81,7 +81,7 @@ int startHOSDSYS(int argc, char *argv[]) {
       // Boot HOSDMenu
       argv[0] = HOSD_SYS_PARTITION ":pfs:" HOSD_PFS_PATH;
 
-      argv[argc] = "-mbrboot";
+      argv[argc] = strdup("-mbrboot");
 
       LoadOptions opts = {
           .dev9ShutdownType = ShutdownType_None,
