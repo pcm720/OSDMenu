@@ -29,6 +29,7 @@ typedef enum {
   FLAG_PS1DRV_FAST = (1 << 9),      // If set, will force PS1DRV fast disc speed
   FLAG_PS1DRV_SMOOTH = (1 << 10),   // If set, will force PS1DRV texture smoothing
   FLAG_PS1DRV_USE_VN = (1 << 11),   // If set, run PS1DRV via the PS1DRV Video Mode Negator
+  FLAG_APP_GAMEID = (1 << 12),      // Used to show OSDMenu game ID on the splash screen
 } PatcherFlags;
 
 // Patcher settings struct, contains all configurable patch settings and menu items

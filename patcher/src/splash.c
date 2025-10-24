@@ -1,5 +1,6 @@
 #include "splash.h"
 #include "gs.h"
+#include "settings.h"
 #include "splash_bmp.h"
 
 // Initializes GS and displays FMCB splash screen
@@ -12,6 +13,9 @@ void gsDisplaySplash(GSVideoMode mode) {
   gsInit(mode);
   gsClearScreen();
   gsPrintBitmap((640 - splashWidth) / 2, splashY, splashWidth, splashHeight, splash);
+
+  if (!(settings.patcherFlags & FLAG_APP_GAMEID))
+    return;
 
   // Draw OSDMenu visual game ID
   uint8_t data[] = {0xA5, 0x00, 0xA9, 0x07, 'O', 'S', 'D', 'M', 'e', 'n', 'u', 0x00, 0xD5, 0x00};

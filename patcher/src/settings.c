@@ -313,6 +313,13 @@ int loadConfig(void) {
         settings.patcherFlags &= ~(FLAG_PS1DRV_USE_VN);
       continue;
     }
+    if (!strcmp(name, "app_gameid")) {
+      if (atoi(value))
+        settings.patcherFlags |= FLAG_APP_GAMEID;
+      else
+        settings.patcherFlags &= ~(FLAG_APP_GAMEID);
+      continue;
+    }
   }
 
   return 0;
