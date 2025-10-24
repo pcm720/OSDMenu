@@ -13,26 +13,26 @@ void _libcglue_timezone_update() {}
 void _libcglue_rtc_update() {}
 PS2_DISABLE_AUTOSTART_PTHREAD();
 
-launcherOptions globalOptions;
+launcherOptions settings;
 
 int main(int argc, char *argv[]) {
   // Process global options
-  globalOptions.osdBoot = 0;
-  globalOptions.gsmArgument = NULL;
-  globalOptions.deviceHint = Device_MemoryCard;
-  globalOptions.mcHint = 0;
+  settings.flags = 0;
+  settings.gsmArgument = NULL;
+  settings.deviceHint = Device_MemoryCard;
+  settings.mcHint = 0;
 
   // Try to guess the device type using argv[0]
   if (!strncmp(argv[0], "mc1", 3))
-    globalOptions.mcHint = 1;
+    settings.mcHint = 1;
   if (!strncmp(argv[0], "pfs", 3) || !strncmp(argv[0], "hdd", 3))
-    globalOptions.deviceHint = Device_PFS;
+    settings.deviceHint = Device_PFS;
 
   argc = parseGlobalFlags(argc, argv);
 
 #ifdef FMCB
   if (!strncmp("osdm", argv[0], 4)) {
-    globalOptions.osdBoot = 1;
+    settings.flags |= FLAG_OSDBOOT;
     fail("Failed to launch %s: %d", argv[0], handleOSDM(argc, argv));
   }
   if (!strncmp("cdrom", argv[0], 5))

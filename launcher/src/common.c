@@ -326,12 +326,16 @@ int parseGlobalFlags(int argc, char *argv[]) {
   for (int i = argc - 1; i > 0; i--) {
     if (!strncmp(argv[i], "-gsm=", 5)) {
       // eGSM argument
-      globalOptions.gsmArgument = strdup(&argv[i][5]);
-      DPRINTF("Applying eGSM options: %s\n", globalOptions.gsmArgument);
+      settings.gsmArgument = strdup(&argv[i][5]);
+      DPRINTF("Applying eGSM options: %s\n", settings.gsmArgument);
+      argc--;
+    } else if (!strcmp(argv[i], "-osd")) {
+      settings.flags |= FLAG_OSDBOOT;
+      argc--;
+    } else if (!strcmp(argv[i], "-appid")) {
+      settings.flags |= FLAG_APP_GAMEID;
       argc--;
     }
-    if (!strcmp(argv[i], "-osd"))
-      globalOptions.osdBoot = 1;
   }
 
   return argc;

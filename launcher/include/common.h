@@ -2,6 +2,7 @@
 #define _COMMON_H_
 
 #include <debug.h>
+#include <stdint.h>
 
 #define BDM_MOUNTPOINT "mass0:"
 #define PFS_MOUNTPOINT "pfs0:"
@@ -28,15 +29,20 @@ typedef enum {
   Device_Debug = (1 << 11),
 } DeviceType;
 
+typedef enum {
+  FLAG_OSDBOOT = (1 << 0), // Whether the launcher was started from OSDMenu
+  FLAG_APP_GAMEID = (1 << 1),   // Enables/disables showing the visual Game ID for applications
+} LauncherFlags;
+
 // Defines global launcher options
 typedef struct {
-  int osdBoot;           // Whether the launcher was started from OSDMenu
+  uint8_t flags;         // Whether the launcher was started from OSDMenu
   DeviceType deviceHint; // The device the launcher has been launched from. Only HDD and memory cards are supported
   int mcHint;            // Memory card number when the deviceHint is Device_MemoryCard
   char *gsmArgument;     // eGSM argument
 } launcherOptions;
 
-extern launcherOptions globalOptions;
+extern launcherOptions settings;
 
 // A simple linked list for paths and arguments
 typedef struct linkedStr {

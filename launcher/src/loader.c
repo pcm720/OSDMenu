@@ -1,5 +1,7 @@
 #include "common.h"
 #include "dprintf.h"
+#include "game_id.h"
+#include <ctype.h>
 #include <kernel.h>
 #include <sifrpc.h>
 #include <stdint.h>
@@ -14,10 +16,53 @@ extern int size_loader_elf;
 
 int LoadEmbeddedELF(uint8_t *boot_elf, int argc, char *argv[]);
 
+// Attempts to generate a title ID from path
+void extractELFName(char *path, char *dst) {
+  // Try to extract the ELF name
+  char *ext = strstr(path, ".ELF");
+  if (!ext)
+    ext = strstr(path, ".elf");
+
+  // Find the start of the ELF name
+  char *elfName = strrchr(path, '/');
+  if (!elfName)
+    return;
+
+  // Advance to point to the actual name
+  elfName++;
+  // Temporarily terminate the string at extension,
+  // copy the first 11 characters and restore the '.'
+  if (ext)
+    *ext = '\0';
+
+  strncpy(dst, elfName, 11);
+
+  if (ext)
+    *ext = '.';
+
+  // Remove whitespace at the end
+  for (int i = 10; i >= 0; i--) {
+    if (isspace((int)dst[i])) {
+      dst[i] = '\0';
+      break;
+    }
+  }
+}
+
 int LoadELFFromFile(int argc, char *argv[]) {
+  if (settings.flags & FLAG_APP_GAMEID) {
+    char titleID[12] = {0};
+    if (titleID[0] == '\0')
+      extractELFName(argv[0], titleID);
+
+    DPRINTF("Title ID is %s\n", titleID);
+    if (titleID[0] != '\0')
+      gsDisplayGameID(titleID);
+  }
+
   char **nargv = argv;
   // Process global arguments
-  if (globalOptions.gsmArgument) {
+  if (settings.gsmArgument) {
     // Add eGSM argument
     nargv = malloc((argc + 2) * sizeof(char *));
     for (int i = 0; i < argc; i++)
@@ -25,7 +70,7 @@ int LoadELFFromFile(int argc, char *argv[]) {
 
     argc += 2;
     nargv[argc - 1] = "-la=G";
-    nargv[argc - 2] = globalOptions.gsmArgument;
+    nargv[argc - 2] = settings.gsmArgument;
   }
 
   DPRINTF("Starting the embedded ELF loader with argc = %d\n", argc);

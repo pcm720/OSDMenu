@@ -53,7 +53,7 @@ int handleOSDM(int argc, char *argv[]) {
     file = fmemopen((void *)target, targetSize, "r");
   } else {
     if (target == 9) {
-      globalOptions.deviceHint = Device_PFS;
+      settings.deviceHint = Device_PFS;
 
       // Handle HOSDMenu launch
       if ((res = initPFS(HOSD_CONF_PARTITION, 1, Device_CDROM)))
@@ -75,10 +75,10 @@ int handleOSDM(int argc, char *argv[]) {
       if (target == 1) {
         // If path is osdm:d1:, try to get config from mc1 first
         cnfPath[2] = '1';
-        globalOptions.mcHint = 1;
+        settings.mcHint = 1;
         if (tryFile(cnfPath)) { // If file is not found, revert to mc0
           cnfPath[2] = '0';
-          globalOptions.mcHint = 0;
+          settings.mcHint = 0;
         }
       }
     } else {
@@ -186,6 +186,10 @@ int handleOSDM(int argc, char *argv[]) {
     }
     if (!strncmp(lineBuffer, "ps1drv_use_ps1vn", 16)) {
       ps1drvFlags |= CDROM_PS1_VN;
+      continue;
+    }
+    if (!strncmp(lineBuffer, "app_gameid", 10)) {
+      settings.flags |= FLAG_APP_GAMEID;
       continue;
     }
   }

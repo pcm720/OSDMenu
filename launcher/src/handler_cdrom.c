@@ -76,7 +76,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   if (!skipInit) {
     int res = 0;
 #ifdef APA
-    if (globalOptions.deviceHint == Device_PFS)
+    if (settings.deviceHint == Device_PFS)
       res = initPFS(HOSD_CONF_PARTITION, 0, Device_CDROM);
     else
 #endif
@@ -115,7 +115,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       sleep(1);
       discType = sceCdGetDiskType();
     }
-  } else if (globalOptions.osdBoot) {
+  } else if (settings.flags & FLAG_OSDBOOT) {
     applyOSDCdQuirk();
     sceCdDiskReady(0);
   }
@@ -143,13 +143,14 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   if (titleID[0] != '\0') {
     // Apply eGSM arguments when launching PS2 discs
     if (discType == ExecType_PS2) {
-      if (!globalOptions.gsmArgument)
-        globalOptions.gsmArgument = getOSDGSMArgument(titleID);
-      if (globalOptions.gsmArgument)
-        DPRINTF("CDROM: Using eGSM to force the video mode: %s\n", globalOptions.gsmArgument);
+      if (!settings.gsmArgument)
+        settings.gsmArgument = getOSDGSMArgument(titleID);
+      if (settings.gsmArgument)
+        DPRINTF("CDROM: Using eGSM to force the video mode: %s\n", settings.gsmArgument);
     }
 
     // Update history file and display game ID
+    settings.flags &= ~(FLAG_APP_GAMEID); // Remove the global flag
     updateHistoryFile(titleID);
     if (displayGameID)
       gsDisplayGameID(titleID);
@@ -161,7 +162,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
     strcpy(titleVersion, "???");
 
   sceCdInit(SCECdEXIT);
-  if (globalOptions.deviceHint == Device_PFS)
+  if (settings.deviceHint == Device_PFS)
     deinitPFS();
 
   switch (discType) {
@@ -224,7 +225,7 @@ char *getOSDGSMArgument(char *titleID) {
   DPRINTF("CDROM: Trying to load the eGSM config file\n");
   FILE *gsmConf = NULL;
 #ifdef APA
-  if (globalOptions.deviceHint == Device_PFS)
+  if (settings.deviceHint == Device_PFS)
     // Check the internal HDD for the eGSM config file
     gsmConf = fopen(PFS_MOUNTPOINT HOSDGSM_CONF_PATH, "r");
 #endif
@@ -232,10 +233,10 @@ char *getOSDGSMArgument(char *titleID) {
     // Check both for memory cards for the eGSM config file
     char cnfPath[sizeof(GSM_CONF_PATH) + 1];
     strcpy(cnfPath, GSM_CONF_PATH);
-    cnfPath[2] = globalOptions.mcHint + '0';
+    cnfPath[2] = settings.mcHint + '0';
     gsmConf = fopen(cnfPath, "r");
     if (!gsmConf) {
-      cnfPath[2] = (globalOptions.mcHint == 1) ? '0' : '1';
+      cnfPath[2] = (settings.mcHint == 1) ? '0' : '1';
       gsmConf = fopen(cnfPath, "r");
     }
   }
