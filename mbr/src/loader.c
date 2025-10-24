@@ -48,6 +48,10 @@ typedef struct {
 #define ELF_MAGIC 0x464c457f
 #define ELF_PT_LOAD 1
 
+static char loaderArg[10] = "-la=\0\0\0\0\0\0";
+static char elfMemArg[22] = {0};
+static char ioprpMemArg[22] = {0};
+
 // Loads and executes the embedded loader with provided arguments
 int executeLoader(int argc, char *argv[]) {
   elf_header_t *eh;
@@ -84,9 +88,6 @@ int executeLoader(int argc, char *argv[]) {
 int loadELF(LoadOptions *options) {
   int argPos = 4; // Account for "-la="
   int argc = 0;
-  char loaderArg[10] = "-la=\0\0\0\0\0\0";
-  char elfMemArg[22] = {0};
-  char ioprpMemArg[22] = {0};
 
   // Basic arguments
   if (options->resetIOP) {

@@ -150,12 +150,9 @@ int startHDDApplication(int argc, char *argv[]) {
   }
 
   // Parse SYSTEM.CNF file from the attribute area
-  char bootPath[CNF_MAX_STR];
-  char dev9Power[CNF_MAX_STR];
-  char ioprpPath[CNF_MAX_STR];
-  bootPath[0] = '\0';
-  dev9Power[0] = '\0';
-  ioprpPath[0] = '\0';
+  char *bootPath = calloc(sizeof(char), CNF_MAX_STR);
+  char *dev9Power = calloc(sizeof(char), CNF_MAX_STR);
+  char *ioprpPath = calloc(sizeof(char), CNF_MAX_STR);
   ExecType eType = parseSystemCNF(file, bootPath, NULL, dev9Power, ioprpPath);
   fclose(file);
   if (eType == ExecType_Error) {
