@@ -53,8 +53,8 @@ Multiple paths and arguments are supported for every `boot_` key.
     - `tch` — Traditional Chinese
     - `sch` — Simplified Chinese  
 
-   Note that a list of available languages depends on your PS2 revision and model.
-   For example, Japanese consoles only support Japanese and English languages and will fallback to Japanese if any other language other than English is set.
+   Note that a list of available languages depends on your PS2 revision and model.  
+   For example, Japanese consoles only support Japanese and English languages and will fallback to Japanese if any other language other than English is set.  
    OSDMenu MBR does **not** check whether your console actually supports the language.  
 
 ### Supported paths
