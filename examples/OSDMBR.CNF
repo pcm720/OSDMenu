@@ -20,3 +20,6 @@ ps1drv_enable_fast = 0
 ps1drv_enable_smooth = 0
 ps1drv_use_ps1vn = 0
 prefer_bbn = 0
+app_gameid = 0
+osd_screentype =
+osd_language =

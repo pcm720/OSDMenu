@@ -151,6 +151,7 @@ The launcher supports the following global arguments:
 - `-gsm=<>` — runs the target ELF via the [embedded Neutrino GSM](utils/egsm/).  
   See [this README](utils/loader/README.md#egsm) for more information on the argument format.   
   Must always be the last argument. Does not apply to `rom?:` paths.
+- `-appid` — enables visual Game ID for applications. The ID is generated from the ELF name (up to 11 characters).
 
 ### `udpbd` handler
 
@@ -257,10 +258,11 @@ New to OSDMenu/HOSDMenu:
 29. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
 30. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
 31. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
+32. `app_gameid` — if enabled, visual Game ID will be displayed for ELF applications launched from OSDMenu. The ID is generated from the ELF name (up to 11 characters).
 
 Options exclusive to OSDMenu:
 
-32. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
+33. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
 
 ## OSDGSM.CNF
 
