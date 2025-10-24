@@ -26,7 +26,7 @@ typedef enum {
   FLAG_DISABLE_GAMEID = (1 << 6),   // Disable PixelFX game ID
   FLAG_USE_DKWDRV = (1 << 7),       // Use DKWDRV for PS1 discs
   FLAG_BROWSER_LAUNCHER = (1 << 8), // Apply patches for launching applications from the Browser
-  FLAG_PS1DRV_FAST = (1 << 9),     // If set, will force PS1DRV fast disc speed
+  FLAG_PS1DRV_FAST = (1 << 9),      // If set, will force PS1DRV fast disc speed
   FLAG_PS1DRV_SMOOTH = (1 << 10),   // If set, will force PS1DRV texture smoothing
   FLAG_PS1DRV_USE_VN = (1 << 11),   // If set, run PS1DRV via the PS1DRV Video Mode Negator
 } PatcherFlags;

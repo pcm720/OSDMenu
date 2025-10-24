@@ -123,14 +123,6 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   else
     patchSkipHDD((uint8_t *)epc); // Skip HDD patch for earlier ROMs
 
-  // Replace function calls with no-ops?
-  // Not sure what it does, but leaving it here just in case
-  if (_lw(0x202d78) == 0x0c080898 && _lw(0x202b40) == 0x0c080934 && _lw(0x20ffa0) == 0x0c080934) {
-    _sw(0x00000000, 0x202d78); // replace jal 0x0080898 with nop
-    _sw(0x24020000, 0x202b40); // replace jal 0x0080934 with addiu 0, v0, 0
-    _sw(0x24020000, 0x20ffa0); // replace jal 0x0080934 with addiu 0, v0, 0
-  }
-
 #else
   // HDD OSD
   args[n++] = "hdd0:__system:pfs:/osd100/hosdsys.elf";
