@@ -37,6 +37,9 @@ void patchPS1DRVConfigProtokernel();
 
 // Patches newer 48-bit capable atad driver into HDD-OSD
 void patchATAD();
+
+// Adds support for hiding partitions that have the '.HIDDEN' suffix
+void patchBrowserHiddenPartitions();
 #endif
 
 #endif

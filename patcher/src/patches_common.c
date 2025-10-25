@@ -52,17 +52,14 @@ char *findString(const char *string, char *buf, uint32_t bufsize) {
 
 // Applies patches and executes OSDSYS
 void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
-  if (settings.patcherFlags & FLAG_CUSTOM_MENU) {
-    // If hacked OSDSYS is enabled, apply menu patch
-    patchMenu((uint8_t *)epc);
-    patchMenuDraw((uint8_t *)epc);
-    patchMenuInfiniteScrolling((uint8_t *)epc, 0);
-    patchMenuButtonPanel((uint8_t *)epc);
-  }
+  // If hacked OSDSYS is enabled, apply menu patch
+  patchMenu((uint8_t *)epc);
+  patchMenuDraw((uint8_t *)epc);
+  patchMenuInfiniteScrolling((uint8_t *)epc, 0);
+  patchMenuButtonPanel((uint8_t *)epc);
 
   // Apply browser application launch patch
-  if (settings.patcherFlags & FLAG_BROWSER_LAUNCHER)
-    patchBrowserApplicationLaunch((uint8_t *)epc, 0);
+  patchBrowserApplicationLaunch((uint8_t *)epc, 0);
 
   // Apply version menu patch
   patchVersionInfo((uint8_t *)epc);
@@ -140,6 +137,9 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   // Update atad
   patchATAD();
 
+  // Patch-in support for hidden partitions
+  patchBrowserHiddenPartitions();
+
   // Find sceRemove function
   ptr = findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternSCERemove, (uint8_t *)patternSCERemove_mask, sizeof(patternSCERemove));
   if (ptr)
@@ -215,16 +215,13 @@ void deinitOSDSYS() {
 // Applies patches and executes OSDSYS
 static void *protoEPC;
 void applyProtokernelPatches() {
-  if (settings.patcherFlags & FLAG_CUSTOM_MENU) {
-    // If hacked OSDSYS is enabled, apply menu patch
-    patchMenuProtokernel((uint8_t *)protoEPC);
-    patchMenuDrawProtokernel((uint8_t *)protoEPC);
-    patchMenuInfiniteScrolling((uint8_t *)protoEPC, 1);
-  }
+  // If hacked OSDSYS is enabled, apply menu patch
+  patchMenuProtokernel((uint8_t *)protoEPC);
+  patchMenuDrawProtokernel((uint8_t *)protoEPC);
+  patchMenuInfiniteScrolling((uint8_t *)protoEPC, 1);
 
   // Apply browser application launch patch
-  if (settings.patcherFlags & FLAG_BROWSER_LAUNCHER)
-    patchBrowserApplicationLaunch((uint8_t *)protoEPC, 1);
+  patchBrowserApplicationLaunch((uint8_t *)protoEPC, 1);
 
   // Apply version menu patch
   patchVersionInfoProtokernel((uint8_t *)protoEPC);

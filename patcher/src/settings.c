@@ -229,13 +229,6 @@ int loadConfig(void) {
 
       continue;
     }
-    if (!strcmp(name, "hacked_OSDSYS")) {
-      if (atoi(value))
-        settings.patcherFlags |= FLAG_CUSTOM_MENU;
-      else
-        settings.patcherFlags &= ~(FLAG_CUSTOM_MENU);
-      continue;
-    }
     if (!strcmp(name, "OSDSYS_scroll_menu")) {
       if (atoi(value))
         settings.patcherFlags |= FLAG_SCROLL_MENU;
@@ -262,13 +255,6 @@ int loadConfig(void) {
         settings.patcherFlags |= FLAG_BOOT_BROWSER;
       else
         settings.patcherFlags &= ~(FLAG_BOOT_BROWSER);
-      continue;
-    }
-    if (!strcmp(name, "OSDSYS_Browser_Launcher")) {
-      if (atoi(value))
-        settings.patcherFlags |= FLAG_BROWSER_LAUNCHER;
-      else
-        settings.patcherFlags &= ~(FLAG_BROWSER_LAUNCHER);
       continue;
     }
     if (!strcmp(name, "cdrom_skip_ps2logo")) {
@@ -338,7 +324,7 @@ void initVariables() {
 
 // Loads defaults
 void initConfig(void) {
-  settings.patcherFlags = FLAG_CUSTOM_MENU | FLAG_SCROLL_MENU | FLAG_SKIP_SCE_LOGO | FLAG_SKIP_DISC | FLAG_BROWSER_LAUNCHER;
+  settings.patcherFlags = FLAG_SCROLL_MENU | FLAG_SKIP_SCE_LOGO | FLAG_SKIP_DISC;
   settings.videoMode = 0;
   settings.menuX = 320;
   settings.menuY = 110;

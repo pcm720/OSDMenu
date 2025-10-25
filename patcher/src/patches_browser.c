@@ -301,6 +301,67 @@ void patchBrowserApplicationLaunch(uint8_t *osd) {
   _sw((0x0c000000 | ((uint32_t)setupExitToPreviousModuleCustom >> 2)), (uint32_t)ptr3); // jal setupExitToPreviousModuleCustom
 }
 
+static char hiddenPartitionSuffix[] = ".HIDDEN";
+
+// Replaces one instruction with a more sophisticated comparison loop
+// that additionally checks whether the partition name ends with '.HIDDEN'
+__attribute__((noreturn)) void checkPartitionName() {
+  // Using only temporary registers in this function to avoid clobbering registers used by the patched function
+
+  // Ensure the pointer to the suffix string is loaded into $t1
+  register char *hiddenPtr asm("$9") = hiddenPartitionSuffix;
+  // $v0 is always set to 0x50 by the patched function
+  asm volatile("add   $8, $zero, $s0 \n" // Load the pointer to the partition name into $t0
+               "lb    $v1, 0x1($8)   \n" // Load the second character from the partition name into $v1
+               "bne   $v0, $v1, skip \n" // If second character is not 'P', hide the partition (this replicates the original behavior)
+
+               // Fast-forward to the end of partition name
+               "ff_loop:             \n"
+               "lb    $10, 0x0($8)   \n" // Load a char from the partition name into $t2
+               "beqz  $10, ffwd      \n" // If the char is 0, it's the end of the string
+               "addiu $8, $8, 1      \n" // Increment the partition name pointer
+               "j     ff_loop        \n" // Repeat
+
+               // Decrement the partition name pointer to point to the possible .HIDDEN substring
+               "ffwd:                \n"
+               "addiu $8, $8, 0xFFF9 \n"
+
+               // Main comparison loop
+               "cmp_loop:            \n"
+               "lb    $10, 0x0($8)   \n" // Load a char from the partition name into $t2
+               "lb    $11, 0x0($9)   \n" // Load a char from '.HIDDEN' into $t3
+               "bne   $10, $11, cont \n" // If chars do not match, show the partition
+               "beqz  $10, skip      \n" // If the partition name pointer points at '\0', it's a match and the partition should be hidden
+               "addiu $8, $8, 0x1    \n" // Increment the partition name pointer
+               "addiu $9, $9, 0x1    \n" // Increment the suffix string pointer
+               "j     cmp_loop       \n" // Repeat
+
+               // Hide the partition
+               "skip:                \n"
+               "addiu $s5, $s5, 0x1  \n" // The original branch delay slot instruction
+               "j     0x0025cfd4     \n" // Skip copying the partition data
+
+               // Continue execution
+               "cont:                \n"
+               "j     0x0025cf7c     \n" // Continue copying the partition data
+               :
+               : "r"(hiddenPtr)
+               : "$8", "$10", "$11", "memory");
+  __builtin_unreachable();
+}
+
+// Adds support for hiding partitions that have the '.HIDDEN' suffix from the HDD-OSD Browser
+void patchBrowserHiddenPartitions() {
+  // Make sure the patch can be applied
+  if (_lw(0x0025cf74) != 0x92030001 || _lw(0x0025cf78) != 0x54620016 || _lw(0x0025cf7c) != 0x26b50001)
+    return;
+
+  // Replace the <partitionName>[0] != 'P' condition with jump to checkPartitionName
+  _sw((0x08000000 | ((uint32_t)checkPartitionName >> 2)), (uint32_t)0x0025cf74); // j checkPartitionName
+  _sw(0x00000000, (uint32_t)0x0025cf78);                                         // nop out the next branch instruction
+  _sw(0x00000000, (uint32_t)0x0025cf7c);                                         // nop out the branch delay slot
+}
+
 // Homebrew atad driver with LBA48 support
 extern unsigned char legacy_ps2atad_irx[] __attribute__((aligned(16)));
 extern uint32_t size_legacy_ps2atad_irx;
