@@ -61,8 +61,6 @@ See the MBR [README](mbr/README.md) for more details.
 - Support for setting PS1 driver options on every boot
 - Support for HDD OSD 1.10U
 
-Due to memory limitations and the need to support more devices, the original FMCB launcher was split into two parts: patcher and launcher.
-
 ## Patcher
 
 This is a slimmed-down and refactored version of OSDSYS patches from FMCB 1.8 for modern PS2SDK with some new patches sprinkled in.
@@ -96,7 +94,8 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
 - Launch SAS-compatible applications and ELF files from directories in the `hdd0:__common` partition or the memory card browser
   if directory name is `BOOT`, `<3-letter SAS prefix>_<appname>` or if file name ends with `.ELF` or `.elf`.  
   To launch an app, just press "Enter" after selecting the app icon.
-- ATAD driver is replaced to bypass security checks on unmodified HDD OSD or to fix compatibility with drives larger than 1TB on cracked HDD OSD.  
+- ATAD driver is replaced to bypass security checks and support drives larger than 1TB.
+- HDD partitions that end with `.HIDDEN` are not shown in the HDD Browser.  
     
   Note that HDD OSD will not see more than 1048448 MB. For larger drives, [APA Jail](https://www.psx-place.com/threads/apa-jail.34847/) is recommended.  
   You can also check out [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) for more automated APA Jail experience and easy-to-use HDD OSD+Broadband Navigator setup.
@@ -109,7 +108,7 @@ Patches not supported/limited on protokernel systems:
 - PAL video mode
 
 **OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` (if the config file is not embedded) and patches the `rom0:OSDSYS` binary.  
-**HOSDMenu** version reads settings from `hdd0:__sysconf/osdmenu/OSDMENU.CNF` and patches the `hdd0:__system/osd100/OSDSYS_A.XLF`
+**HOSDMenu** version reads settings from `hdd0:__sysconf/osdmenu/OSDMENU.CNF` and patches `hdd0:__system/osd100/OSDSYS_A.XLF` or `hdd0:__system/osd100/hosdsys.elf`
 
 ### Configuration
 
@@ -126,7 +125,7 @@ See the MBR [README](mbr/README.md) for more details.
 
 ## Launcher
 
-A fully-featured main ELF launcher that handles launching ELFs and CD/DVD discs.  
+A fully-featured ELF launcher that handles launching ELFs and CD/DVD discs.  
 Supports passing arbitrary arguments to an ELF and can also be used standalone.
 
 Supported paths are:
@@ -225,44 +224,42 @@ DKWDRV and custom payload paths are limited to 49 characters.
 ### Configuration options
 
 1. `OSDSYS_video_mode` — force OSDSYS mode. Valid values are `AUTO`, `PAL`, `NTSC`, `480p` or `1080i`
-2. `hacked_OSDSYS` — enables or disables OSDSYS patches
-3. `OSDSYS_scroll_menu` — enables or disables infinite scrolling
-4. `OSDSYS_menu_x` — menu X center coordinate
-5. `OSDSYS_menu_y` — menu Y center coordinate
-6. `OSDSYS_enter_x` — `Enter` button X coordinate (at main OSDSYS menu)
-7. `OSDSYS_enter_y` — `Enter` button Y coordinate (at main OSDSYS menu)
-8. `OSDSYS_version_x` — `Version` button X coordinate (at main OSDSYS menu)
-9. `OSDSYS_version_y` — `Version` button Y coordinate (at main OSDSYS menu)
-10. `OSDSYS_cursor_max_velocity` — max cursor speed
-11. `OSDSYS_cursor_acceleration` — cursor speed
-12. `OSDSYS_left_cursor` — left cursor text
-13. `OSDSYS_right_cursor` — right cursor text
-14. `OSDSYS_menu_top_delimiter` — top menu delimiter text
-15. `OSDSYS_menu_bottom_delimiter` — bottom menu delimiter text
-16. `OSDSYS_num_displayed_items` — the number of menu items displayed
-17. `OSDSYS_Skip_Disc` — enables/disables automatic CD/DVD launch
-18. `OSDSYS_Skip_Logo` — enables/disables SCE logo (also needs `OSDSYS_Skip_Disc` to be disabled to actually show the logo)
-19. `OSDSYS_Inner_Browser` — enables/disables going to the Browser after launching OSDSYS
-20. `OSDSYS_selected_color` — color of selected menu entry
-21. `OSDSYS_unselected_color` — color of unselected menu entry
-22. `name_OSDSYS_ITEM_???` — menu entry name
-23. `path?_OSDSYS_ITEM_???` — path to ELF. Also supports the following special paths: `cdrom`, `OSDSYS`, `POWEROFF`
+2. `OSDSYS_scroll_menu` — enables or disables infinite scrolling
+3. `OSDSYS_menu_x` — menu X center coordinate
+4. `OSDSYS_menu_y` — menu Y center coordinate
+5. `OSDSYS_enter_x` — `Enter` button X coordinate (at main OSDSYS menu)
+6. `OSDSYS_enter_y` — `Enter` button Y coordinate (at main OSDSYS menu)
+7. `OSDSYS_version_x` — `Version` button X coordinate (at main OSDSYS menu)
+8. `OSDSYS_version_y` — `Version` button Y coordinate (at main OSDSYS menu)
+9. `OSDSYS_cursor_max_velocity` — max cursor speed
+10. `OSDSYS_cursor_acceleration` — cursor speed
+11. `OSDSYS_left_cursor` — left cursor text
+12. `OSDSYS_right_cursor` — right cursor text
+13. `OSDSYS_menu_top_delimiter` — top menu delimiter text
+14. `OSDSYS_menu_bottom_delimiter` — bottom menu delimiter text
+15. `OSDSYS_num_displayed_items` — the number of menu items displayed
+16. `OSDSYS_Skip_Disc` — enables/disables automatic CD/DVD launch
+17. `OSDSYS_Skip_Logo` — enables/disables SCE logo (also needs `OSDSYS_Skip_Disc` to be disabled to actually show the logo)
+18. `OSDSYS_Inner_Browser` — enables/disables going to the Browser after launching OSDSYS
+19. `OSDSYS_selected_color` — color of selected menu entry
+20. `OSDSYS_unselected_color` — color of unselected menu entry
+21. `name_OSDSYS_ITEM_???` — menu entry name
+22. `path?_OSDSYS_ITEM_???` — path to ELF. Also supports the following special paths: `cdrom`, `OSDSYS`, `POWEROFF`
 
 New to OSDMenu/HOSDMenu:
 
-24. `arg_OSDSYS_ITEM_???` — custom argument to be passed to the ELF. Each argument needs a separate entry.
-25. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`. Useful for MechaPwn-patched consoles.
-26. `cdrom_disable_gameid` — disables or enables visual Game ID
-27. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
-28. `OSDSYS_Browser_Launcher` — enables/disables patch for launching applications from the Browser 
-29. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
-30. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
-31. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
-32. `app_gameid` — if enabled, visual Game ID will be displayed for ELF applications launched from OSDMenu. The ID is generated from the ELF name (up to 11 characters).
+23. `arg_OSDSYS_ITEM_???` — custom argument to be passed to the ELF. Each argument needs a separate entry.
+24. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`. Useful for MechaPwn-patched consoles.
+25. `cdrom_disable_gameid` — disables or enables visual Game ID
+26. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
+27. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
+28. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
+29. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
+30. `app_gameid` — if enabled, visual Game ID will be displayed for ELF applications launched from OSDMenu. The ID is generated from the ELF name (up to 11 characters).
 
 Options exclusive to OSDMenu:
 
-33. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
+31. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
 
 ## OSDGSM.CNF
 
