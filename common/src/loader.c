@@ -1,6 +1,5 @@
 #include "loader.h"
 #include "dprintf.h"
-#include "init.h"
 #include <errno.h>
 #include <iopcontrol.h>
 #include <kernel.h>

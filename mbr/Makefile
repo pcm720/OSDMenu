@@ -78,13 +78,15 @@ ps1vn.elf:
 %_sys.c:
 	$(BIN2C) ../common/res/$(*:$(EE_SRC_DIR)%=%).sys $@ $(*:$(EE_SRC_DIR)%=%)_sys
 
-# Common CDROM files
+# Common files
 $(EE_OBJS_DIR)history.o: | $(EE_OBJS_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/history.c -o $@
 $(EE_OBJS_DIR)game_id.o: | $(EE_OBJS_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/game_id.c -o $@
 $(EE_OBJS_DIR)cdrom.o: | $(EE_OBJS_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/cdrom.c -o $@
+$(EE_OBJS_DIR)loader.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/loader.c -o $@
 
 BIN2C = $(PS2SDK)/bin/bin2c
 
