@@ -1,7 +1,9 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include "loader.h"
 #include <stdint.h>
+#include <stdio.h>
 
 typedef enum {
   FLAG_SKIP_PS2_LOGO = (1 << 0),  // Skip PS2LOGO when booting discs
@@ -45,9 +47,23 @@ typedef struct {
   int8_t osdScreenType;
 } Settings;
 
+// Custom  options
+typedef struct {
+  char *bootPath;
+  char *ioprpPath;
+  int skipArgv0;
+  int argCount;
+  char **args;
+  ShutdownType dev9ShutdownType;
+} SystemCNFOptions;
+
 // Stores MBR settings
 extern Settings settings;
 
 int loadConfig(void);
+
+// Parses the PATINFO SYSTEM.CNF file into passed string pointers
+// Returns the executable type or a PIExecType_Error if an error occurs.
+void parsePISystemCNF(FILE *cnfFile, SystemCNFOptions *opts);
 
 #endif

@@ -1,3 +1,4 @@
+#include "cdrom.h"
 #include "common.h"
 #include "config.h"
 #include "disc.h"
@@ -5,7 +6,6 @@
 #include "game_id.h"
 #include "history.h"
 #include "loader.h"
-#include <cdrom.h>
 #include <iopcontrol.h>
 #include <libsecr.h>
 #include <ps2sdkapi.h>
@@ -150,39 +150,34 @@ int startHDDApplication(int argc, char *argv[]) {
   }
 
   // Parse SYSTEM.CNF file from the attribute area
-  char *bootPath = calloc(sizeof(char), CNF_MAX_STR);
-  char *dev9Power = calloc(sizeof(char), CNF_MAX_STR);
-  char *ioprpPath = calloc(sizeof(char), CNF_MAX_STR);
-  ExecType eType = parseSystemCNF(file, bootPath, NULL, dev9Power, ioprpPath);
+  SystemCNFOptions opts = {0};
+  parsePISystemCNF(file, &opts);
   fclose(file);
-  if (eType == ExecType_Error) {
-    fioClose(fd);
-    msg("Failed to parse SYSTEM.CNF\n");
-    return -EINVAL;
-  }
 
-  DPRINTF("====\nSYSTEM.CNF:\nBoot path: %s\nDEV9 power: %s\nIOPRP Path: %s\n====\n", bootPath, dev9Power, ioprpPath);
+  DPRINTF("====\nSYSTEM.CNF:\n");
+  if (opts.bootPath)
+    DPRINTF("Boot path: %s\n", opts.bootPath);
+  if (opts.ioprpPath)
+    DPRINTF("IOPRP Path: %s\n", opts.ioprpPath);
+  DPRINTF("DEV9 Shutdown Type: %d\nSkip argv[0] = %d\nAdditional arguments:\n", opts.dev9ShutdownType, opts.skipArgv0);
+  for (int i = 0; i < opts.argCount; i++)
+    DPRINTF("argv[%d]: %s\n", i, opts.args[i]);
+  DPRINTF("====\n");
 
-  if (bootPath[0] == '\0' || !strcmp(bootPath, "NOBOOT") || !strcmp(ioprpPath, "NOBOOT")) {
+  if (!opts.bootPath || opts.bootPath[0] == '\0' || !strcmp(opts.bootPath, "NOBOOT") || (opts.ioprpPath && !strcmp(opts.ioprpPath, "NOBOOT"))) {
     fioClose(fd);
     bootFail("Invalid boot path\n");
   }
 
   // Parse the options
-  LoadOptions opts = {0};
-
-  // DEV9
-  if (dev9Power[0] != '\0') {
-    if (!strcmp(dev9Power, "NIC"))
-      opts.dev9ShutdownType = ShutdownType_HDD;
-    else if (!strcmp(dev9Power, "NICHDD"))
-      opts.dev9ShutdownType = ShutdownType_None;
-  }
+  LoadOptions lopts = {0};
+  lopts.skipArgv0 = opts.skipArgv0;
+  lopts.dev9ShutdownType = opts.dev9ShutdownType;
 
   // IOPRP
-  if (ioprpPath[0] != '\0') {
-    if (strcmp(ioprpPath, "PATINFO"))
-      opts.ioprpPath = ioprpPath;
+  if (opts.ioprpPath && opts.ioprpPath[0] != '\0') {
+    if (strcmp(opts.ioprpPath, "PATINFO"))
+      lopts.ioprpPath = opts.ioprpPath;
     else {
       // Load the IOPRP image into memory
       if (readPATINFOFile((void *)PATINFO_IOPRP_MEM_ADDR, fd, header.ioprp, NULL)) {
@@ -190,30 +185,33 @@ int startHDDApplication(int argc, char *argv[]) {
         bootFail("Failed to read IOPRP image into memory\n");
       }
 
-      opts.ioprpMem = (void *)PATINFO_IOPRP_MEM_ADDR;
-      opts.ioprpSize = header.ioprp.size;
+      lopts.ioprpMem = (void *)PATINFO_IOPRP_MEM_ADDR;
+      lopts.ioprpSize = header.ioprp.size;
     }
   }
 
   // ELF
-  if (!strncmp(bootPath, "cdrom", 5)) {
+  if (!strncmp(opts.bootPath, "cdrom", 5)) {
     fioClose(fd);
-    updateLaunchHistory(bootPath);
-    handlePS2Disc(bootPath);
+    updateLaunchHistory(opts.bootPath);
+    handlePS2Disc(opts.bootPath);
   }
 
-  opts.argc = argc - 2;
-  if (opts.argc < 1)
-    opts.argc = 1;
+  lopts.argc = argc + opts.argCount;
+  if (lopts.argc < 1)
+    lopts.argc = 1;
 
-  opts.argv = malloc(opts.argc * sizeof(char *));
+  lopts.argv = malloc(lopts.argc * sizeof(char *));
 
-  // Copy additional arguments
-  if (opts.argc > 1)
-    for (int i = 1; i < opts.argc; i++)
-      opts.argv[i] = argv[i];
+  // Copy additional arguments while leaving argv[0] empty
+  if (lopts.argc > 1) {
+    for (int i = 1; i < argc; i++)
+      lopts.argv[i] = argv[i];
+    for (int i = 0; i < opts.argCount; i++)
+      lopts.argv[i + argc] = opts.args[i];
+  }
 
-  if (!strcmp(bootPath, "PATINFO")) {
+  if (!strcmp(opts.bootPath, "PATINFO")) {
     // Load ELF into memory
     uint32_t decryptAddr = 0;
     if (readPATINFOFile((void *)PATINFO_ELF_MEM_ADDR, fd, header.elf, &decryptAddr)) {
@@ -222,25 +220,28 @@ int startHDDApplication(int argc, char *argv[]) {
     }
 
     if (decryptAddr != 0) {
-      opts.elfMem = (void *)decryptAddr;
+      lopts.elfMem = (void *)decryptAddr;
     } else
-      opts.elfMem = (void *)PATINFO_ELF_MEM_ADDR;
+      lopts.elfMem = (void *)PATINFO_ELF_MEM_ADDR;
 
-    opts.elfSize = header.elf.size;
-    opts.argv[0] = argv[0]; // Set partition path as argv[0]
-  } else if (!strncmp(bootPath, "pfs", 3)) {
-    // Build the full path, reusing dev9Power as the string buffer
-    char *pfsPath = strchr(bootPath, '/');
+    lopts.elfSize = header.elf.size;
+    lopts.argv[0] = argv[0]; // Set partition path as argv[0]
+  } else if (!strncmp(opts.bootPath, "pfs", 3)) {
+    // Build the full path
+    char *pfsPath = strchr(opts.bootPath, '/');
+    char *fullPath = malloc(CNF_MAX_STR);
+    fullPath[0] = '\0';
     if (pfsPath) {
-      sprintf(dev9Power, "%s:pfs:%s", argv[2], pfsPath);
-      opts.argv[0] = dev9Power;
+      sprintf(fullPath, "%s:pfs:%s", argv[2], pfsPath);
+      lopts.argv[0] = fullPath;
+      free(opts.bootPath);
     }
   } else
-    opts.argv[0] = bootPath; // Pass the bootPath as-is
+    lopts.argv[0] = opts.bootPath; // Pass the opts.bootPath as-is
 
   fioClose(fd);
   updateLaunchHistory(argv[0]);
-  return loadELF(&opts);
+  return loadELF(&lopts);
 }
 
 // Starts the dnasload applcation

@@ -48,7 +48,7 @@ typedef struct {
 #define ELF_MAGIC 0x464c457f
 #define ELF_PT_LOAD 1
 
-static char loaderArg[10] = "-la=\0\0\0\0\0\0";
+static char loaderArg[11] = "-la=\0\0\0\0\0\0\0";
 static char elfMemArg[22] = {0};
 static char ioprpMemArg[22] = {0};
 
@@ -92,6 +92,10 @@ int loadELF(LoadOptions *options) {
   // Basic arguments
   if (options->resetIOP) {
     loaderArg[argPos++] = 'R';
+    argc = 1;
+  }
+  if (options->skipArgv0) {
+    loaderArg[argPos++] = 'A';
     argc = 1;
   }
   if (options->dev9ShutdownType == ShutdownType_HDD) {

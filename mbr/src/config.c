@@ -260,3 +260,73 @@ int loadConfig() {
   umountPFS();
   return 0;
 }
+
+// Parses the PATINFO SYSTEM.CNF file
+// Returns the executable type or a PIExecType_Error if an error occurs.
+void parsePISystemCNF(FILE *cnfFile, SystemCNFOptions *opts) {
+  opts->bootPath = NULL;
+  opts->ioprpPath = NULL;
+  opts->skipArgv0 = 0;
+  opts->args = NULL;
+  opts->argCount = 0;
+  opts->dev9ShutdownType = ShutdownType_None;
+
+  char lineBuffer[255] = {0};
+  char *valuePtr = NULL;
+  linkedStr *args = NULL;
+  while (fgets(lineBuffer, sizeof(lineBuffer), cnfFile)) { // fgets returns NULL if EOF or an error occurs
+    // Find the start of the value
+    valuePtr = strchr(lineBuffer, '=');
+    if (!valuePtr)
+      continue;
+
+    // Trim whitespace and terminate the value
+    do {
+      valuePtr++;
+    } while (isspace((int)*valuePtr));
+    valuePtr[strcspn(valuePtr, "\r\n")] = '\0';
+
+    if (!strncmp(lineBuffer, "BOOT2", 5)) { // PS2 title
+      opts->bootPath = strdup(valuePtr);
+      continue;
+    }
+    if (!strncmp(lineBuffer, "HDDUNITPOWER", 12)) { // DEV9 Power
+      if (!strncmp(valuePtr, "NICHDD", 6))
+        opts->dev9ShutdownType = ShutdownType_None;
+      else if (!strncmp(valuePtr, "NIC", 3))
+        opts->dev9ShutdownType = ShutdownType_HDD;
+      continue;
+    }
+    if (!strncmp(lineBuffer, "IOPRP", 5)) { // IOPRP path
+      opts->ioprpPath = strdup(valuePtr);
+      continue;
+    }
+    if (!strncmp(lineBuffer, "path", 4)) {
+      opts->bootPath = strdup(valuePtr);
+      continue;
+    }
+    if (!strncmp(lineBuffer, "skip_argv0", 10)) {
+      opts->skipArgv0 = atoi(valuePtr);
+      continue;
+    }
+    if (!strncmp(lineBuffer, "arg", 3)) {
+      args = addStr(args, valuePtr);
+      opts->argCount++;
+      continue;
+    }
+  }
+
+  if (opts->argCount > 0) {
+    // Assemble argv array
+    opts->args = malloc(opts->argCount);
+    linkedStr *narg = NULL;
+    int argIdx = 0;
+    while (args != NULL) {
+      opts->args[argIdx++] = args->str;
+      narg = args->next;
+      free(args);
+      args = narg;
+    }
+  }
+  return;
+}
