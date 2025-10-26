@@ -103,6 +103,7 @@ uint32_t parseGSMFlags(char *gsmArg);
 //   - 'D': Keep both the HDD and DEV9 powered on (HDDUNITPOWER = NICHDD)
 //   - 'I': The argv[argc-2] argument contains IOPRP image path (for HDD, the path must be a pfs: path on the same partition as the ELF file)
 //   - 'E': The argv[argc-2] argument contains ELF memory location to use instead of argv[0]
+//   - 'A': Do not pass argv[0] to the target ELF and start with argv[1].
 //   - 'G': Force video mode via eGSM. The argv[argc-2] argument contains eGSM arguments:
 //          The argument format is inherited from Neutrino GSM and defined as `x:y:z`, where
 //          x — Interlaced field mode, when a full height buffer is used by the game for displaying. Force video output to:
@@ -135,6 +136,7 @@ int main(int argc, char *argv[]) {
   char *ioprpPath = NULL;
   char *elfPath = NULL;
   uint32_t eGSMFlags = 0;
+  uint32_t skipArgv0 = 0;
 
   // Init SIF RPC
   sceSifInitRpc(0);
@@ -169,6 +171,9 @@ int main(int argc, char *argv[]) {
         eGSMFlags = parseGSMFlags(argv[argc - 2]);
         argc--;
         break;
+      case 'A':
+        skipArgv0 = 1;
+        break;
       default:
       }
     }
@@ -191,6 +196,11 @@ int main(int argc, char *argv[]) {
         elfPath++; // point to 'pfs...'
     } else
       elfPath = argv[0];
+  }
+
+  if (skipArgv0) {
+    argc--;
+    argv = &argv[1];
   }
 
   // Handle in-memory ELF file
