@@ -1,6 +1,6 @@
 #include "defaults.h"
 #include "init.h"
-#include "loader.h"
+#include "launcher.h"
 #include "patches_fmcb.h"
 #include "patches_osdmenu.h"
 #include "patterns_common.h"

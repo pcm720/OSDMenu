@@ -1,7 +1,7 @@
 #include "defaults.h"
 #include "gs.h"
 #include "init.h"
-#include "loader.h"
+#include "launcher.h"
 #include "patches_common.h"
 #include "settings.h"
 #include "splash.h"

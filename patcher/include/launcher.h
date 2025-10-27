@@ -1,5 +1,5 @@
-#ifndef _LOADER_H_
-#define _LOADER_H_
+#ifndef _LAUNCHER_H_
+#define _LAUNCHER_H_
 
 #include <stdint.h>
 

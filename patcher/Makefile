@@ -22,7 +22,7 @@ EE_INCS = -I../common/include -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include 
 EE_LINKFILE = linkfile
 EE_LIBS = -lpatches -ldma
 
-EE_OBJS = main.o settings.o init.o loader.o patches_common.o patches_fmcb.o gs.o
+EE_OBJS = main.o settings.o init.o launcher.o patches_common.o patches_fmcb.o gs.o
 EE_OBJS += patches_browser.o patches_gs.o patches_version.o patches_ps1drv.o
 ELF_FILES += launcher.elf
 

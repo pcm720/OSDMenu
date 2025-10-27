@@ -72,7 +72,6 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
 - Force GS video mode to PAL, NTSC, 1080i or line-doubled 480p (with half the vertical resolution).  
   _Due to how to OSDSYS renders everything, "true" 480p can't be implemented easily_
 - HDD update check bypass
-- Integrated Neutrino GSM
 - Override PS1 and PS2 disc launch functions with the launcher, bringing the following features to OSDSYS/HDD-OSD:
   - Skip the PlayStation 2 logo
   - Display the visual Game ID for the PixelFX RetroGM
