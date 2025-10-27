@@ -1,10 +1,42 @@
-// GS functions
-// Based on code by Tony Saveski, t_saveski@yahoo.com
+#include <ctype.h>
 #include <dmaKit.h>
 #include <gsKit.h>
 #include <kernel.h>
 #include <stdint.h>
 #include <stdio.h>
+
+// Attempts to generate a title ID from path
+void generateTitleIDFromELF(char *path, char *dst) {
+  // Try to extract the ELF name
+  char *ext = strstr(path, ".ELF");
+  if (!ext)
+    ext = strstr(path, ".elf");
+
+  // Find the start of the ELF name
+  char *elfName = strrchr(path, '/');
+  if (!elfName)
+    return;
+
+  // Advance to point to the actual name
+  elfName++;
+  // Temporarily terminate the string at extension,
+  // copy the first 11 characters and restore the '.'
+  if (ext)
+    *ext = '\0';
+
+  strncpy(dst, elfName, 11);
+
+  if (ext)
+    *ext = '.';
+
+  // Remove whitespace at the end
+  for (int i = 10; i >= 0; i--) {
+    if (isspace((int)dst[i])) {
+      dst[i] = '\0';
+      break;
+    }
+  }
+}
 
 //
 // GameID code based on https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher

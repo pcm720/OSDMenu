@@ -1,4 +1,4 @@
-#include "cdrom.h"
+#include "cnf.h"
 #include "dprintf.h"
 #include "game_id_table.h"
 #include <ctype.h>
@@ -16,16 +16,20 @@
 // Attempts to guess PS1 title ID from volume creation date stored in PVD
 const char *getPS1GenericTitleID();
 
-// Parses the SYSTEM.CNF file into passed string pointers
-// - bootPath (BOOT/BOOT2): boot path
-// - titleVersion (VER): title version (optional, argument can be NULL)
-// - dev9Power (HDDUNITPOWER): can be NIC or NICHDD (optional)
-// - ioprpPath (IOPRP): IOPRP path (optional)
-// Returns the executable type or a ExecType_Error if an error occurs.
-// All parameters must have at least CNF_MAX_STR bytes allocated.
-ExecType parseSystemCNF(FILE *cnfFile, char *bootPath, char *titleVersion, char *dev9Power, char *ioprpPath) {
+// Parses the SYSTEM.CNF file with support for OSDMenu PATINFO extensions
+// Returns the executable type or a PIExecType_Error if an error occurs.
+ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts) {
+  opts->bootPath = NULL;
+  opts->ioprpPath = NULL;
+  opts->titleVersion = NULL;
+  opts->args = NULL;
+  opts->skipArgv0 = 0;
+  opts->argCount = 0;
+  opts->dev9ShutdownType = ShutdownType_All;
+
   char lineBuffer[255] = {0};
   char *valuePtr = NULL;
+  linkedStr *args = NULL;
   ExecType type = ExecType_Error;
   while (fgets(lineBuffer, sizeof(lineBuffer), cnfFile)) { // fgets returns NULL if EOF or an error occurs
     // Find the start of the value
@@ -41,29 +45,75 @@ ExecType parseSystemCNF(FILE *cnfFile, char *bootPath, char *titleVersion, char 
 
     if (!strncmp(lineBuffer, "BOOT2", 5)) { // PS2 title
       type = ExecType_PS2;
-      strncpy(bootPath, valuePtr, CNF_MAX_STR);
+      opts->bootPath = strdup(valuePtr);
       continue;
     }
     if (!strncmp(lineBuffer, "BOOT", 4)) { // PS1 title
       type = ExecType_PS1;
-      strncpy(bootPath, valuePtr, CNF_MAX_STR);
+      opts->bootPath = strdup(valuePtr);
       continue;
     }
-    if (titleVersion && !strncmp(lineBuffer, "VER", 3)) { // Title version
-      strncpy(titleVersion, valuePtr, CNF_MAX_STR);
+    if (!strncmp(lineBuffer, "HDDUNITPOWER", 12)) { // DEV9 Power
+      if (!strncmp(valuePtr, "NICHDD", 6))
+        opts->dev9ShutdownType = ShutdownType_None;
+      else if (!strncmp(valuePtr, "NIC", 3))
+        opts->dev9ShutdownType = ShutdownType_HDD;
       continue;
     }
-    if (dev9Power && !strncmp(lineBuffer, "HDDUNITPOWER", 12)) { // DEV9 Power
-      strncpy(dev9Power, valuePtr, CNF_MAX_STR);
+    if (!strncmp(lineBuffer, "IOPRP", 5)) { // IOPRP path
+      opts->ioprpPath = strdup(valuePtr);
       continue;
     }
-    if (ioprpPath && !strncmp(lineBuffer, "IOPRP", 5)) { // IOPRP path
-      strncpy(ioprpPath, valuePtr, CNF_MAX_STR);
+    if (!strncmp(lineBuffer, "VER", 3)) { // Title version
+      opts->titleVersion = strdup(valuePtr);
+      continue;
+    }
+    if (!strncmp(lineBuffer, "path", 4)) { // Extended launcher path
+      type = ExecType_PS2;
+      opts->bootPath = strdup(valuePtr);
+      continue;
+    }
+    if (!strncmp(lineBuffer, "skip_argv0", 10)) { // Skip argv[0] flag
+      opts->skipArgv0 = atoi(valuePtr);
+      continue;
+    }
+    if (!strncmp(lineBuffer, "arg", 3)) { // Custom argument
+      args = addStr(args, valuePtr);
+      opts->argCount++;
       continue;
     }
   }
 
+  if (opts->argCount > 0) {
+    // Assemble argv array
+    opts->args = malloc(opts->argCount);
+    linkedStr *narg = NULL;
+    int argIdx = 0;
+    while (args != NULL) {
+      opts->args[argIdx++] = args->str;
+      narg = args->next;
+      free(args);
+      args = narg;
+    }
+  }
   return type;
+}
+
+void freeSystemCNFOptions(SystemCNFOptions *opts) {
+  if (opts->bootPath)
+    free(opts->bootPath);
+
+  if (opts->ioprpPath)
+    free(opts->ioprpPath);
+
+  if (opts->titleVersion)
+    free(opts->titleVersion);
+
+  if (opts->args) {
+    for (int i = 0; i < opts->argCount; i++)
+      free(opts->args[i]);
+    free(opts->args);
+  }
 }
 
 // Parses the SYSTEM.CNF file on CD/DVD into passed string pointers and attempts to detect the title ID
@@ -115,13 +165,19 @@ int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion) {
     return -ENOENT;
   }
 
-  ExecType type = parseSystemCNF(file, bootPath, titleVersion, NULL, NULL);
+  SystemCNFOptions opts = {0};
+  ExecType type = parseSystemCNF(file, &opts);
   fclose(file);
   free(cnf);
   if (type < 0) {
+    freeSystemCNFOptions(&opts);
     DPRINTF("Failed to parse SYSTEM.CNF: %d\n", type);
     return type;
   }
+
+  strcpy(bootPath, opts.bootPath);
+  strcpy(titleVersion, opts.titleVersion);
+  freeSystemCNFOptions(&opts);
 
   // Get the start of the executable path
   char *valuePtr = strchr(bootPath, '\\');
@@ -179,4 +235,44 @@ const char *getPS1GenericTitleID() {
     }
   }
   return NULL;
+}
+
+// Adds a new string to linkedStr and returns
+linkedStr *addStr(linkedStr *lstr, char *str) {
+  linkedStr *newLstr = malloc(sizeof(linkedStr));
+  if (!newLstr)
+    return NULL;
+
+  newLstr->str = strdup(str);
+  newLstr->next = NULL;
+
+  if (lstr) {
+    linkedStr *tLstr = lstr;
+    // If lstr is not null, go to the last element and
+    // link the new element
+    while (tLstr->next)
+      tLstr = tLstr->next;
+
+    tLstr->next = newLstr;
+    return lstr;
+  }
+
+  // Else, return the new element as the first one
+  return newLstr;
+}
+
+// Frees all elements of linkedStr
+void freeLinkedStr(linkedStr *lstr) {
+  if (!lstr)
+    return;
+
+  linkedStr *tPtr = lstr;
+  while (lstr->next) {
+    free(lstr->str);
+    tPtr = lstr->next;
+    free(lstr);
+    lstr = tPtr;
+  }
+  free(lstr->str);
+  free(lstr);
 }
