@@ -46,6 +46,9 @@ int handleOSDArgs(int argc, char *argv[]);
 // Starts the executable pointed to by argv[0]
 int handleConfigPath(int argc, char *argv[]);
 
+// Starts the dnasload applcation
+void startDNAS(int argc, char *argv[]);
+
 int main(int argc, char *argv[]) {
   // Initialize IOP modules
   int res = 0;
@@ -268,6 +271,23 @@ int handleOSDArgs(int argc, char *argv[]) {
   argv[1] = "BootError";
   bootFailWithArgs("Failed to handle the argument\n", argc, &argv[1]);
   return -1;
+}
+
+// Starts the dnasload applcation
+void startDNAS(int argc, char *argv[]) {
+  // Update the history file
+  char *titleID = generateTitleID(argv[2]);
+  if (titleID)
+    updateLaunchHistory(titleID);
+
+  // Override argv[1] with the dnasload path and adjust argc
+  argv[1] = "hdd0:__system:pfs:/dnas100/dnasload.elf";
+  argc -= 1;
+  LoadOptions opts = {
+      .argc = argc,
+      .argv = &argv[1],
+  };
+  loadELF(&opts);
 }
 
 // Starts the executable pointed to by argv[0]

@@ -24,4 +24,7 @@ void bootFailWithArgs(char *msg, int argc, char *argv[]);
 // Shuts down HDD, dev9 and exits to OSDSYS
 void bootFail(char *msg);
 
+// Updates the history file and shows game ID
+void updateLaunchHistory(char *titleID);
+
 #endif

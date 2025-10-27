@@ -26,7 +26,4 @@ int umountPFS();
 // Starts HDD application using data from the partition attribute area header
 int startHDDApplication(int argc, char *argv[]);
 
-// Starts the dnasload applcation
-void startDNAS(int argc, char *argv[]);
-
 #endif

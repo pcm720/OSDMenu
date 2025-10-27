@@ -4,7 +4,6 @@
 #include "disc.h"
 #include "dprintf.h"
 #include "game_id.h"
-#include "history.h"
 #include "loader.h"
 #include <iopcontrol.h>
 #include <libsecr.h>
@@ -40,9 +39,6 @@ typedef struct {
   AttributeAreaFile elf;
   AttributeAreaFile ioprp;
 } AttributeAreaHeader;
-
-// Updates the history file and shows game ID
-void updateLaunchHistory(char *titleID);
 
 // Addresses for PATINFO files
 #define PATINFO_ELF_MEM_ADDR 0x1000000
@@ -251,43 +247,4 @@ int startHDDApplication(int argc, char *argv[]) {
     free(opts.titleID);
   }
   return loadELF(&lopts);
-}
-
-// Starts the dnasload applcation
-void startDNAS(int argc, char *argv[]) {
-  // Update the history file
-  char *titleID = generateTitleID(argv[2]);
-  if (titleID)
-    updateLaunchHistory(titleID);
-
-  // Override argv[1] with the dnasload path and adjust argc
-  argv[1] = "hdd0:__system:pfs:/dnas100/dnasload.elf";
-  argc -= 1;
-  LoadOptions opts = {
-      .argc = argc,
-      .argv = &argv[1],
-  };
-  loadELF(&opts);
-}
-
-// Updates the history file and shows game ID
-void updateLaunchHistory(char *titleID) {
-  if (!titleID || titleID[0] == '\0')
-    return;
-
-  if (!((titleID[4] == '_') && ((titleID[7] == '.') || (titleID[8] == '.')))) {
-    if (settings.flags & FLAG_APP_GAMEID)
-      // Display game ID even if the title ID is not a valid PS2 title ID
-      goto gameid;
-    else
-      return;
-  }
-
-  updateHistoryFile(titleID);
-gameid:
-  if (!(settings.flags & FLAG_DISABLE_GAMEID))
-    gsDisplayGameID(titleID);
-
-  free(titleID);
-  return;
 }
