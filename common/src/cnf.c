@@ -22,6 +22,7 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts) {
   opts->bootPath = NULL;
   opts->ioprpPath = NULL;
   opts->titleVersion = NULL;
+  opts->titleID = NULL;
   opts->args = NULL;
   opts->skipArgv0 = 0;
   opts->argCount = 0;
@@ -84,6 +85,8 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts) {
     }
   }
 
+  opts->titleID = generateTitleID(opts->bootPath);
+
   if (opts->argCount > 0) {
     // Assemble argv array
     opts->args = malloc(opts->argCount);
@@ -99,6 +102,8 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts) {
   return type;
 }
 
+// Frees all paths and arguments in SystemCNFOptions.
+// Does not free the SystemCNFOptions itself.
 void freeSystemCNFOptions(SystemCNFOptions *opts) {
   if (opts->bootPath)
     free(opts->bootPath);
@@ -109,6 +114,9 @@ void freeSystemCNFOptions(SystemCNFOptions *opts) {
   if (opts->titleVersion)
     free(opts->titleVersion);
 
+  if (opts->titleID)
+    free(opts->titleID);
+
   if (opts->args) {
     for (int i = 0; i < opts->argCount; i++)
       free(opts->args[i]);
@@ -116,23 +124,15 @@ void freeSystemCNFOptions(SystemCNFOptions *opts) {
   }
 }
 
-// Parses the SYSTEM.CNF file on CD/DVD into passed string pointers and attempts to detect the title ID
-// - bootPath (BOOT/BOOT2): boot path
-// - titleID: detected title ID
-// - titleVersion (VER): title version (optional, argument can be NULL)
-//
-// Returns the executable type or a negative number if an error occurs.
-// Except for titleID (max 12 bytes), all other parameters must have CNF_MAX_STR bytes allocated.
-int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion) {
+// Parses the SYSTEM.CNF file on CD/DVD into SystemCNFOptions
+int parseDiscCNF(SystemCNFOptions *opts) {
   // Open SYSTEM.CNF
   int fd = open("cdrom0:\\SYSTEM.CNF;1", O_RDONLY);
   if (fd < 0) {
     // Apparently not all PS1 titles have SYSTEM.CNF
     // Try to guess the title ID from the disc PVD
-    const char *tID = getPS1GenericTitleID();
-    if (tID) {
-      DPRINTF("Guessed the title ID from disc PVD: %s\n", tID);
-      strncpy(titleID, tID, 11);
+    opts->titleID = generateTitleID("cdrom:");
+    if (opts->titleID) {
       return ExecType_PS1;
     }
     return -ENOENT;
@@ -165,44 +165,12 @@ int parseDiscCNF(char *bootPath, char *titleID, char *titleVersion) {
     return -ENOENT;
   }
 
-  SystemCNFOptions opts = {0};
-  ExecType type = parseSystemCNF(file, &opts);
+  ExecType type = parseSystemCNF(file, opts);
   fclose(file);
   free(cnf);
   if (type < 0) {
-    freeSystemCNFOptions(&opts);
     DPRINTF("Failed to parse SYSTEM.CNF: %d\n", type);
-    return type;
   }
-
-  strcpy(bootPath, opts.bootPath);
-  strcpy(titleVersion, opts.titleVersion);
-  freeSystemCNFOptions(&opts);
-
-  // Get the start of the executable path
-  char *valuePtr = strchr(bootPath, '\\');
-  if (!valuePtr) {
-    valuePtr = strchr(bootPath, ':'); // PS1 CDs don't have \ in the path
-    if (!valuePtr) {
-      DPRINTF("CDROM: Failed to parse the executable for the title ID\n");
-      return type;
-    }
-  }
-  valuePtr++;
-
-  // Do a basic sanity check.
-  // Some PS1 titles might have an off-by-one error in executable name (SLPS_11.111 instead of SLPS_111.11)
-  if ((strlen(valuePtr) > 11) && (valuePtr[4] == '_') && ((valuePtr[7] == '.') || (valuePtr[8] == '.')))
-    strncpy(titleID, valuePtr, 11);
-  else {
-    // Try to guess the title ID from the disc PVD
-    const char *tID = getPS1GenericTitleID();
-    if (tID) {
-      DPRINTF("Guessed the title ID from disc PVD: %s\n", tID);
-      strncpy(titleID, tID, 11);
-    }
-  }
-
   return type;
 }
 
@@ -235,6 +203,113 @@ const char *getPS1GenericTitleID() {
     }
   }
   return NULL;
+}
+
+// Attempts to generate a title ID from path
+char *generateTitleID(char *path) {
+  char *titleID = calloc(sizeof(char), 12);
+  if (!titleID)
+    return NULL;
+  char *valuePtr = NULL;
+
+  // Handle cdrom paths
+  if (!strncmp(path, "cdrom", 5)) {
+    // Get the start of the executable path
+    valuePtr = strchr(path, '\\');
+    if (!valuePtr) {
+      valuePtr = strchr(path, ':'); // PS1 CDs don't have \ in the path
+      if (!valuePtr) {
+        DPRINTF("Failed to parse the executable for the title ID\n");
+        goto fallback;
+      }
+    }
+    valuePtr++;
+
+    // Do a basic sanity check.
+    // Some PS1 titles might have an off-by-one error in executable name (SLPS_11.111 instead of SLPS_111.11)
+    if ((strlen(valuePtr) >= 11) && (valuePtr[4] == '_') && ((valuePtr[7] == '.') || (valuePtr[8] == '.'))) {
+      strncpy(titleID, valuePtr, 11);
+      return titleID;
+    } else {
+      // Try to guess the title ID from the disc PVD
+      const char *tID = getPS1GenericTitleID();
+      if (tID) {
+        DPRINTF("Guessed the title ID from disc PVD: %s\n", tID);
+        strncpy(titleID, tID, 11);
+      }
+      return titleID;
+    }
+    // If title ID doesn't pass the check, proceed to ELF fallback
+  }
+
+  // Handle hdd0 path
+  if ((!strncmp(path, "hdd0:", 5))) {
+    valuePtr = &path[5];
+
+    // Make sure we have a valid partition name
+    if (valuePtr[1] == 'P' && valuePtr[2] == '.') {
+      // Copy everything after ?P.
+      valuePtr += 3;
+      strncpy(titleID, valuePtr, 11);
+
+      // Terminate the string at '.' or ':'
+      if ((valuePtr = strchr(titleID, '.')) || (valuePtr = strchr(titleID, ':')))
+        *valuePtr = '\0';
+
+      // Check if this is a valid PS2 title ID
+      if (titleID[4] == '-') {
+        // Make sure all five characters after the '-' are digits
+        for (int i = 5; i < 10; i++) {
+          if ((titleID[i] < '0') || (titleID[i] > '9'))
+            goto whitespace; // If not, jump to removing possible whitespace from the name
+        }
+
+        // Change the '-' to '_', insert a dot after the first three digits and terminate the string
+        titleID[4] = '_';
+        titleID[10] = titleID[9];
+        titleID[9] = titleID[8];
+        titleID[8] = '.';
+        DPRINTF("Got the title ID from partition name: %s\n", titleID);
+        return titleID;
+      }
+      goto whitespace;
+    }
+  }
+
+fallback:
+  DPRINTF("Extracting title ID from ELF name: %s\n", titleID);
+  // Try to extract the ELF name
+  char *ext = strstr(path, ".ELF");
+  if (!ext)
+    ext = strstr(path, ".elf");
+
+  // Find the start of the ELF name
+  char *elfName = strrchr(path, '/');
+  if (!elfName)
+    return NULL;
+
+  // Advance to point to the actual name
+  elfName++;
+  // Temporarily terminate the string at extension,
+  // copy the first 11 characters and restore the '.'
+  if (ext)
+    *ext = '\0';
+
+  strncpy(titleID, elfName, 11);
+
+  if (ext)
+    *ext = '.';
+
+whitespace:
+  // Remove whitespace at the end
+  for (int i = 10; i >= 0; i--) {
+    if (isspace((int)titleID[i])) {
+      titleID[i] = '\0';
+      break;
+    }
+  }
+  DPRINTF("Path: %s\nTitle ID: %s\n", path, titleID);
+  return titleID;
 }
 
 // Adds a new string to linkedStr and returns
