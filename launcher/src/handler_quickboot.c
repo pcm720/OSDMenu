@@ -1,3 +1,4 @@
+#include "cnf.h"
 #include "common.h"
 #include "dprintf.h"
 #include <ctype.h>

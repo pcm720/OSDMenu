@@ -94,7 +94,7 @@ endif
 
 ifeq ($(CDROM),1)
  EE_CFLAGS += -DCDROM
- EE_OBJS += handler_cdrom.o history.o game_id.o cdrom.o
+ EE_OBJS += handler_cdrom.o history.o game_id.o cnf.o
  RES_FILES += icon_A.sys icon_C.sys icon_J.sys
  IRX_FILES += xparam.irx
  ELF_FILES += ps1vn.elf
@@ -208,8 +208,10 @@ $(EE_OBJS_DIR)history.o: | $(EE_OBJS_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/history.c -o $@
 $(EE_OBJS_DIR)game_id.o: | $(EE_OBJS_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/game_id.c -o $@
-$(EE_OBJS_DIR)cdrom.o: | $(EE_OBJS_DIR)
-	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/cdrom.c -o $@
+$(EE_OBJS_DIR)cnf.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/cnf.c -o $@
+$(EE_OBJS_DIR)loader.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/loader.c -o $@
 
 # PS1 Video Mode Negator
 ps1vn.elf:

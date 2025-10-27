@@ -44,12 +44,6 @@ typedef struct {
 
 extern launcherOptions settings;
 
-// A simple linked list for paths and arguments
-typedef struct linkedStr {
-  char *str;
-  struct linkedStr *next;
-} linkedStr;
-
 // Prints a message to the screen and console
 void msg(const char *str, ...);
 
@@ -67,13 +61,6 @@ char *normalizePath(char *path, DeviceType type);
 
 // Attempts to launch ELF from device and path in argv[0]
 int launchPath(int argc, char *argv[]);
-
-// Adds a new string to linkedStr and returns
-linkedStr *addStr(linkedStr *lstr, char *str);
-
-// Frees all elements of linkedStr
-void freeLinkedStr(linkedStr *lstr);
-
 // Initializes APA-formatted HDD and mounts the partition
 int initPFS(char *path, int clearSPU, DeviceType additionalDevices);
 
@@ -86,5 +73,8 @@ void deinitPFS();
 // Parses the launcher argv for global flags.
 // Returns the new argc
 int parseGlobalFlags(int argc, char *argv[]);
+
+// Loads and executes ELF specified in argv[0]
+int LoadELFFromFile(int argc, char *argv[]);
 
 #endif

@@ -1,4 +1,4 @@
-#include "cdrom.h"
+#include "cnf.h"
 #include "common.h"
 #include "defaults.h"
 #include "dprintf.h"
@@ -188,7 +188,14 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
 
       if (ps1drvFlags & CDROM_PS1_VN) {
         DPRINTF("Starting PS1DRV via PS1VModeNeg with title ID %s and version %s\n", argv[0], argv[1]);
-        LoadEmbeddedELF(ps1vn_elf, 2, argv);
+        LoadOptions opts = {
+            .elfMem = ps1vn_elf,
+            .elfSize = size_ps1vn_elf,
+            .argc = 2,
+            .argv = argv,
+        };
+        loadELF(&opts);
+        return -ENOENT;
       } else {
         char *argv[] = {titleID, titleVersion};
         DPRINTF("Starting PS1DRV with title ID %s and version %s\n", argv[0], argv[1]);

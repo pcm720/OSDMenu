@@ -1,6 +1,8 @@
 #include "dprintf.h"
+#include "game_id.h"
 #include "handlers.h"
 #include "init.h"
+#include "loader.h"
 #include <debug.h>
 #include <fcntl.h>
 #include <kernel.h>
@@ -122,43 +124,6 @@ int launchPath(int argc, char *argv[]) {
   }
 
   return ret;
-}
-
-// Adds a new string to linkedStr and returns
-linkedStr *addStr(linkedStr *lstr, char *str) {
-  linkedStr *newLstr = malloc(sizeof(linkedStr));
-  newLstr->str = strdup(str);
-  newLstr->next = NULL;
-
-  if (lstr) {
-    linkedStr *tLstr = lstr;
-    // If lstr is not null, go to the last element and
-    // link the new element
-    while (tLstr->next)
-      tLstr = tLstr->next;
-
-    tLstr->next = newLstr;
-    return lstr;
-  }
-
-  // Else, return the new element as the first one
-  return newLstr;
-}
-
-// Frees all elements of linkedStr
-void freeLinkedStr(linkedStr *lstr) {
-  if (!lstr)
-    return;
-
-  linkedStr *tPtr = lstr;
-  while (lstr->next) {
-    free(lstr->str);
-    tPtr = lstr->next;
-    free(lstr);
-    lstr = tPtr;
-  }
-  free(lstr->str);
-  free(lstr);
 }
 
 // Attempts to guess device type from path
@@ -339,4 +304,25 @@ int parseGlobalFlags(int argc, char *argv[]) {
   }
 
   return argc;
+}
+
+int LoadELFFromFile(int argc, char *argv[]) {
+  if (settings.flags & FLAG_APP_GAMEID) {
+    char titleID[12] = {0};
+    if (titleID[0] == '\0')
+      generateTitleIDFromELF(argv[0], titleID);
+
+    DPRINTF("Title ID is %s\n", titleID);
+    if (titleID[0] != '\0')
+      gsDisplayGameID(titleID);
+  }
+
+  LoadOptions opts = {
+      .argc = argc,
+      .argv = argv,
+  };
+  if (settings.gsmArgument)
+    opts.eGSM = settings.gsmArgument;
+
+  return loadELF(&opts);
 }
