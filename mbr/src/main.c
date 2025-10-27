@@ -269,35 +269,6 @@ int handleOSDArgs(int argc, char *argv[]) {
   return -1;
 }
 
-// Attempts to extract the title ID from path
-void extractELFName(char *path, char *dst) {
-  // Try to extract the ELF name
-  char *ext = strstr(path, ".ELF");
-  if (!ext && !(ext = strstr(path, ".elf")))
-    return;
-
-  // Find the start of the ELF name
-  char *elfName = strrchr(path, '/');
-  if (!elfName)
-    return;
-
-  // Advance to point to the actual name
-  elfName++;
-  // Temporarily terminate the string at extension,
-  // copy the first 11 characters and restore the '.'
-  *ext = '\0';
-  strncpy(dst, elfName, 11);
-  *ext = '.';
-
-  // Remove whitespace at the end
-  for (int i = 10; i >= 0; i--) {
-    if (isspace((int)dst[i])) {
-      dst[i] = '\0';
-      break;
-    }
-  }
-}
-
 // Starts the executable pointed to by argv[0]
 // Supports the following paths:
 // $HOSDSYS — will run HOSDMenu or HDD-OSD. Make sure argv has space for the additional -mbrboot argument.
@@ -405,7 +376,7 @@ int handleConfigPath(int argc, char *argv[]) {
 start:
   if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID)) {
     if (titleID[0] == '\0')
-      extractELFName(argv[0], titleID);
+      generateTitleIDFromELF(argv[0], titleID);
     if (titleID[0] != '\0')
       gsDisplayGameID(titleID);
   }

@@ -1,4 +1,4 @@
-#include "cdrom.h"
+#include "cnf.h"
 #include "common.h"
 #include "config.h"
 #include "disc.h"
@@ -151,7 +151,7 @@ int startHDDApplication(int argc, char *argv[]) {
 
   // Parse SYSTEM.CNF file from the attribute area
   SystemCNFOptions opts = {0};
-  parsePISystemCNF(file, &opts);
+  parseSystemCNF(file, &opts);
   fclose(file);
 
   DPRINTF("====\nSYSTEM.CNF:\n");

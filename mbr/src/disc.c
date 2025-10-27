@@ -1,4 +1,4 @@
-#include "cdrom.h"
+#include "cnf.h"
 #include "common.h"
 #include "config.h"
 #include "defaults.h"
