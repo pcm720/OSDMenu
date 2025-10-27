@@ -128,19 +128,37 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   }
 
   // Parse SYSTEM.CNF
-  char *bootPath = calloc(sizeof(char), CNF_MAX_STR);
-  char *titleID = calloc(sizeof(char), 12);
-  char *titleVersion = calloc(sizeof(char), CNF_MAX_STR);
-  discType = parseDiscCNF(bootPath, titleID, titleVersion);
-  if (discType < 0) {
+  SystemCNFOptions opts = {0};
+  discType = parseDiscCNF(&opts);
+  if (discType < 0 || (!opts.bootPath && discType != ExecType_PS1)) {
+    freeSystemCNFOptions(&opts);
     msg("CDROM ERROR: Failed to parse SYSTEM.CNF\n");
-    free(bootPath);
-    free(titleID);
-    free(titleVersion);
     return -ENOENT;
   }
 
-  if (titleID[0] != '\0') {
+  char *bootPath = NULL;
+  char *titleID = NULL;
+  char *titleVersion = NULL;
+  if (opts.bootPath)
+    bootPath = strdup(opts.bootPath);
+  if (opts.titleID)
+    titleID = strdup(opts.titleID);
+  if (opts.titleVersion)
+    titleVersion = strdup(opts.titleVersion);
+  else
+    titleVersion = strdup("???");
+  freeSystemCNFOptions(&opts);
+
+  DPRINTF("====\nSYSTEM.CNF:\n");
+  if (bootPath)
+    DPRINTF("Boot path: %s\n", bootPath);
+  if (titleVersion)
+    DPRINTF("Title version: %s\n", titleVersion);
+  if (titleID)
+    DPRINTF("Title ID: %s\n", titleID);
+  DPRINTF("====\n");
+
+  if (titleID && titleID[0] != '\0') {
     // Apply eGSM arguments when launching PS2 discs
     if (discType == ExecType_PS2) {
       if (!settings.gsmArgument)
@@ -156,10 +174,6 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       gsDisplayGameID(titleID);
   } else
     strcpy(titleID, "???"); // Set placeholder value
-
-  if (titleVersion[0] == '\0')
-    // Set placeholder value
-    strcpy(titleVersion, "???");
 
   sceCdInit(SCECdEXIT);
   if (settings.deviceHint == Device_PFS)

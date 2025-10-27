@@ -1,3 +1,4 @@
+#include "cnf.h"
 #include "dprintf.h"
 #include "game_id.h"
 #include "handlers.h"
@@ -308,13 +309,12 @@ int parseGlobalFlags(int argc, char *argv[]) {
 
 int LoadELFFromFile(int argc, char *argv[]) {
   if (settings.flags & FLAG_APP_GAMEID) {
-    char titleID[12] = {0};
-    if (titleID[0] == '\0')
-      generateTitleIDFromELF(argv[0], titleID);
-
-    DPRINTF("Title ID is %s\n", titleID);
-    if (titleID[0] != '\0')
+    char *titleID = generateTitleID(argv[0]);
+    if (titleID) {
+      DPRINTF("Title ID is %s\n", titleID);
       gsDisplayGameID(titleID);
+      free(titleID);
+    }
   }
 
   LoadOptions opts = {
