@@ -1,3 +1,4 @@
+#include "cnf.h"
 #include "common.h"
 #include "config.h"
 #include "crypto.h"
@@ -375,10 +376,12 @@ int handleConfigPath(int argc, char *argv[]) {
 
 start:
   if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID)) {
-    if (titleID[0] == '\0')
-      generateTitleIDFromELF(argv[0], titleID);
-    if (titleID[0] != '\0')
+    char *titleID = generateTitleID(argv[0]);
+    if (titleID) {
+      DPRINTF("Title ID is %s\n", titleID);
       gsDisplayGameID(titleID);
+      free(titleID);
+    }
   }
 
   LoadOptions opts = {};

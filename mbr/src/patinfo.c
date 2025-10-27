@@ -41,8 +41,8 @@ typedef struct {
   AttributeAreaFile ioprp;
 } AttributeAreaHeader;
 
-// Attempts to parse the title from the full boot path and update the history file
-void updateLaunchHistory(char *bootPath);
+// Updates the history file and shows game ID
+void updateLaunchHistory(char *titleID);
 
 // Addresses for PATINFO files
 #define PATINFO_ELF_MEM_ADDR 0x1000000
@@ -157,8 +157,11 @@ int startHDDApplication(int argc, char *argv[]) {
   DPRINTF("====\nSYSTEM.CNF:\n");
   if (opts.bootPath)
     DPRINTF("Boot path: %s\n", opts.bootPath);
+  if (opts.titleID)
+    DPRINTF("Title ID: %s\n", opts.titleID);
   if (opts.ioprpPath)
     DPRINTF("IOPRP Path: %s\n", opts.ioprpPath);
+  DPRINTF("====\nSYSTEM.CNF:\n");
   DPRINTF("DEV9 Shutdown Type: %d\nSkip argv[0] = %d\nAdditional arguments:\n", opts.dev9ShutdownType, opts.skipArgv0);
   for (int i = 0; i < opts.argCount; i++)
     DPRINTF("argv[%d]: %s\n", i, opts.args[i]);
@@ -193,7 +196,10 @@ int startHDDApplication(int argc, char *argv[]) {
   // ELF
   if (!strncmp(opts.bootPath, "cdrom", 5)) {
     fioClose(fd);
-    updateLaunchHistory(opts.bootPath);
+    if (opts.titleID) {
+      updateLaunchHistory(opts.titleID);
+      free(opts.titleID);
+    }
     handlePS2Disc(opts.bootPath);
   }
 
@@ -240,14 +246,19 @@ int startHDDApplication(int argc, char *argv[]) {
     lopts.argv[0] = opts.bootPath; // Pass the opts.bootPath as-is
 
   fioClose(fd);
-  updateLaunchHistory(argv[0]);
+  if (opts.titleID) {
+    updateLaunchHistory(opts.titleID);
+    free(opts.titleID);
+  }
   return loadELF(&lopts);
 }
 
 // Starts the dnasload applcation
 void startDNAS(int argc, char *argv[]) {
   // Update the history file
-  updateLaunchHistory(argv[2]);
+  char *titleID = generateTitleID(argv[2]);
+  if (titleID)
+    updateLaunchHistory(titleID);
 
   // Override argv[1] with the dnasload path and adjust argc
   argv[1] = "hdd0:__system:pfs:/dnas100/dnasload.elf";
@@ -259,69 +270,24 @@ void startDNAS(int argc, char *argv[]) {
   loadELF(&opts);
 }
 
-// Attempts to parse the title from the full boot path and update the history file
-// Handles the following paths:
-// 1. hdd0:?P.<PS2 title ID>[:.]
-// 3. cdrom0:<executable name>;1
-void updateLaunchHistory(char *bootPath) {
-  char titleID[12] = {0};
+// Updates the history file and shows game ID
+void updateLaunchHistory(char *titleID) {
+  if (!titleID || titleID[0] == '\0')
+    return;
 
-  char *valuePtr = strchr(bootPath, '\\');
-  if (valuePtr) {
-    // Handle cdrom0 path
-    valuePtr++;
-    // Do a basic sanity check.
-    if ((strlen(valuePtr) > 11) && (valuePtr[4] == '_') && (valuePtr[8] == '.')) {
-      strncpy(titleID, valuePtr, 11);
-      goto update;
-    }
+  if (!((titleID[4] == '_') && ((titleID[7] == '.') || (titleID[8] == '.')))) {
+    if (settings.flags & FLAG_APP_GAMEID)
+      // Display game ID even if the title ID is not a valid PS2 title ID
+      goto gameid;
+    else
+      return;
   }
 
-  if ((!strncmp(bootPath, "hdd0:", 5))) {
-    // Handle hdd0 path
-    valuePtr = &bootPath[5];
-
-    // Make sure we have a valid partition name
-    if (valuePtr[1] == 'P' && valuePtr[2] == '.') {
-      // Copy everything after ?P.
-      valuePtr += 3;
-      strncpy(titleID, valuePtr, 11);
-
-      // Terminate the string at '.' or ':'
-      if ((valuePtr = strchr(titleID, '.')) || (valuePtr = strchr(titleID, ':')))
-        *valuePtr = '\0';
-
-      // Check if this is a valid PS2 title ID
-      if (titleID[4] == '-') {
-        // Make sure all five characters after the '-' are digits
-        for (int i = 5; i < 10; i++) {
-          if ((titleID[i] < '0') || (titleID[i] > '9'))
-            goto fail;
-        }
-
-        // Change the '-' to '_', insert a dot after the first three digits and terminate the string
-        titleID[4] = '_';
-        titleID[10] = titleID[9];
-        titleID[9] = titleID[8];
-        titleID[8] = '.';
-        goto update;
-      }
-
-      if (settings.flags & FLAG_APP_GAMEID)
-        // Display game ID even if the title ID is invalid
-        goto gameid;
-    }
-  }
-
-fail:
-  DPRINTF("'%s': failed to format the title ID\n", bootPath);
-  return;
-
-update:
-  DPRINTF("Title ID is %s\n", titleID);
   updateHistoryFile(titleID);
 gameid:
   if (!(settings.flags & FLAG_DISABLE_GAMEID))
     gsDisplayGameID(titleID);
+
+  free(titleID);
   return;
 }
