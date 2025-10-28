@@ -28,7 +28,7 @@ int handleQuickboot(char *cnfPath) {
 
   DeviceType dtype;
   if (isHDD) {
-    dtype = Device_PFS;
+    dtype = Device_APA;
     if ((res = initPFS(cnfPath, 0, Device_None)))
       return res;
   } else {

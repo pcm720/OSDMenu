@@ -22,7 +22,7 @@ typedef enum {
   Device_UDPBD = (1 << 7),
   Device_BDM = Device_ATA | Device_USB | Device_MX4SIO | Device_iLink | Device_UDPBD, // For loading common BDM modules
   //
-  Device_PFS = (1 << 8),
+  Device_APA = (1 << 8),
   Device_CDROM = (1 << 9),
   Device_ROM = (1 << 10),
   //
@@ -30,8 +30,9 @@ typedef enum {
 } DeviceType;
 
 typedef enum {
-  FLAG_OSDBOOT = (1 << 0), // Whether the launcher was started from OSDMenu
-  FLAG_APP_GAMEID = (1 << 1),   // Enables/disables showing the visual Game ID for applications
+  FLAG_BOOT_OSD = (1 << 0),     // Whether the launcher was started from OSDMenu
+  FLAG_BOOT_PATINFO = (1 << 1), // Whether the launcher was started from the hdd partition area
+  FLAG_APP_GAMEID = (1 << 2),   // Enables/disables showing the visual Game ID for applications
 } LauncherFlags;
 
 // Defines global launcher options
@@ -69,6 +70,9 @@ int mountPFS(char *path);
 
 // Unmounts the partition
 void deinitPFS();
+
+// Puts HDD in idle mode and powers off the dev9 device
+void shutdownDEV9();
 
 // Parses the launcher argv for global flags.
 // Returns the new argc

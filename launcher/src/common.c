@@ -108,8 +108,11 @@ int launchPath(int argc, char *argv[]) {
     break;
 #endif
 #ifdef APA
-  case Device_PFS:
-    ret = handlePFS(argc, argv);
+  case Device_APA:
+    if (strstr(argv[0], ":PATINFO"))
+      ret = handlePATINFO(argc, argv);
+    else
+      ret = handlePFS(argc, argv);
     break;
 #endif
 #ifdef CDROM
@@ -157,7 +160,7 @@ DeviceType guessDeviceType(char *path) {
 #endif
 #ifdef APA
   } else if (!strncmp("hdd", path, 3)) {
-    return Device_PFS;
+    return Device_APA;
 #endif
 #ifdef CDROM
   } else if (!strncmp("cdrom", path, 5)) {
@@ -173,7 +176,7 @@ DeviceType guessDeviceType(char *path) {
 char *normalizePath(char *path, DeviceType type) {
   pathbuffer[0] = '\0';
   switch (type) {
-  case Device_PFS:
+  case Device_APA:
     if (!strncmp("hdd", path, 3)) {
       char *pfsPath = strstr(path, ":pfs:");
       if (pfsPath) {
@@ -247,14 +250,14 @@ int mountPFS(char *path) {
 #endif
 }
 
-// Initializes APA-formatted HDD and mounts the partition
+// Initializes APA-formatted HDD and mounts the partition if specified
 int initPFS(char *path, int clearSPU, DeviceType additionalDevices) {
 #ifndef APA
   return -ENODEV;
 #else
   int res;
   // Reset IOP
-  if ((res = initModules(Device_PFS | additionalDevices, clearSPU)))
+  if ((res = initModules(Device_APA | additionalDevices, clearSPU)))
     return res;
 
   // Wait for IOP to initialize device driver
@@ -270,6 +273,8 @@ int initPFS(char *path, int clearSPU, DeviceType additionalDevices) {
   if (res < 0)
     return -ENODEV;
 
+  if (!path)
+    return 0;
   return mountPFS(path);
 #endif
 }
@@ -280,6 +285,19 @@ void deinitPFS() {
   fileXioDevctl(PFS_MOUNTPOINT, PDIOC_CLOSEALL, NULL, 0, NULL, 0);
   fileXioSync(PFS_MOUNTPOINT, FXIO_WAIT);
   fileXioUmount(PFS_MOUNTPOINT);
+#endif
+}
+
+// Puts HDD in idle mode and powers off the dev9 device
+void shutdownDEV9() {
+#if defined(APA) || defined(ATA)
+  // Unmount the partition (if mounted)
+  fileXioUmount("pfs0:");
+  // Immediately put HDDs into idle mode
+  fileXioDevctl("hdd0:", HDIOC_IDLEIMM, NULL, 0, NULL, 0);
+  fileXioDevctl("hdd1:", HDIOC_IDLEIMM, NULL, 0, NULL, 0);
+  // Turn off dev9
+  fileXioDevctl("dev9x:", DDIOC_OFF, NULL, 0, NULL, 0);
 #endif
 }
 
@@ -296,10 +314,13 @@ int parseGlobalFlags(int argc, char *argv[]) {
       DPRINTF("Applying eGSM options: %s\n", settings.gsmArgument);
       argc--;
     } else if (!strcmp(argv[i], "-osd")) {
-      settings.flags |= FLAG_OSDBOOT;
+      settings.flags |= FLAG_BOOT_OSD;
       argc--;
     } else if (!strcmp(argv[i], "-appid")) {
       settings.flags |= FLAG_APP_GAMEID;
+      argc--;
+    } else if (!strcmp(argv[i], "-patinfo")) {
+      settings.flags |= FLAG_BOOT_PATINFO;
       argc--;
     }
   }

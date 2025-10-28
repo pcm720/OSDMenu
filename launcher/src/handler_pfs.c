@@ -25,7 +25,7 @@ int handlePFS(int argc, char *argv[]) {
     return res;
 
   // Build PFS path
-  char *elfPath = normalizePath(argv[0], Device_PFS);
+  char *elfPath = normalizePath(argv[0], Device_APA);
   if (!elfPath)
     return -ENODEV;
 

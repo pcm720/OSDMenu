@@ -36,6 +36,12 @@ int handleMMCE(int argc, char *argv[]);
 // Loads ELF from APA-formatted HDD
 int handlePFS(int argc, char *argv[]);
 
+// handler_patinfo.c
+//
+// Starts HDD application using data from the partition attribute area header
+// Assumes argv[0] is the partition path
+int handlePATINFO(int argc, char *argv[]);
+
 // handler_quickboot.c
 //
 // Loads ELF from the .CNF file in CWD

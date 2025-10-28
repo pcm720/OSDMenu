@@ -76,7 +76,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   if (!skipInit) {
     int res = 0;
 #ifdef APA
-    if (settings.deviceHint == Device_PFS)
+    if (settings.deviceHint == Device_APA)
       res = initPFS(HOSD_CONF_PARTITION, 0, Device_CDROM);
     else
 #endif
@@ -115,7 +115,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       sleep(1);
       discType = sceCdGetDiskType();
     }
-  } else if (settings.flags & FLAG_OSDBOOT) {
+  } else if (settings.flags & FLAG_BOOT_OSD) {
     applyOSDCdQuirk();
     sceCdDiskReady(0);
   }
@@ -176,7 +176,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
     strcpy(titleID, "???"); // Set placeholder value
 
   sceCdInit(SCECdEXIT);
-  if (settings.deviceHint == Device_PFS)
+  if (settings.deviceHint == Device_APA)
     deinitPFS();
 
   switch (discType) {
@@ -246,7 +246,7 @@ char *getOSDGSMArgument(char *titleID) {
   DPRINTF("CDROM: Trying to load the eGSM config file\n");
   FILE *gsmConf = NULL;
 #ifdef APA
-  if (settings.deviceHint == Device_PFS)
+  if (settings.deviceHint == Device_APA)
     // Check the internal HDD for the eGSM config file
     gsmConf = fopen(PFS_MOUNTPOINT HOSDGSM_CONF_PATH, "r");
 #endif

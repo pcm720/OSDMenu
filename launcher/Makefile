@@ -27,8 +27,9 @@ ENABLE_PRINTF ?= 0
 # End of configurable section
 
 # ELF file name
-EE_BIN_PKD = launcher.elf
 EE_BIN = launcher_unc.elf
+EE_BIN_PKD = launcher.elf
+EE_BIN_KELF = LAUNCHER.XLF
 
 # Base object files
 EE_OBJS = main.o common.o init.o loader.o
@@ -88,8 +89,8 @@ endif
 ifeq ($(APA), 1)
  DEV9 = 1
  EE_CFLAGS += -DAPA
- EE_OBJS += handler_pfs.o
- IRX_FILES += ps2atad.irx ps2hdd-osd.irx ps2fs.irx
+ EE_OBJS += handler_pfs.o handler_patinfo.o patinfo.o
+ IRX_FILES += ps2atad.irx ps2hdd-osd.irx ps2fs.irx secrsif.irx
 endif
 
 ifeq ($(CDROM),1)
@@ -143,7 +144,7 @@ EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
 EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
-EE_LIBS = -lcdvd -lpatches -lkernel -ldebug -lfileXio -lgskit -ldmakit -lmc -lpoweroff
+EE_LIBS = -lcdvd -lpatches -lkernel -ldebug -lfileXio -lgskit -ldmakit -lmc -lpoweroff -lsecr
 EE_INCS = -I../common/include -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -Iinclude -I$(PS2SDK)/ports/include -I$(PS2DEV)/gsKit/include
 EE_LDFLAGS += -L$(PS2DEV)/gsKit/lib -s
 
@@ -167,9 +168,13 @@ clean:
 	$(MAKE) -C ../utils/loader clean
 	$(MAKE) -C ../utils/ps1vn clean
 	$(MAKE) -C iop/smap_udpbd clean
-	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD)
+	rm -rf $(EE_OBJS_DIR) $(EE_BIN) $(EE_BIN_PKD) $(EE_BIN_KELF)
 
 BIN2C = $(PS2SDK)/bin/bin2c
+
+# Produces KELF payload for PATINFO
+kelf: $(EE_BIN_PKD)
+	python3 ../utils/kelf/sign.py fhdb $(EE_BIN_PKD) $(EE_BIN_KELF)
 
 # IRX files
 %_irx.c:
@@ -212,6 +217,8 @@ $(EE_OBJS_DIR)cnf.o: | $(EE_OBJS_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/cnf.c -o $@
 $(EE_OBJS_DIR)loader.o: | $(EE_OBJS_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/loader.c -o $@
+$(EE_OBJS_DIR)patinfo.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/patinfo.c -o $@
 
 # PS1 Video Mode Negator
 ps1vn.elf:

@@ -54,7 +54,7 @@ int handleOSDM(int argc, char *argv[]) {
     file = fmemopen((void *)target, targetSize, "r");
   } else {
     if (target == 9) {
-      settings.deviceHint = Device_PFS;
+      settings.deviceHint = Device_APA;
 
       // Handle HOSDMenu launch
       if ((res = initPFS(HOSD_CONF_PARTITION, 1, Device_CDROM)))

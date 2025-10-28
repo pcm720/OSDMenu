@@ -26,13 +26,13 @@ int main(int argc, char *argv[]) {
   if (!strncmp(argv[0], "mc1", 3))
     settings.mcHint = 1;
   if (!strncmp(argv[0], "pfs", 3) || !strncmp(argv[0], "hdd", 3))
-    settings.deviceHint = Device_PFS;
+    settings.deviceHint = Device_APA;
 
   argc = parseGlobalFlags(argc, argv);
 
 #ifdef FMCB
   if (!strncmp("osdm", argv[0], 4)) {
-    settings.flags |= FLAG_OSDBOOT;
+    settings.flags |= FLAG_BOOT_OSD;
     fail("Failed to launch %s: %d", argv[0], handleOSDM(argc, argv));
   }
   if (!strncmp("cdrom", argv[0], 5))

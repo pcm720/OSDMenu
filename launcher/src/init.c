@@ -74,6 +74,7 @@ IRX_DEFINE(smap_udpbd);
 IRX_DEFINE(ps2atad);
 IRX_DEFINE(ps2hdd_osd);
 IRX_DEFINE(ps2fs);
+IRX_DEFINE(secrsif);
 #endif
 
 #ifdef CDROM
@@ -127,22 +128,22 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(iomanX, NULL, Device_Basic),
     INT_MODULE(fileXio, NULL, Device_Basic),
 #ifdef SIO2MAN
-    INT_MODULE(sio2man, NULL, Device_MemoryCard | Device_MMCE | Device_MX4SIO | Device_UDPBD | Device_CDROM | Device_Debug),
+    INT_MODULE(sio2man, NULL, Device_Basic),
 #else
-    EXT_MODULE(sio2man, "rom0:SIO2MAN", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
+    EXT_MODULE(sio2man, "rom0:SIO2MAN", NULL, Device_Basic),
 #endif
 #ifndef USE_ROM_MODULES
-    INT_MODULE(mcman, NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
-    INT_MODULE(mcserv, NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
+    INT_MODULE(mcman, NULL, Device_Basic),
+    INT_MODULE(mcserv, NULL, Device_Basic),
 #else
-    EXT_MODULE(mcman, "rom0:MCMAN", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
-    EXT_MODULE(mcserv, "rom0:MCSERV", NULL, Device_MemoryCard | Device_UDPBD | Device_CDROM | Device_Debug),
+    EXT_MODULE(mcman, "rom0:MCMAN", NULL, Device_Basic),
+    EXT_MODULE(mcserv, "rom0:MCSERV", NULL, Device_Basic),
 #endif
 #ifdef MMCE
     INT_MODULE(mmceman, NULL, Device_MMCE),
 #endif
 #ifdef DEV9
-    INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_PFS | Device_Debug),
+    INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_APA | Device_Debug),
 #endif
 #ifdef BDM
     INT_MODULE(bdm, NULL, Device_BDM),
@@ -163,14 +164,15 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(IEEE1394_bd_mini, NULL, Device_iLink),
 #endif
 #ifdef ENABLE_PRINTF
-    INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
+    // INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
 #elif defined(UDPBD)
     INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD),
 #endif
 #ifdef APA
-    INT_MODULE(ps2atad, NULL, Device_PFS),
-    INT_MODULE(ps2hdd_osd, &initPS2HDDArguments, Device_PFS),
-    INT_MODULE(ps2fs, &initPS2FSArguments, Device_PFS),
+    INT_MODULE(ps2atad, NULL, Device_APA),
+    INT_MODULE(ps2hdd_osd, &initPS2HDDArguments, Device_APA),
+    INT_MODULE(ps2fs, &initPS2FSArguments, Device_APA),
+    INT_MODULE(secrsif, NULL, Device_APA),
 #endif
 };
 #define MODULE_COUNT sizeof(moduleList) / sizeof(ModuleListEntry)
@@ -182,6 +184,9 @@ int initModules(DeviceType device, int clearSPU) {
   if (currentDevice & device)
     // Do nothing if the drivers are already loaded
     return 0;
+
+  if (currentDevice && !(currentDevice & (Device_APA | Device_ATA)) && !(currentDevice & (Device_APA | Device_ATA)))
+    shutdownDEV9();
 
   int ret = 0;
   int iopret = 0;
