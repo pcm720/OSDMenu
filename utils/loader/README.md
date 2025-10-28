@@ -1,6 +1,7 @@
 # Embeddable ELF loader
 
 Loads an ELF file from the path specified in argv[0].  
+Loads in the `0x0E0000 - 0x100000` memory region to avoid possible conflicts with some unpacked homebrew and OSDMenu eGSM and PS1VN.
 
 ## Advanced features
 
