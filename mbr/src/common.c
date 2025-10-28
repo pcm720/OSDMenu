@@ -164,24 +164,3 @@ void bootFail(char *msg) {
   char *args[] = {"BootError"};
   bootFailWithArgs(msg, 1, args);
 }
-
-// Updates the history file and shows game ID
-void updateLaunchHistory(char *titleID) {
-  if (!titleID || titleID[0] == '\0')
-    return;
-
-  if (!((titleID[4] == '_') && ((titleID[7] == '.') || (titleID[8] == '.')))) {
-    if (settings.flags & FLAG_APP_GAMEID)
-      // Display game ID even if the title ID is not a valid PS2 title ID
-      goto gameid;
-    else
-      return;
-  }
-
-  updateHistoryFile(titleID);
-gameid:
-  if (!(settings.flags & FLAG_DISABLE_GAMEID))
-    gsDisplayGameID(titleID);
-
-  return;
-}

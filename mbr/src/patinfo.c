@@ -193,7 +193,7 @@ int startHDDApplication(int argc, char *argv[]) {
   if (!strncmp(opts.bootPath, "cdrom", 5)) {
     fioClose(fd);
     if (opts.titleID) {
-      updateLaunchHistory(opts.titleID);
+      updateLaunchHistory(opts.titleID, 0);
       free(opts.titleID);
     }
     handlePS2Disc(opts.bootPath);
@@ -243,7 +243,7 @@ int startHDDApplication(int argc, char *argv[]) {
 
   fioClose(fd);
   if (opts.titleID) {
-    updateLaunchHistory(opts.titleID);
+    updateLaunchHistory(opts.titleID, (settings.flags & FLAG_APP_GAMEID));
     free(opts.titleID);
   }
   return loadELF(&lopts);

@@ -146,31 +146,42 @@ int main(int argc, char *argv[]) {
 
 // Initiailizes the pad library and returns the button pressed
 TriggerType readPad() {
-  struct padButtonStatus buttons;
   static char padBuf[256] __attribute__((aligned(64)));
+  TriggerType t = TRIGGER_TYPE_AUTO;
+  struct padButtonStatus buttons;
+  uint32_t paddata = 0;
 
-  if (padInit(0) != 1)
-    return TRIGGER_TYPE_AUTO;
-  if (padPortOpen(0, 0, padBuf)) {
-    padEnd();
-    return TRIGGER_TYPE_AUTO;
+  if (padInit(0) != 1) {
+    DPRINTF("Failed to init libpad\n");
+    return t;
   }
+
+  int retries = 10;
+  while (retries--) {
+    if (padPortOpen(0, 0, padBuf) != 0)
+      goto next;
+  }
+  DPRINTF("Failed to open the pad port\n");
+  padEnd();
+  return t;
+
+next:
   int padState = 0;
   while ((padState = padGetState(0, 0))) {
     if (padState == PAD_STATE_STABLE)
       break;
     if (padState == PAD_STATE_DISCONN) {
+      DPRINTF("Pad is disconnected\n");
       padPortClose(0, 0);
       padEnd();
-      return TRIGGER_TYPE_AUTO;
+      return t;
     }
   }
 
-  int retries = 10;
-  TriggerType t = TRIGGER_TYPE_AUTO;
+  retries = 10;
   while (retries--) {
     if (padRead(0, 0, &buttons) != 0) {
-      uint32_t paddata = 0xffff ^ buttons.btns;
+      paddata = (0xffff ^ buttons.btns) & ~paddata;
       if (paddata & PAD_START) {
         t = TRIGGER_TYPE_START;
         break;
@@ -278,7 +289,7 @@ void startDNAS(int argc, char *argv[]) {
   // Update the history file
   char *titleID = generateTitleID(argv[2]);
   if (titleID)
-    updateLaunchHistory(titleID);
+    updateLaunchHistory(titleID, 0);
 
   // Override argv[1] with the dnasload path and adjust argc
   argv[1] = "hdd0:__system:pfs:/dnas100/dnasload.elf";
