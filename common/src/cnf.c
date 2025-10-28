@@ -207,6 +207,9 @@ const char *getPS1GenericTitleID() {
 
 // Attempts to generate a title ID from path
 char *generateTitleID(char *path) {
+  if (!path)
+    return NULL;
+
   char *titleID = calloc(sizeof(char), 12);
   if (!titleID)
     return NULL;
