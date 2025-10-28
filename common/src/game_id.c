@@ -1,3 +1,4 @@
+#include "history.h"
 #include <ctype.h>
 #include <dmaKit.h>
 #include <gsKit.h>
@@ -74,4 +75,21 @@ void gsDisplayGameID(const char *gameID) {
   gsKit_finish();
   gsKit_sync_flip(gsGlobal);
   gsKit_deinit_global(gsGlobal);
+}
+
+// Updates the history file and shows game ID
+void updateLaunchHistory(char *titleID, int showAppID) {
+  if (!titleID || titleID[0] == '\0')
+    return;
+
+  if (!((titleID[4] == '_') && ((titleID[7] == '.') || (titleID[8] == '.')))) {
+    if (showAppID)
+      // Display game ID even if the title ID is not a valid PS2 title ID
+      gsDisplayGameID(titleID);
+    return;
+  }
+
+  updateHistoryFile(titleID);
+  gsDisplayGameID(titleID);
+  return;
 }
