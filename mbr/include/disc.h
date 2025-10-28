@@ -5,7 +5,7 @@
 int startGameDisc();
 
 // Boots PS2 disc directly or via PS2LOGO
-void handlePS2Disc(char *bootPath);
+void handlePS2Disc(char *bootPath, char *eGSMArgument);
 
 // Starts the DVD Player from a memory card or ROM
 int startDVDVideo();

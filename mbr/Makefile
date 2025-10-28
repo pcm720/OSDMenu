@@ -87,6 +87,8 @@ $(EE_OBJS_DIR)cnf.o: | $(EE_OBJS_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/cnf.c -o $@
 $(EE_OBJS_DIR)loader.o: | $(EE_OBJS_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/loader.c -o $@
+$(EE_OBJS_DIR)patinfo.o: | $(EE_OBJS_DIR)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c ../common/src/patinfo.c -o $@
 
 BIN2C = $(PS2SDK)/bin/bin2c
 

@@ -3,6 +3,7 @@
 #include "config.h"
 #include "crypto.h"
 #include "defaults.h"
+#include "patinfo.h"
 #include "disc.h"
 #include "dprintf.h"
 #include "game_id.h"
@@ -48,6 +49,10 @@ int handleConfigPath(int argc, char *argv[]);
 
 // Starts the dnasload applcation
 void startDNAS(int argc, char *argv[]);
+
+// Starts HDD application using data from the partition attribute area header
+// Assumes argv[0] is the partition path
+int startHDDApplication(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
   // Initialize IOP modules
@@ -424,4 +429,27 @@ start:
   opts.argc = argc;
   opts.argv = argv;
   return loadELF(&opts);
+}
+
+// Starts HDD application using data from the partition attribute area header
+// Assumes argv[0] is the partition path
+int startHDDApplication(int argc, char *argv[]) {
+  char *titleID = NULL;
+  LoadOptions *lopts = parsePATINFO(argc, argv, &titleID);
+  if (!lopts)
+    return -ENOENT;
+
+  if (titleID) {
+    updateLaunchHistory(titleID, (settings.flags & FLAG_APP_GAMEID));
+  }
+
+  if (!strncmp(lopts->argv[0], "cdrom", 5)) {
+    char *gsmArg = getOSDGSMArgument(titleID);
+    free(titleID);
+    handlePS2Disc(lopts->argv[0], gsmArg);
+    return -1;
+  }
+  free(titleID);
+
+  return loadELF(lopts);
 }
