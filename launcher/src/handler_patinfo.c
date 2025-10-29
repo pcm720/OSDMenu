@@ -19,7 +19,7 @@ int handlePATINFO(int argc, char *argv[]) {
   if (!lopts)
     return -ENOENT;
 
-  argc = parseGlobalFlags(lopts->argc, lopts->argv);
+  lopts->argc = parseGlobalFlags(lopts->argc, lopts->argv);
 
   if (titleID) {
     updateLaunchHistory(titleID, 0);
@@ -27,6 +27,7 @@ int handlePATINFO(int argc, char *argv[]) {
   }
 
   if (settings.flags & FLAG_BOOT_PATINFO) {
+    DPRINTF("BOOT_PATINFO flag is set, ignoring bootPath\n");
     // Ignore the argv[0] as it points to another copy of the launcher
     if (lopts->ioprpPath)
       free(lopts->ioprpPath);
