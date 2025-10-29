@@ -7,16 +7,16 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
 ### OSDMenu
 1. Copy `osdmenu.elf` to `mc?:/BOOT/` or copy and paste `SYS_OSDMENU.psu` via wLaunchELF using `psuPaste`
    Copy DKWDRV to `mc?:/BOOT/DKWDRV.ELF` _(optional)_ 
-2. Edit `mc?:/SYS-CONF/OSDMENU.CNF` [as you see fit](#osdmenucnf)
+2. Edit `mc?:/SYS-CONF/OSDMENU.CNF` [as you see fit](patcher/README.md#osdmenucnf)
 3. Configure PS2BBL to launch `mc?:/BOOT/osdmenu.elf` or launch it manually from anywhere
 
 ### OSDMenu as the System Update
 
 You can install OSDMenu as the System Update instead of FMCB or PS2BBL to get faster boot times.  
 The release archive contains the following files:
-  - `kelf/OSDMENU.XLF` — encrypted and signed OSDMenu executable to be installed as `osd???.elf` or `osdmain.elf`
-  - `kelf/osdmenu.icn` — OSDMenu icon for the PS2 Browser
-  - `kelf/icon.sys` — icon manifest for the PS2 Browser
+  - `patcher/kelf/OSDMENU.XLF` — encrypted and signed OSDMenu executable to be installed as `osd???.elf` or `osdmain.elf`
+  - `patcher/kelf/osdmenu.icn` — OSDMenu icon for the PS2 Browser
+  - `patcher/kelf/icon.sys` — icon manifest for the PS2 Browser
 
 To install OSDMenu as the System Update, you can use the [KELFBinder](https://github.com/israpps/KELFBinder).  
 Consult the KELFBinder documentation on how to use the KELFBinder to install your own payloads.
@@ -32,7 +32,7 @@ Consult the KELFBinder documentation on how to use the KELFBinder to install you
    to change the MagicGate region to 0xff (region free).
 2. Copy `hosdmenu.elf` to `hdd0:__system/osdmenu/`  
    Copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` _(optional)_ 
-3. Edit `hdd0:__sysconf/osdmenu/OSDMENU.CNF` [as you see fit](#osdmenucnf)
+3. Edit `hdd0:__sysconf/osdmenu/OSDMENU.CNF` [as you see fit](patcher/README.md#osdmenucnf)
 4. Configure your bootloader to launch `hdd0:__system/osdmenu/hosdmenu.elf` or launch it manually from anywhere  
 
 ### OSDMenu MBR
@@ -55,13 +55,14 @@ The release archive contains the following files:
 See the launcher [README](launcher/README.md) for more details. 
 
 ## Key differences from FMCB 1.8:
-- All initialization code is removed in favor of using a separate bootloader to start the patcher (e.g. [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader))
+- All OSD initialization code is removed
 - USB support is dropped from the patcher, so only memory cards are checked for `OSDMENU.CNF`
 - No ESR support
 - No support for launching ELFs by holding a gamepad button
 - ELF paths are not checked by the patcher, so every named entry from FMCB config file is displayed in hacked OSDSYS menu
-- A separate launcher is used to launch menu entries
+- Support for launching applications from MMCE, MX4SIO, UDPBD, iLink devices and APA- and exFAT-formatted HDDs
 - CD/DVD support was extended to support skipping PS2LOGO, mounting VMCs on MMCE devices, showing visual GameID for PixelFX devices and booting DKWDRV for PS1 discs
+- Integrated Neutrino GSM for disc games and applications
 - "Unlimited" number of paths for each entry
 - Support for 1080i and 480p (as line-doubled 240p) video modes
 - Support for "protokernel" systems (SCPH-10000, SCPH-15000) ported from Free McBoot 1.9 by reverse-engineering
@@ -69,137 +70,30 @@ See the launcher [README](launcher/README.md) for more details.
 - Support for setting PS1 driver options on every boot
 - Support for HDD OSD 1.10U
 
-## OSDMenu Patcher
+## Configuration
 
-This is a slimmed-down and refactored version of OSDSYS patches from FMCB 1.8 for modern PS2SDK with some new patches sprinkled in.
-It patches the OSDSYS/HDD OSD binary and applies the following patches:
-- Custom OSDSYS menu with up to 200 entries
-- Infinite scrolling
-- Custom button prompts and menu header
-- Automatic disc launch bypass
-- Force GS video mode to PAL, NTSC, 1080i or line-doubled 480p (with half the vertical resolution).  
-  _Due to how to OSDSYS renders everything, "true" 480p can't be implemented easily_
-- HDD update check bypass
-- Override PS1 and PS2 disc launch functions with the launcher, bringing the following features to OSDSYS/HDD-OSD:
-  - Skip the PlayStation 2 logo
-  - Display the visual Game ID for the PixelFX RetroGM
-  - Run disc-based games via the embedded Neutrino GSM (eGSM)
-  - Run PS1 discs via the PS1 Video Mode Negator or DKWDRV
-- Additional system information in version submenu (Video mode, ROM version, EE, GS and MechaCon revision)  
-- Set PS1 driver options to values from `OSDMENU.CNF` on every boot
+### OSDMenu and HOSDMenu
 
-**OSDMenu**:
-- The OSDMenu configuration file can be embedded into the patcher at compile time for memory card-independent setups and faster boot times
-- Launch SAS-compatible applications from the memory card browser if directory name is   
-  `BOOT`, `<3-letter SAS prefix>_<appname>` or if file name ends with `.ELF` or `.elf`.  
-  This patch swaps around the "Enter" and "Options" menus and substitutes file properties submenu with the launcher.  
-  To launch an app, just press "Enter" after selecting the app icon.  
-  To copy or delete the save file, just use the triangle button.  
+See the patcher [README](patcher/README.md) for more details.
 
-**HOSDMenu**:
-- Launch SAS-compatible applications and ELF files from directories in the `hdd0:__common` partition or the memory card browser
-  if directory name is `BOOT`, `<3-letter SAS prefix>_<appname>` or if file name ends with `.ELF` or `.elf`.  
-  To launch an app, just press "Enter" after selecting the app icon.
-- ATAD driver is replaced to bypass security checks and support drives larger than 1TB.
-- HDD partitions that end with `.HIDDEN` are not shown in the HDD Browser.  
-    
-  Note that HDD OSD will not see more than 1048448 MB. For larger drives, [APA Jail](https://www.psx-place.com/threads/apa-jail.34847/) is recommended.  
-  You can also check out [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) for more automated APA Jail experience and easy-to-use HDD OSD+Broadband Navigator setup.
-
-  HOSDMenu will skip the full IOP initialization when it receives `-mbrboot` as the last argument (`argv[argc - 1]`), improving boot times when running from a compatible `__mbr`.
-
-Patches not supported/limited on protokernel systems:
-- Automatic disc launch bypass
-- Button prompt customization
-- PAL video mode
-
-**OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` (if the config file is not embedded) and patches the `rom0:OSDSYS` binary.  
-**HOSDMenu** version reads settings from `hdd0:__sysconf/osdmenu/OSDMENU.CNF` and patches `hdd0:__system/osd100/OSDSYS_A.XLF` or `hdd0:__system/osd100/hosdsys.elf`
-
-### Configuration
-
-See the list for supported `OSDMENU.CNF` options [here](#osdmenucnf).  
-OSDMenu will run the embedded launcher and pass the menu index to it for every menu item and disc launch.
-
-The embedded Neutrino GSM (eGSM) can be configured using the `OSDGSM.CNF` file, see the additional information [here](#osdgsmcnf).  
-
-## OSDMenu MBR
+### OSDMenu MBR
 
 OSDMenu comes with the fully-featured MBR that supports running HOSDMenu, HDD-OSD and PSBBN natively.  
 It also supports running arbitrary paths from the HDD and memory cards.  
 See the MBR [README](mbr/README.md) for more details.
 
-## OSDMenu Launcher
+### OSDMenu Launcher
 
 OSDMenu comes with the fully-featured launcher that supports running applications from all devices supported by homebrew drivers.  
 See the launcher [README](launcher/README.md) for more details.
-
-## OSDMENU.CNF
-
-Most of `OSDMENU.CNF` settings are directly compatible with those from FMCB 1.8 `FREEMCB.CNF`.
-
-### Character limits
-
-OSDMenu supports up to 200 custom menu entries, each up to 79 characters long.  
-Note that left and right cursors are limited to 19 characters and top and bottom delimiters are limited to 79 characters.  
-DKWDRV and custom payload paths are limited to 49 characters.
-
-### Configuration options
-
-1. `OSDSYS_video_mode` — force OSDSYS mode. Valid values are `AUTO`, `PAL`, `NTSC`, `480p` or `1080i`
-2. `OSDSYS_scroll_menu` — enables or disables infinite scrolling
-3. `OSDSYS_menu_x` — menu X center coordinate
-4. `OSDSYS_menu_y` — menu Y center coordinate
-5. `OSDSYS_enter_x` — `Enter` button X coordinate (at main OSDSYS menu)
-6. `OSDSYS_enter_y` — `Enter` button Y coordinate (at main OSDSYS menu)
-7. `OSDSYS_version_x` — `Version` button X coordinate (at main OSDSYS menu)
-8. `OSDSYS_version_y` — `Version` button Y coordinate (at main OSDSYS menu)
-9. `OSDSYS_cursor_max_velocity` — max cursor speed
-10. `OSDSYS_cursor_acceleration` — cursor speed
-11. `OSDSYS_left_cursor` — left cursor text
-12. `OSDSYS_right_cursor` — right cursor text
-13. `OSDSYS_menu_top_delimiter` — top menu delimiter text
-14. `OSDSYS_menu_bottom_delimiter` — bottom menu delimiter text
-15. `OSDSYS_num_displayed_items` — the number of menu items displayed
-16. `OSDSYS_Skip_Disc` — enables/disables automatic CD/DVD launch
-17. `OSDSYS_Skip_Logo` — enables/disables SCE logo (also needs `OSDSYS_Skip_Disc` to be disabled to actually show the logo)
-18. `OSDSYS_Inner_Browser` — enables/disables going to the Browser after launching OSDSYS
-19. `OSDSYS_selected_color` — color of selected menu entry
-20. `OSDSYS_unselected_color` — color of unselected menu entry
-21. `name_OSDSYS_ITEM_???` — menu entry name
-22. `path?_OSDSYS_ITEM_???` — path to ELF. Also supports the following special paths: `cdrom`, `OSDSYS`, `POWEROFF`
-
-New to OSDMenu/HOSDMenu:
-
-23. `arg_OSDSYS_ITEM_???` — custom argument to be passed to the ELF. Each argument needs a separate entry.
-24. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`. Useful for MechaPwn-patched consoles.
-25. `cdrom_disable_gameid` — disables or enables visual Game ID
-26. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
-27. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
-28. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
-29. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
-30. `app_gameid` — if enabled, visual Game ID will be displayed for ELF applications launched from OSDMenu. The ID is generated from the ELF name (up to 11 characters).
-
-Options exclusive to OSDMenu:
-
-31. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
-
-## OSDGSM.CNF
-
-OSDMenu supports running disc-based PS2 games via the embedded [Neutrino GSM](utils/egsm/).
-
-**OSDMenu** loads the per-title options from `mc?:/SYS-CONF/OSDGSM.CNF`.  
-**HOSDMenu** loads the per-title options from `hdd0:__sysconf/osdmenu/OSDGSM.CNF`, with fallback to `mc?:/SYS-CONF/OSDGSM.CNF` if the file on the HDD doesn't exist.
-
-See the sample configuraton [here](examples/OSDGSM.CNF) and [this](utils/loader/README.md#egsm) README for more information on the argument format.
 
 ## Credits
 
 - Everyone involved in developing the original Free MC Boot and OSDSYS patches, especially Neme and jimmikaelkael
 - Julian Uy for mapping out significant parts of HDD OSD for [osdsys_re](https://github.com/ps2re/osdsys_re) project
 - [TonyHax International](https://github.com/alex-free/tonyhax) developers for PS1 game ID detection for generic executables.
-- Maximus32 for creating the [`smap_udpbd` module](
-https://github.com/rickgaiser/neutrino) and Neutrino GSM
-- Matías Israelson for making [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader)
-- CosmicScale for [RetroGEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher)
-- Ripto for creating the OSDMenu Browser icons and Yornn for collecting all files required for the PSU package
+- Rick Gaiser/Maximus32 for creating [Neutrino](https://github.com/rickgaiser/neutrino), parts of which are used by OSDMenu 
+- Matías Israelson for creating [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader)
+- CosmicScale for [RetroGEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher), [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) and extensive testing  
+- Ripto for creating OSDMenu Browser icons and Yornn for collecting all files required for the PSU package  
+- Alex Parrado for creating [SoftDev2 installer](https://github.com/parrado/SoftDev2)  

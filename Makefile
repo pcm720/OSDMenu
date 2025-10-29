@@ -21,13 +21,14 @@ clean:
 osdmenu.elf:
 	$(MAKE) -C patcher clean
 	$(MAKE) -C patcher kelf
-	mkdir -p release/kelf
+	mkdir -p release/patcher/kelf
 # OSDMenu + PSU
 	cp patcher/patcher.elf release/osdmenu.elf
 	python3 utils/psu/makepsu.py release/SYS_OSDMENU.psu SYS_OSDMENU utils/psu/res release/osdmenu.elf
 # OSDMenu KELF
-	cp patcher/PATCHER.XLF release/kelf/OSDMENU.XLF
-	cp -r utils/icn/* release/kelf
+	cp patcher/PATCHER.XLF release/patcher/kelf/OSDMENU.XLF
+	cp -r utils/icn/* release/patcher/kelf
+	cp patcher/README.md release/patcher/README.md
 	cp README.md release/
 
 # HOSDMenu
