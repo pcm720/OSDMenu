@@ -225,7 +225,7 @@ int loadConfig() {
 // Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
 char *getOSDGSMArgument(char *titleID) {
   if (!titleID)
-    return;
+    return NULL;
 
   DPRINTF("Trying to load the eGSM config file\n");
   if (mountPFS(HOSD_CONF_PARTITION))
