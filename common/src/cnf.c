@@ -22,7 +22,6 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts) {
   opts->bootPath = NULL;
   opts->ioprpPath = NULL;
   opts->titleVersion = NULL;
-  opts->titleID = NULL;
   opts->args = NULL;
   opts->skipArgv0 = 0;
   opts->argCount = 0;
@@ -85,7 +84,8 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts) {
     }
   }
 
-  opts->titleID = generateTitleID(opts->bootPath);
+  if (!opts->titleID)
+    opts->titleID = generateTitleID(opts->bootPath);
 
   if (opts->argCount > 0) {
     // Assemble argv array
