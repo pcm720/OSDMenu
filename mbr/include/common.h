@@ -4,6 +4,13 @@
 // Returns >=0 if file exists
 int checkFile(char *path);
 
+// Checks both memory cards for a file in path
+// If the path starts with mc?, replaces the '? with the memory card number
+int checkMCPath(char *path);
+
+// Checks whether the file exists
+int checkPFSPath(char *path);
+
 // Displays the message on the screen
 void msg(const char *str, ...);
 

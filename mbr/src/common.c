@@ -1,6 +1,7 @@
 #include "config.h"
 #include "crypto.h"
 #include "defaults.h"
+#include "dprintf.h"
 #include "game_id.h"
 #include "hdd.h"
 #include "history.h"
@@ -16,12 +17,66 @@ static int isScreenInited = 0;
 
 // Returns >=0 if file exists
 int checkFile(char *path) {
+  DPRINTF("Checking %s\n", path);
   int res = open(path, O_RDONLY);
   if (res < 0)
     return res;
 
   close(res);
   return res;
+}
+
+// Checks both memory cards for a file in path
+// If the path starts with mc?, replaces the '? with the memory card number
+int checkMCPath(char *path) {
+  // Run executable from the memory card
+  // Make sure the file exists
+  if (path[2] == '?') {
+    path[2] = '0';
+    if (checkFile(path) >= 0)
+      return 0;
+
+    path[2] = '1';
+  }
+
+  if (checkFile(path) < 0)
+    return -ENOENT;
+
+  return 0;
+}
+
+// Checks whether the file exists
+int checkPFSPath(char *path) {
+  // Mount the partition
+  if (mountPFS(path))
+    return -ENODEV;
+
+  // Extract the PFS path
+  char *pfsPath = strstr(path, ":pfs:");
+  if (pfsPath) {
+    pfsPath = pfsPath + 5;
+  } else {
+    char *pfsPath = strchr(path, '/');
+    if (pfsPath)
+      pfsPath = pfsPath;
+  }
+  if (!pfsPath) {
+    umountPFS();
+    return -EINVAL;
+  }
+
+  char *filePath = malloc(6 + strlen(pfsPath));
+  sprintf(filePath, "pfs0:%s", pfsPath);
+
+  // Make sure the path exists
+  int res = checkFile(filePath);
+  umountPFS();
+  free(filePath);
+
+  if (res < 0)
+    return -ENOENT;
+
+  return 0;
 }
 
 void initScreen() {

@@ -3,13 +3,13 @@
 #include "config.h"
 #include "crypto.h"
 #include "defaults.h"
-#include "patinfo.h"
 #include "disc.h"
 #include "dprintf.h"
 #include "game_id.h"
 #include "hdd.h"
 #include "init.h"
 #include "loader.h"
+#include "patinfo.h"
 #include <ctype.h>
 #include <debug.h>
 #include <kernel.h>
@@ -355,14 +355,7 @@ int handleConfigPath(int argc, char *argv[]) {
 
   if (!strncmp(argv[0], "mc", 2)) {
     // Run executable from the memory card
-    // Make sure the file exists
-    if (argv[0][2] == '?') {
-      argv[0][2] = '0';
-      if (checkFile(argv[0]) < 0)
-        argv[0][2] = '1';
-    }
-
-    if (checkFile(argv[0]) < 0)
+    if (checkMCPath(argv[0]))
       return -EINVAL;
 
     goto start;
@@ -375,32 +368,7 @@ int handleConfigPath(int argc, char *argv[]) {
       return startHDDApplication(argc, argv);
 
     // Handle PFS path
-    if (mountPFS(argv[0]))
-      return -ENODEV;
-
-    // Extract the PFS path
-    char *pfsPath = strstr(argv[0], ":pfs:");
-    if (pfsPath) {
-      pfsPath = pfsPath + 5;
-    } else {
-      char *pfsPath = strchr(argv[0], '/');
-      if (pfsPath)
-        pfsPath = pfsPath;
-    }
-    if (!pfsPath) {
-      umountPFS();
-      return -EINVAL;
-    }
-
-    char *filePath = malloc(6 + strlen(pfsPath));
-    sprintf(filePath, "pfs0:%s", pfsPath);
-
-    // Make sure the path exists
-    int res = checkFile(filePath);
-    umountPFS();
-    free(filePath);
-
-    if (res < 0)
+    if (checkPFSPath(argv[0]))
       return -ENOENT;
 
     goto start;
@@ -439,9 +407,20 @@ int startHDDApplication(int argc, char *argv[]) {
   if (!lopts)
     return -ENOENT;
 
+  // Check memory card path
+  if (!strncmp(lopts->argv[0], "mc", 2) && (checkMCPath(lopts->argv[0])))
+    return -ENOENT;
+
+  // Check PFS path
+  if (strstr(lopts->argv[0], ":pfs:") && checkPFSPath(lopts->argv[0]))
+    return -ENOENT;
+
   if (titleID) {
     updateLaunchHistory(titleID, (settings.flags & FLAG_APP_GAMEID));
   }
+
+  if (!strcmp(lopts->argv[lopts->argc - 1], "-patinfo"))
+    lopts->argc--; // Remove launcher argument from target ELF args
 
   if (!strncmp(lopts->argv[0], "cdrom", 5)) {
     char *gsmArg = getOSDGSMArgument(titleID);
