@@ -4,11 +4,10 @@ all: release
 osdmenu: osdmenu.elf
 hosdmenu: hosdmenu.elf
 osdmbr: osdmbr.elf osdmbr-installer.elf
+launcher: launcher.elf
 
-release: clean osdmenu hosdmenu osdmbr
+release: clean osdmenu hosdmenu osdmbr launcher
 	mkdir -p release/
-	cp README.md release/
-	cp mbr/README.md release/osdmbr/
 	cp -r examples release/
 
 clean:
@@ -29,6 +28,7 @@ osdmenu.elf:
 # OSDMenu KELF
 	cp patcher/PATCHER.XLF release/kelf/OSDMENU.XLF
 	cp -r utils/icn/* release/kelf
+	cp README.md release/
 
 # HOSDMenu
 hosdmenu.elf:
@@ -45,6 +45,7 @@ osdmbr.elf:
 	cp mbr/OSDMBR.XLF release/osdmbr/
 	cp mbr/osdmbr.elf release/osdmbr/payloads
 	cp mbr/osdmbr.bin release/osdmbr/payloads
+	cp mbr/README.md release/osdmbr/
 
 # OSDMenu MBR Installer
 osdmbr-installer.elf:
@@ -52,3 +53,11 @@ osdmbr-installer.elf:
 	mkdir -p release/osdmbr/
 	cp utils/installer/osdmbr-installer.elf release/osdmbr/
 
+# OSDMenu Launcher
+launcher.elf:
+	$(MAKE) -C launcher clean
+	$(MAKE) -C launcher kelf
+	mkdir -p release/launcher
+	cp launcher/LAUNCHER.XLF release/launcher/
+	cp launcher/launcher.elf release/launcher/
+	cp launcher/README.md release/launcher/
