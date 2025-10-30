@@ -332,7 +332,7 @@ int handleConfigPath(int argc, char *argv[]) {
     return startHOSDSYS(argc, argv);
   }
 
-  char titleID[12] = {0};
+  char *titleID = NULL;
   if (!strcmp(argv[0], "$PSBBN")) {
     // Start PSBBN osdboot.elf
     if (mountPFS(SYSTEM_PARTITION))
@@ -348,7 +348,7 @@ int handleConfigPath(int argc, char *argv[]) {
     argv[0] = SYSTEM_PARTITION ":pfs:" OSDBOOT_PFS_PATH;
 
     if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID))
-      strcpy(titleID, "SCPN_601.60");
+      titleID = strdup("SCPN_601.60");
 
     goto start;
   }
@@ -380,7 +380,8 @@ int handleConfigPath(int argc, char *argv[]) {
 
 start:
   if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID)) {
-    char *titleID = generateTitleID(argv[0]);
+    if (!titleID)
+      titleID = generateTitleID(argv[0]);
     if (titleID) {
       DPRINTF("Title ID is %s\n", titleID);
       gsDisplayGameID(titleID);
