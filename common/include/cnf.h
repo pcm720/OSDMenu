@@ -36,7 +36,7 @@ void freeSystemCNFOptions(SystemCNFOptions *opts);
 
 // Parses the SYSTEM.CNF file with support for OSDMenu PATINFO extensions
 // Returns the executable type or a PIExecType_Error if an error occurs.
-ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts);
+ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts, int generateTitleID);
 
 // Parses the SYSTEM.CNF file on CD/DVD into SystemCNFOptions
 int parseDiscCNF(SystemCNFOptions *opts);

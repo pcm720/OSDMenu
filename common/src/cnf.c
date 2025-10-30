@@ -18,10 +18,11 @@ const char *getPS1GenericTitleID();
 
 // Parses the SYSTEM.CNF file with support for OSDMenu PATINFO extensions
 // Returns the executable type or a PIExecType_Error if an error occurs.
-ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts) {
+ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts, int gTID) {
   opts->bootPath = NULL;
   opts->ioprpPath = NULL;
   opts->titleVersion = NULL;
+  opts->titleID = NULL;
   opts->args = NULL;
   opts->skipArgv0 = 0;
   opts->argCount = 0;
@@ -84,7 +85,7 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts) {
     }
   }
 
-  if (!opts->titleID)
+  if (gTID)
     opts->titleID = generateTitleID(opts->bootPath);
 
   if (opts->argCount > 0) {
@@ -165,7 +166,7 @@ int parseDiscCNF(SystemCNFOptions *opts) {
     return -ENOENT;
   }
 
-  ExecType type = parseSystemCNF(file, opts);
+  ExecType type = parseSystemCNF(file, opts, 1);
   fclose(file);
   free(cnf);
   if (type < 0) {
