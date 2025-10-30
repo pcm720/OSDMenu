@@ -164,7 +164,7 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(IEEE1394_bd_mini, NULL, Device_iLink),
 #endif
 #ifdef ENABLE_PRINTF
-    // INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
+    INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
 #elif defined(UDPBD)
     INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD),
 #endif

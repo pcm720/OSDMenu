@@ -15,6 +15,8 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 
 launcherOptions settings;
 
+#include <debug.h>
+
 int main(int argc, char *argv[]) {
   // Process global options
   settings.flags = 0;
@@ -39,9 +41,14 @@ int main(int argc, char *argv[]) {
     fail("Failed to launch %s: %d", argv[0], handleCDROM(argc, argv));
 #endif
 
-  if ((argc < 2) || (argv[1][0] == '\0')) // argv[1] can be empty when launched from OPL
+  if ((argc < 2) || (argv[1][0] == '\0')) { // argv[1] can be empty when launched from OPL
+    if (strstr(argv[0], ":PATINFO"))
+      // Handle "hdd0:<partition>:PATINFO" paths
+      fail("PATINFO failed: %d", handlePATINFO(argc, argv));
+
     // Try to quickboot with paths from .CNF located at the current working directory
     fail("Quickboot failed: %d", handleQuickboot(argv[0]));
+  }
 
   // Remove launcher path from arguments
   argc--;
