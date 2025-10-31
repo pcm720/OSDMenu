@@ -7,14 +7,14 @@
 #include <stdio.h>
 
 typedef enum {
-  FLAG_SKIP_PS2_LOGO = (1 << 0),  // Skip PS2LOGO when booting discs
-  FLAG_DISABLE_GAMEID = (1 << 1), // Disable PixelFX game ID
-  FLAG_USE_DKWDRV = (1 << 2),     // Use DKWDRV for PS1 discs
-  FLAG_PS1DRV_FAST = (1 << 3),    // If set, will force PS1DRV fast disc speed
-  FLAG_PS1DRV_SMOOTH = (1 << 4),  // If set, will force PS1DRV texture smoothing
-  FLAG_PS1DRV_USE_VN = (1 << 5),  // If set, run PS1DRV via the PS1DRV Video Mode Negator
-  FLAG_PREFER_BBN = (1 << 6),     // If set, will attempt to run PSBBN instead of HOSDSYS on OSD errors
-  FLAG_APP_GAMEID = (1 << 7),     // If set, the visual Game ID will be displayed for all applications launched by the OSDMenu MBR
+  FLAG_SKIP_PS2_LOGO = (1 << 0), // Skip PS2LOGO when booting discs
+  FLAG_ENABLE_GAMEID = (1 << 1), // Enable PixelFX game ID
+  FLAG_USE_DKWDRV = (1 << 2),    // Use DKWDRV for PS1 discs
+  FLAG_PS1DRV_FAST = (1 << 3),   // If set, will force PS1DRV fast disc speed
+  FLAG_PS1DRV_SMOOTH = (1 << 4), // If set, will force PS1DRV texture smoothing
+  FLAG_PS1DRV_USE_VN = (1 << 5), // If set, run PS1DRV via the PS1DRV Video Mode Negator
+  FLAG_PREFER_BBN = (1 << 6),    // If set, will attempt to run PSBBN instead of HOSDSYS on OSD errors
+  FLAG_APP_GAMEID = (1 << 7),    // If set, the visual Game ID will be displayed for all applications launched by the OSDMenu MBR
 } Flags;
 
 typedef enum {

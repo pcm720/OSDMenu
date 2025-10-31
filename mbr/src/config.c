@@ -21,6 +21,7 @@ char configPath[] = "pfs0:" HOSDMBR_CONF_PATH;
 
 int loadConfig() {
   // Init default values
+  settings.flags = FLAG_ENABLE_GAMEID;
   settings.osdLanguage = 1;
   settings.osdScreenType = -1;
 
@@ -133,9 +134,9 @@ int loadConfig() {
     }
     if (!strncmp(lineBuffer, "cdrom_disable_gameid", 20)) {
       if (atoi(valuePtr))
-        settings.flags |= FLAG_DISABLE_GAMEID;
+        settings.flags |= FLAG_ENABLE_GAMEID;
       else
-        settings.flags &= ~(FLAG_DISABLE_GAMEID);
+        settings.flags &= ~(FLAG_ENABLE_GAMEID);
       continue;
     }
     if (!strncmp(lineBuffer, "cdrom_use_dkwdrv", 16)) {
@@ -232,8 +233,10 @@ char *getOSDGSMArgument(char *titleID) {
     return NULL;
 
   FILE *gsmConf = fopen("pfs0:" HOSDGSM_CONF_PATH, "r");
-  if (!gsmConf)
+  if (!gsmConf) {
+    umountPFS();
     return NULL;
+  }
 
   char *defaultArg = NULL;
   char *titleArg = NULL;
@@ -272,6 +275,5 @@ char *getOSDGSMArgument(char *titleID) {
 
     defaultArg = titleArg;
   }
-
   return defaultArg;
 }

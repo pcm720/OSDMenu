@@ -23,10 +23,6 @@ EE_CFLAGS = -D_EE -Os -G0 -Wall -Werror -fdata-sections -ffunction-sections $(EE
 EE_LDFLAGS += -Wl,-zmax-page-size=128 -Wl,--gc-sections -s
 EE_LDFLAGS += -L$(PS2DEV)/gsKit/lib
 
-# Reduce binary size by using newlib-nano
-EE_NEWLIB_NANO = 1
-NEWLIB_NANO = 1
-
 EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
 EE_SRC_DIR = src/

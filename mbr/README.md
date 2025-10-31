@@ -57,6 +57,8 @@ Multiple paths and arguments are supported for every `boot_` key.
    For example, Japanese consoles only support Japanese and English languages and will fallback to Japanese if any other language other than English is set.  
    OSDMenu MBR does **not** check whether your console actually supports the language.  
 
+To disable configuration flags just for one boot path while keeping them for other paths, add a `-noflags` as the last argument.
+
 ### Supported paths
 
 - `$HOSDSYS` — executes HOSDMenu or HDD-OSD from the following locations:

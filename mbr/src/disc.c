@@ -40,7 +40,7 @@ int startGameDisc() {
 
   if (settings.flags & FLAG_USE_DKWDRV)
     DPRINTF("CDROM: Using DKWDRV for PS1 discs\n");
-  if (settings.flags & FLAG_DISABLE_GAMEID)
+  if (!(settings.flags & FLAG_ENABLE_GAMEID))
     DPRINTF("CDROM: Disabling visual game ID\n");
   if (settings.flags & FLAG_SKIP_PS2_LOGO)
     DPRINTF("CDROM: Skipping PS2LOGO\n");
@@ -104,10 +104,10 @@ int startGameDisc() {
   if (titleID && titleID[0] != '\0') {
     // Update history file and display game ID
     updateHistoryFile(titleID);
-    if (!(settings.flags & FLAG_DISABLE_GAMEID))
+    if (settings.flags & FLAG_ENABLE_GAMEID)
       gsDisplayGameID(titleID);
   } else
-    strcpy(titleID, "???"); // Set placeholder value
+    titleID = strdup("???"); // Set placeholder value
 
   sceCdInit(SCECdEXIT);
 
@@ -152,7 +152,6 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
   }
 
   // Else, use PS1DRV
-  shutdownDEV9();
   argv[0] = titleID;
   argv[1] = titleVersion;
 
@@ -180,6 +179,7 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
     return;
   } else {
     DPRINTF("Starting PS1DRV with title ID %s and version %s\n", argv[0], argv[1]);
+    shutdownDEV9();
     sceSifExitCmd();
     LoadExecPS2("rom0:PS1DRV", 2, argv);
   }
@@ -205,6 +205,7 @@ void handlePS2Disc(char *bootPath, char *eGSMArgument) {
     opts.eGSM = eGSMArgument;
   }
 
+  DPRINTF("argc = %d; argv[0] = %s; argv[1] = %s;\n", opts.argc, opts.argv[0], opts.argv[1]);
   loadELF(&opts);
 }
 

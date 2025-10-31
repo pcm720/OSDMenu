@@ -316,6 +316,13 @@ void startDNAS(int argc, char *argv[]) {
 // cdrom — CD/DVD
 // dvd — DVD Player
 int handleConfigPath(int argc, char *argv[]) {
+  if (!strcmp(argv[argc - 1], "-noflags")) {
+    DPRINTF("Resetting configuration flags\n");
+    // Reset config flags and remove the last argument
+    settings.flags = 0;
+    argc--;
+  }
+
   if (!strcmp(argv[0], "cdrom"))
     // Start the CD/DVD
     return startGameDisc();
@@ -347,7 +354,7 @@ int handleConfigPath(int argc, char *argv[]) {
 
     argv[0] = SYSTEM_PARTITION ":pfs:" OSDBOOT_PFS_PATH;
 
-    if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID))
+    if (settings.flags & (FLAG_ENABLE_GAMEID | FLAG_APP_GAMEID))
       titleID = strdup("SCPN_601.60");
 
     goto start;
@@ -379,7 +386,7 @@ int handleConfigPath(int argc, char *argv[]) {
     return -ENOENT;
 
 start:
-  if (!(settings.flags & FLAG_DISABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID)) {
+  if (settings.flags & (FLAG_ENABLE_GAMEID | FLAG_APP_GAMEID)) {
     if (!titleID)
       titleID = generateTitleID(argv[0]);
     if (titleID) {
