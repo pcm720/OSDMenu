@@ -22,10 +22,6 @@
 #include <string.h>
 #include <unistd.h>
 
-// Embedded payload ELF
-extern uint8_t payload_elf[];
-extern int size_payload_elf;
-
 // Placeholder entrypoint function for the PS2SDK crt0, to be placed at 0x100000.
 // Jumps to the actual entrypoint (__start)
 __attribute__((weak)) void __start();
@@ -173,7 +169,7 @@ TriggerType readPad() {
 next:
   int padState = 0;
   while ((padState = padGetState(0, 0))) {
-    if (padState == PAD_STATE_STABLE)
+    if ((padState == PAD_STATE_STABLE) || (padState == PAD_STATE_FINDCTP1))
       break;
     if (padState == PAD_STATE_DISCONN) {
       DPRINTF("Pad is disconnected\n");
