@@ -10,7 +10,7 @@ ATA ?= 1
 # Support for loading ELFs from MX4SIO (mx4sio:)
 MX4SIO ?= 1
 # Support for loading ELFs from iLink (ilink:)
-ILINK ?= 1
+ILINK ?= 0
 # Support for loading ELFs from UDPBD (udpbd:)
 UDPBD ?= 1
 # Support for loading ELFs from APA-formatted HDD (hdd0:)
@@ -23,6 +23,8 @@ CDROM ?= 1
 USE_ROM_MODULES ?= 0
 # If enabled, will print additional debug text to stdout
 ENABLE_PRINTF ?= 0
+# If enabled, will disable newlib-nano
+STANDALONE ?= 0
 
 # End of configurable section
 
@@ -154,8 +156,10 @@ EE_OBJS += $(RES_FILES:.sys=_sys.o)
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
 
 # Reduce binary size by using newlib-nano
-EE_NEWLIB_NANO = 1
-NEWLIB_NANO = 1
+ifneq ($(STANDALONE), 1)
+ EE_NEWLIB_NANO = 1
+ NEWLIB_NANO = 1
+endif
 
 .PHONY: all clean
 
