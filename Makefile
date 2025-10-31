@@ -57,7 +57,7 @@ osdmbr-installer.elf:
 # OSDMenu Launcher
 launcher.elf:
 	$(MAKE) -C launcher clean
-	$(MAKE) -C launcher kelf
+	$(MAKE) -C launcher kelf STANDALONE=1
 	mkdir -p release/launcher
 	cp launcher/LAUNCHER.XLF release/launcher/
 	cp launcher/launcher.elf release/launcher/
