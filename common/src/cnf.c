@@ -88,17 +88,17 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts, int gTID) {
   if (gTID)
     opts->titleID = generateTitleID(opts->bootPath);
 
-  if (opts->argCount > 0) {
+  if (args && (opts->argCount > 0)) {
     // Assemble argv array
-    opts->args = malloc(opts->argCount);
+    opts->args = malloc(opts->argCount * sizeof(char *));
     linkedStr *narg = NULL;
     int argIdx = 0;
     while (args != NULL) {
-      opts->args[argIdx++] = args->str;
+      opts->args[argIdx++] = strdup(args->str);
       narg = args->next;
-      free(args);
       args = narg;
     }
+    freeLinkedStr(args);
   }
   return type;
 }
@@ -120,7 +120,8 @@ void freeSystemCNFOptions(SystemCNFOptions *opts) {
 
   if (opts->args) {
     for (int i = 0; i < opts->argCount; i++)
-      free(opts->args[i]);
+      if (opts->args[i])
+        free(opts->args[i]);
     free(opts->args);
   }
 }
@@ -150,6 +151,8 @@ int parseDiscCNF(SystemCNFOptions *opts) {
 
   // Read file into memory
   char *cnf = malloc(size * sizeof(char));
+  if (!cnf)
+    return -ENOMEM;
   if (read(fd, cnf, size) != size) {
     DPRINTF("CDROM ERROR: Failed to read SYSTEM.CNF\n");
     close(fd);
