@@ -9,7 +9,7 @@ EE_LINKFILE = linkfile
 
 EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include  -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include  -Iinclude -I../common/include
 EE_LIBS = -lpatches -ldma -ldebug -lfileXio -lsecr -lpad -lgskit -ldmakit -lmc
-EE_OBJS =  main.o init.o config.o crypto.o loader.o hdd.o patinfo.o common.o disc.o cnf.o
+EE_OBJS =  main.o init.o handlers.o config.o crypto.o loader.o hdd.o patinfo.o common.o disc.o cnf.o
 ELF_FILES = loader.elf ps1vn.elf
 IRX_FILES = iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd-osd.irx ps2fs.irx secrsif.irx
 

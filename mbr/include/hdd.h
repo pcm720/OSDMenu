@@ -24,6 +24,6 @@ int umountPFS();
 // Functions implemented in hdd_start.c
 
 // Starts HDD application using data from the partition attribute area header
-int startHDDApplication(int argc, char *argv[]);
+int handleHDDApplication(int argc, char *argv[]);
 
 #endif
