@@ -16,7 +16,7 @@
 ENTRY(__start);
 
 MEMORY {
-	bram	: ORIGIN = 0x0084000, LENGTH = 0x20000 /* 0x00084000 - 0x000A4000: BIOS unused memory */
+	bram	: ORIGIN = 0x00A0000, LENGTH = 0x10000 /* 0x00084000 - 0x00100000: BIOS unused memory */
 }
 
 PHDRS {
