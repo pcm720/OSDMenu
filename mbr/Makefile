@@ -11,7 +11,7 @@ EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/incl
 EE_LIBS = -lpatches -ldma -ldebug -lfileXio -lsecr -lpad -lgskit -ldmakit -lmc
 EE_OBJS =  main.o init.o handlers.o config.o crypto.o loader.o hdd.o patinfo.o common.o disc.o cnf.o
 ELF_FILES = loader.elf ps1vn.elf
-IRX_FILES = iomanX.irx fileXio.irx ps2dev9.irx ps2atad.irx ps2hdd-osd.irx ps2fs.irx secrsif.irx
+IRX_FILES = iomanX.irx fileXio.irx ps2dev9.irx bdm.irx bdmfs_fatfs.irx ata_bd.irx ps2hdd-osd.irx ps2fs.irx secrsif.irx
 
 # CDROM dependencies
 EE_OBJS += history.o game_id.o

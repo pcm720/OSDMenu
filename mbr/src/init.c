@@ -31,7 +31,9 @@ IRX_DEFINE(iomanX);
 IRX_DEFINE(secrsif);
 IRX_DEFINE(fileXio);
 IRX_DEFINE(ps2dev9);
-IRX_DEFINE(ps2atad);
+IRX_DEFINE(bdm);
+IRX_DEFINE(bdmfs_fatfs);
+IRX_DEFINE(ata_bd);
 IRX_DEFINE(ps2hdd_osd);
 IRX_DEFINE(ps2fs);
 
@@ -80,7 +82,9 @@ int initModules(void) {
   IRX_LOAD(fileXio, 0, NULL)
   IRX_LOAD(secrsif, 0, NULL)
   IRX_LOAD(ps2dev9, 0, NULL)
-  IRX_LOAD(ps2atad, 0, NULL)
+  IRX_LOAD(bdm, 0, NULL)
+  IRX_LOAD(bdmfs_fatfs, 0, NULL)
+  IRX_LOAD(ata_bd, 0, NULL)
   IRX_LOAD(ps2hdd_osd, sizeof(ps2hddArguments), ps2hddArguments)
   IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments)
 

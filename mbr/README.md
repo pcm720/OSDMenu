@@ -69,6 +69,7 @@ To disable configuration flags just for one boot path while keeping them for oth
 - `hdd0:<partition name>:PATINFO` — will boot using SYSTEM.CNF from the HDD partition attribute area
 - `hdd0:<partition name>:pfs:<path to ELF>` — will boot the ELF from the PFS partition
 - `mc?:<PATH>` — executes the ELF from the memory card. Use `?` to make the MBR try both memory cards
+- `mass0:<PATH>` — executes the ELF from the exFAT partition.
 - `cdrom` — boots the PS1/PS2 CD/DVD disc
 - `dvd` — starts the DVD Player.
 
