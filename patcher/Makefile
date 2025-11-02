@@ -121,9 +121,7 @@ launcher.elf:
 %launcher_elf.c: launcher.elf
 	$(BIN2C) $(*:$(EE_SRC_DIR)%=../launcher/%)launcher.elf $@ $(*:$(EE_SRC_DIR)%=%)launcher_elf
 # Patch bin2c output to force launcher_elf section
-ifeq ($(HOSD), 1)
 	sed -i 's/= {/__attribute__((section("._launcher"))) = {/' $@
-endif
 
 $(EE_ASM_DIR):
 	@mkdir -p $@

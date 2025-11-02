@@ -16,7 +16,7 @@
 ENTRY(__start);
 
 MEMORY {
-	bram	: ORIGIN = 0x000a8000, LENGTH = 0x58000 /* 0x000a8000 - 0x00100000: BIOS unused memory */
+	bram	: ORIGIN = 0x0a8000, LENGTH = 0x58000  /* 0x0a8000 - 0x100000: BIOS unused memory */
 	osdram	: ORIGIN = 0x100000, LENGTH = 0x100000 /* 0x100000 - 0x200000: user memory region, temporarily used to load the launcher and embedded CNF file */
 }
 

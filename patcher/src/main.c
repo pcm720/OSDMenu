@@ -26,18 +26,16 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 #include <fileio.h>
 
 int main(int argc, char *argv[]) {
-#ifndef EMBED_CNF
-  // Clear the memory
-  memset((void *)USER_MEM_START_ADDR, 0, USER_MEM_END_ADDR - USER_MEM_START_ADDR);
-#else
-  // Clear the memory while avoiding the embedded data in the OSD memory region
+  // Clear memory while avoiding the embedded data in the OSD memory region
   memset((void *)EXTRA_SECTION_END, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
+  // Relocate the embedded launcher to the memory unused by the OSD unpacker
+  memcpy((void *)EXTRA_RELOC_ADDR, (void *)launcher_elf, size_launcher_elf);
+  launcher_elf_addr = (void *)EXTRA_RELOC_ADDR;
+#ifdef EMBED_CNF
   // Relocate the CNF file to the memory unused by the OSD code
-  memcpy((void *)EXTRA_RELOC_ADDR, (void *)embedded_cnf, size_embedded_cnf);
-  embedded_cnf_addr = (void *)EXTRA_RELOC_ADDR;
-#endif
-
-#ifndef EMBED_CNF
+  memcpy((void *)(EXTRA_RELOC_ADDR + size_launcher_elf), (void *)embedded_cnf, size_embedded_cnf);
+  embedded_cnf_addr = (void *)(EXTRA_RELOC_ADDR + size_launcher_elf);
+#else
   // Load needed modules
   initModules();
 #endif

@@ -148,11 +148,11 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   ptr = findPatternWithMask((uint8_t *)epc, 0x100000, (uint8_t *)patternSCEUmount, (uint8_t *)patternSCEUmount_mask, sizeof(patternSCEUmount));
   if (ptr)
     sceUmount = (void *)ptr;
+#endif
 
-  // Relocate the embedded launcher to avoid HDD OSD overwriting it
+  // Relocate the embedded launcher to avoid OSD code overwriting it
   memcpy((void *)USER_MEM_START_ADDR, launcher_elf_addr, size_launcher_elf);
   launcher_elf_addr = (uint8_t *)USER_MEM_START_ADDR;
-#endif
 
   FlushCache(0);
   FlushCache(2);
