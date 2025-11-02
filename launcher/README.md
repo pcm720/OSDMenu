@@ -9,8 +9,8 @@ Supported paths are:
 - `mass:` and `usb:` — USB devices (supported via BDM)
 - `ata:` — internal exFAT-formatted HDD (supported via BDM)
 - `mx4sio:` — MX4SIO (supported via BDM)
-- `ilink:` — i.Link mass storage (supported via BDM)
-- `udpbd:` — UDPBD (supported via BDM)
+- `ilink:` — i.Link mass storage (supported via BDM, disabled in OSDMenu/HOSDMenu)
+- `udpbd:` — UDPBD (supported via BDM, disabled in OSDMenu/HOSDMenu)
 - `hdd0:` — internal APA-formatted HDD. Both `:pfs:` and `:PATINFO` paths are supported
 - `rom?:` — ROM binaries
 - `cdrom` — CD/DVD discs

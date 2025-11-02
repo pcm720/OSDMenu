@@ -40,9 +40,11 @@ int main(int argc, char *argv[]) {
 #endif
 
   if ((argc < 2) || (argv[1][0] == '\0')) { // argv[1] can be empty when launched from OPL
+#ifdef APA
     if (strstr(argv[0], ":PATINFO"))
       // Handle "hdd0:<partition>:PATINFO" paths
       fail("PATINFO failed: %d", handlePATINFO(argc, argv));
+#endif
 
     // Try to quickboot with paths from .CNF located at the current working directory
     fail("Quickboot failed: %d", handleQuickboot(argv[0]));

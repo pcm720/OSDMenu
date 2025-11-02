@@ -12,7 +12,7 @@ MX4SIO ?= 1
 # Support for loading ELFs from iLink (ilink:)
 ILINK ?= 0
 # Support for loading ELFs from UDPBD (udpbd:)
-UDPBD ?= 1
+UDPBD ?= 0
 # Support for loading ELFs from APA-formatted HDD (hdd0:)
 APA ?= 1
 # Support for loading PS1 and PS2 CDs/DVDs (cdrom)
