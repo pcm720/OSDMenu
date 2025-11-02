@@ -15,8 +15,6 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 
 launcherOptions settings;
 
-#include <debug.h>
-
 int main(int argc, char *argv[]) {
   // Process global options
   settings.flags = 0;

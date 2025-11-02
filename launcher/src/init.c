@@ -39,7 +39,7 @@ IRX_DEFINE(mcserv);
 IRX_DEFINE(mmceman);
 #endif
 
-#ifdef ATA
+#if defined(ATA) || defined(APA)
 #define DEV9
 #define BDM
 IRX_DEFINE(ata_bd);
@@ -71,7 +71,6 @@ IRX_DEFINE(smap_udpbd);
 
 #ifdef APA
 #define DEV9
-IRX_DEFINE(ps2atad);
 IRX_DEFINE(ps2hdd_osd);
 IRX_DEFINE(ps2fs);
 IRX_DEFINE(secrsif);
@@ -146,11 +145,11 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_APA | Device_Debug),
 #endif
 #ifdef BDM
-    INT_MODULE(bdm, NULL, Device_BDM),
-    INT_MODULE(bdmfs_fatfs, NULL, Device_BDM),
+    INT_MODULE(bdm, NULL, Device_BDM | Device_APA),
+    INT_MODULE(bdmfs_fatfs, NULL, Device_BDM | Device_APA),
 #endif
-#ifdef ATA
-    INT_MODULE(ata_bd, NULL, Device_ATA),
+#if defined(ATA) || defined(APA)
+    INT_MODULE(ata_bd, NULL, Device_ATA | Device_APA),
 #endif
 #ifdef USB
     INT_MODULE(usbd_mini, NULL, Device_USB),
@@ -169,7 +168,6 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD),
 #endif
 #ifdef APA
-    INT_MODULE(ps2atad, NULL, Device_APA),
     INT_MODULE(ps2hdd_osd, &initPS2HDDArguments, Device_APA),
     INT_MODULE(ps2fs, &initPS2FSArguments, Device_APA),
     INT_MODULE(secrsif, NULL, Device_APA),
@@ -181,7 +179,7 @@ static DeviceType currentDevice = Device_None;
 
 // Initializes IOP modules for given device type
 int initModules(DeviceType device, int clearSPU) {
-  if (currentDevice & device)
+  if ((currentDevice)&device)
     // Do nothing if the drivers are already loaded
     return 0;
 
@@ -209,6 +207,8 @@ int initModules(DeviceType device, int clearSPU) {
   if ((ret = sbv_patch_enable_lmb()))
     return ret;
   if ((ret = sbv_patch_disable_prefix_check()))
+    return ret;
+  if ((ret = sbv_patch_fileio()))
     return ret;
 
   // Load modules

@@ -61,6 +61,14 @@ ifeq ($(USB), 1)
  IRX_FILES += usbd_mini.irx usbmass_bd_mini.irx
 endif
 
+ifeq ($(APA), 1)
+ DEV9 = 1
+ ATA = 1
+ EE_CFLAGS += -DAPA
+ EE_OBJS += handler_pfs.o handler_patinfo.o patinfo.o
+ IRX_FILES += ps2hdd-osd.irx ps2fs.irx secrsif.irx
+endif
+
 ifeq ($(ATA), 1)
  BDM = 1
  DEV9 = 1
@@ -86,13 +94,6 @@ ifeq ($(UDPBD), 1)
  DEV9 = 1
  EE_CFLAGS += -DUDPBD
  IRX_FILES += smap_udpbd.irx
-endif
-
-ifeq ($(APA), 1)
- DEV9 = 1
- EE_CFLAGS += -DAPA
- EE_OBJS += handler_pfs.o handler_patinfo.o patinfo.o
- IRX_FILES += ps2atad.irx ps2hdd-osd.irx ps2fs.irx secrsif.irx
 endif
 
 ifeq ($(CDROM),1)
