@@ -85,9 +85,9 @@ int initModules(void) {
   IRX_LOAD(bdm, 0, NULL)
   IRX_LOAD(bdmfs_fatfs, 0, NULL)
   IRX_LOAD(ata_bd, 0, NULL)
+  sleep(1); // Delay to prevent ps2hdd module from hanging
   IRX_LOAD(ps2hdd_osd, sizeof(ps2hddArguments), ps2hddArguments)
   IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments)
-
   if ((ret = SifLoadModule("rom0:SIO2MAN", 0, NULL)) < 0)
     return ret;
   if ((ret = SifLoadModule("rom0:MCMAN", 0, NULL)) < 0)
