@@ -241,6 +241,10 @@ int initModules(DeviceType device, int clearSPU) {
       sleep(10);
 #endif
 
+    // Delay to prevent ps2hdd module from hanging
+    if ((device & Device_APA) && !strcmp(moduleList[i].name, "ata_bd"))
+      sleep(1);
+
     if (ret >= 0)
       ret = 0;
     if (iopret == 1)
