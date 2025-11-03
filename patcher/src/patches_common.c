@@ -96,7 +96,9 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   char *args[10];
 #ifndef HOSD
   // OSDSYS
-  args[n++] = "rom0:OSDSYS";
+  // The path is intentionally not rom0:OSDSYS since some modchips seem to hook into ExecPS2
+  // and break OSDMenu-patched OSDSYS when the argv[0] is 'rom0:OSDSYS'
+  args[n++] = "rom0:";
 
   if (argc > 1)
     // Passthrough the original arguments
