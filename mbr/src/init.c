@@ -36,6 +36,10 @@ IRX_DEFINE(bdmfs_fatfs);
 IRX_DEFINE(ata_bd);
 IRX_DEFINE(ps2hdd_osd);
 IRX_DEFINE(ps2fs);
+#ifdef ENABLE_PRINTF
+IRX_DEFINE(smap_udptty);
+const char udpbd_ip[] = "ip=" UDPTTYIP;
+#endif
 
 // ps2hdd module arguments. Up to 4 descriptors, 20 buffers
 static char ps2hddArguments[] = "-o"
@@ -82,6 +86,10 @@ int initModules(void) {
   IRX_LOAD(fileXio, 0, NULL)
   IRX_LOAD(secrsif, 0, NULL)
   IRX_LOAD(ps2dev9, 0, NULL)
+#ifdef ENABLE_PRINTF
+  IRX_LOAD(smap_udptty, sizeof(udpbd_ip), udpbd_ip)
+  sleep(20);
+#endif
   IRX_LOAD(bdm, 0, NULL)
   IRX_LOAD(bdmfs_fatfs, 0, NULL)
   IRX_LOAD(ata_bd, 0, NULL)

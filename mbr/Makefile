@@ -1,5 +1,6 @@
 # If enabled, will print additional debug text to stdout
 ENABLE_PRINTF ?= 0
+UDPTTY_IP ?= 192.168.1.6
 
 EE_BIN = osdmbr.elf
 EE_BIN_RAW = osdmbr.bin
@@ -7,7 +8,7 @@ EE_BIN_KELF = OSDMBR.XLF
 
 EE_LINKFILE = linkfile
 
-EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include  -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include  -Iinclude -I../common/include
+EE_INCS = -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/sbv/include -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Iinclude -I../common/include
 EE_LIBS = -lpatches -ldma -ldebug -lfileXio -lsecr -lpad -lgskit -ldmakit -lmc
 EE_OBJS =  main.o init.o handlers.o config.o crypto.o loader.o hdd.o patinfo.o common.o disc.o cnf.o
 ELF_FILES = loader.elf ps1vn.elf
@@ -28,13 +29,18 @@ EE_ASM_DIR = asm/
 EE_SRC_DIR = src/
 
 ifeq ($(ENABLE_PRINTF), 1)
- EE_CFLAGS += -DENABLE_PRINTF
+ EE_CFLAGS += -DENABLE_PRINTF -DUDPTTYIP="\"${UDPTTY_IP}\""
+ IRX_FILES += smap_udptty.irx
 endif
 
 EE_OBJS += $(IRX_FILES:.irx=_irx.o)
 EE_OBJS += $(ELF_FILES:.elf=_elf.o)
 EE_OBJS += $(RES_FILES:.sys=_sys.o)
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
+
+# Reduce binary size by using newlib-nano
+EE_NEWLIB_NANO = 1
+NEWLIB_NANO = 1
 
 .PHONY: all clean
 
@@ -55,6 +61,13 @@ kelf: $(EE_BIN_RAW)
 
 %ps2hdd-osd_irx.c:
 	$(BIN2C) $(PS2SDK)/iop/irx/ps2hdd-osd.irx $@ $(*:$(EE_SRC_DIR)%=%)ps2hdd_osd_irx
+
+# smap_udptty.irx
+iop/smap_udptty/smap_udptty.irx: ../launcher/iop/smap_udptty
+	$(MAKE) -C $<
+
+%smap_udptty_irx.c: iop/smap_udptty/smap_udptty.irx
+	$(BIN2C) ../launcher/iop/smap_udptty/$(*:$(EE_SRC_DIR)%=%)smap_udptty.irx $@ $(*:$(EE_SRC_DIR)%=%)smap_udptty_irx
 
 # ELF loader
 loader.elf:

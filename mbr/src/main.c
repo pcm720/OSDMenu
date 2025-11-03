@@ -27,6 +27,11 @@ __attribute__((noreturn)) void __entrypoint() {
   __builtin_unreachable();
 }
 
+// Reduce binary size by disabling unneeded functionality
+void _libcglue_timezone_update() {}
+void _libcglue_rtc_update() {}
+PS2_DISABLE_AUTOSTART_PTHREAD();
+
 // Initiailizes the pad library and returns the button pressed
 TriggerType readPad();
 
