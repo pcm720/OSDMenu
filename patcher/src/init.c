@@ -38,15 +38,12 @@ int initModules() {
 
   sceSifInitRpc(0);
 
-  int ret;
   // Apply patches required to load executables from memory cards
-  if ((ret = sbv_patch_enable_lmb()))
-    return ret;
-  if ((ret = sbv_patch_disable_prefix_check()))
-    return ret;
-  if ((ret = sbv_patch_fileio()))
-    return ret;
+  sbv_patch_enable_lmb();
+  sbv_patch_disable_prefix_check();
+  sbv_patch_fileio();
 
+  int ret;
   if ((ret = SifLoadModule("rom0:SIO2MAN", 0, NULL)) < 0)
     return ret;
   if ((ret = SifLoadModule("rom0:MCMAN", 0, NULL)) < 0)
