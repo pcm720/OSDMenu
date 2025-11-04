@@ -237,6 +237,17 @@ int handleHDDApplication(int argc, char *argv[]) {
   if (strstr(lopts->argv[0], ":pfs:") && checkPFSPath(lopts->argv[0]))
     return -ENOENT;
 
+  if (!strncmp(lopts->argv[0], "ata:", 4)) {
+    // Replace ata: with mass0: and check if target ELF exists
+    char *nargv = malloc(strlen(lopts->argv[0]) + 7);
+    sprintf(nargv, "mass0%s", &lopts->argv[0][3]);
+    free(lopts->argv[0]);
+    lopts->argv[0] = nargv;
+
+    if (checkFile(lopts->argv[0]) < 0)
+      return -ENOENT;
+  }
+
   if (titleID) {
     updateLaunchHistory(titleID, (settings.flags & FLAG_APP_GAMEID));
   }

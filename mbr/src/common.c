@@ -200,7 +200,13 @@ void execOSD(int argc, char *argv[]) {
   // Else, exec OSDSYS
   // Shutdown dev9
   shutdownDEV9();
-  ExecOSD(argc, argv);
+  for (int i = 0; i < argc; i++)
+    if (!strcmp("SkipHdd", argv[i]))
+      ExecOSD(argc, argv);
+
+  // Add SkipHdd to prevent boot loops
+  nargv[0] = "SkipHdd";
+  ExecOSD(nargc, nargv);
   return;
 }
 
