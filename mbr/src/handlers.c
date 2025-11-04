@@ -188,6 +188,13 @@ int handleConfigPath(int argc, char *argv[]) {
     goto start;
   }
 
+  if (!strncmp(argv[0], "ata:", 4)) {
+    // Replace ata: with mass0:
+    char *nargv = malloc(strlen(argv[0]) + 7);
+    sprintf(nargv, "mass0%s", &argv[0][3]);
+    argv[0] = nargv;
+  }
+
   // Fallback to just checking if file exists and attempting to execute it
   if (checkFile(argv[0]) < 0)
     return -ENOENT;
