@@ -23,6 +23,7 @@ CDROM ?= 1
 USE_ROM_MODULES ?= 0
 # If enabled, will print additional debug text to stdout
 ENABLE_PRINTF ?= 0
+UDPTTY_IP ?= 192.168.1.6
 # If enabled, will disable newlib-nano
 STANDALONE ?= 0
 
@@ -126,7 +127,7 @@ else
 endif
 
 ifeq ($(ENABLE_PRINTF), 1)
- EE_CFLAGS += -DENABLE_PRINTF
+ EE_CFLAGS += -DENABLE_PRINTF -DUDPTTYIP="\"${UDPTTY_IP}\""
  IRX_FILES += smap_udptty.irx
 endif
 

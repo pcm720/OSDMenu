@@ -99,6 +99,7 @@ IRX_DEFINE(poweroff);
 
 #ifdef ENABLE_PRINTF
 IRX_DEFINE(smap_udptty);
+const char udpbd_ip[] = "ip=" UDPTTYIP;
 #endif
 
 // Function used to initialize module arguments.
@@ -148,6 +149,11 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(bdm, NULL, Device_BDM | Device_APA),
     INT_MODULE(bdmfs_fatfs, NULL, Device_BDM | Device_APA),
 #endif
+#ifdef ENABLE_PRINTF
+    INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
+#elif defined(UDPBD)
+    INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD),
+#endif
 #if defined(ATA) || defined(APA)
     INT_MODULE(ata_bd, NULL, Device_ATA | Device_APA),
 #endif
@@ -161,11 +167,6 @@ static ModuleListEntry moduleList[] = {
 #ifdef ILINK
     INT_MODULE(iLinkman, NULL, Device_iLink),
     INT_MODULE(IEEE1394_bd_mini, NULL, Device_iLink),
-#endif
-#ifdef ENABLE_PRINTF
-    INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
-#elif defined(UDPBD)
-    INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD),
 #endif
 #ifdef APA
     INT_MODULE(ps2hdd_osd, &initPS2HDDArguments, Device_APA),
@@ -294,7 +295,12 @@ void applyXPARAM(char *gameID) { SifExecModuleBuffer(xparam_irx, size_xparam_irx
 
 // Argument functions
 
-#ifdef UDPBD
+#ifdef ENABLE_PRINTF
+char *initSMAPArguments(uint32_t *argLength) {
+  *argLength = sizeof(udpbd_ip);
+  return strdup(udpbd_ip);
+}
+#elif defined(UDPBD)
 // Builds IP address argument for SMAP module
 // using mc?:SYS-CONF/IPCONFIG.DAT from memory card
 char *initSMAPArguments(uint32_t *argLength) {

@@ -322,6 +322,12 @@ int parseGlobalFlags(int argc, char *argv[]) {
     } else if (!strcmp(argv[i], "-patinfo")) {
       settings.flags |= FLAG_BOOT_PATINFO;
       argc--;
+    } else if (!strncmp(argv[i], "-dev9", 5)) {
+      if (strstr(argv[i], "NICHDD"))
+        settings.dev9ShutdownType = ShutdownType_None;
+      else if (strstr(argv[i], "NIC"))
+        settings.dev9ShutdownType = ShutdownType_HDD;
+      argc--;
     }
   }
 
@@ -341,6 +347,7 @@ int LoadELFFromFile(int argc, char *argv[]) {
   LoadOptions opts = {
       .argc = argc,
       .argv = argv,
+      .dev9ShutdownType = settings.dev9ShutdownType,
   };
   if (settings.gsmArgument)
     opts.eGSM = settings.gsmArgument;

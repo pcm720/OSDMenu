@@ -10,7 +10,7 @@
 // Starts application using data from the HDD partition attribute area header
 // Assumes argv[0] is the partition path
 int handlePATINFO(int argc, char *argv[]) {
-  int res = initPFS(NULL, 0, Device_None);
+  int res = initPFS(NULL, 0, Device_ATA);
   if (res)
     return res;
 
@@ -20,6 +20,8 @@ int handlePATINFO(int argc, char *argv[]) {
     return -ENOENT;
 
   lopts->argc = parseGlobalFlags(lopts->argc, lopts->argv);
+  // Apply DEV9 options to other handlers
+  settings.dev9ShutdownType = lopts->dev9ShutdownType;
 
   if (titleID) {
     updateLaunchHistory(titleID, 0);
@@ -44,5 +46,6 @@ int handlePATINFO(int argc, char *argv[]) {
 
     return launchPath(lopts->argc, lopts->argv);
   }
+
   return loadELF(lopts);
 }

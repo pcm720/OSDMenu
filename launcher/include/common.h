@@ -1,6 +1,7 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#include "loader.h"
 #include <debug.h>
 #include <stdint.h>
 
@@ -41,6 +42,7 @@ typedef struct {
   DeviceType deviceHint; // The device the launcher has been launched from. Only HDD and memory cards are supported
   int mcHint;            // Memory card number when the deviceHint is Device_MemoryCard
   char *gsmArgument;     // eGSM argument
+  ShutdownType dev9ShutdownType;
 } launcherOptions;
 
 extern launcherOptions settings;
