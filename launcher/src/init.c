@@ -204,12 +204,9 @@ int initModules(DeviceType device, int clearSPU) {
   sceSifInitRpc(0);
 
   // Apply patches required to load modules from EE RAM
-  if ((ret = sbv_patch_enable_lmb()))
-    return ret;
-  if ((ret = sbv_patch_disable_prefix_check()))
-    return ret;
-  if ((ret = sbv_patch_fileio()))
-    return ret;
+  sbv_patch_enable_lmb();
+  sbv_patch_disable_prefix_check();
+  sbv_patch_fileio();
 
   // Load modules
   for (int i = 0; i < MODULE_COUNT; i++) {
