@@ -72,16 +72,13 @@ int initModules(void) {
 
   sceSifInitRpc(0);
 
+  // Apply patches required to load executables from EE RAM
+  sbv_patch_enable_lmb();
+  sbv_patch_disable_prefix_check();
+  sbv_patch_fileio();
+
   int ret = 0;
   int iopret = 0;
-  // Apply patches required to load executables from EE RAM
-  if ((ret = sbv_patch_enable_lmb()))
-    return ret;
-  if ((ret = sbv_patch_disable_prefix_check()))
-    return ret;
-  if ((ret = sbv_patch_fileio()))
-    return ret;
-
   IRX_LOAD(iomanX, 0, NULL)
   IRX_LOAD(fileXio, 0, NULL)
   IRX_LOAD(secrsif, 0, NULL)
