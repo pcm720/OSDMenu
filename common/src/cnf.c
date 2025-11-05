@@ -74,6 +74,10 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts, int gTID) {
       opts->bootPath = strdup(valuePtr);
       continue;
     }
+    if (!strncmp(lineBuffer, "titleid", 7)) { // Custom title ID
+      opts->titleID = strdup(valuePtr);
+      continue;
+    }
     if (!strncmp(lineBuffer, "skip_argv0", 10)) { // Skip argv[0] flag
       opts->skipArgv0 = atoi(valuePtr);
       continue;
@@ -85,7 +89,7 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts, int gTID) {
     }
   }
 
-  if (gTID)
+  if (gTID && !opts->titleID)
     opts->titleID = generateTitleID(opts->bootPath);
 
   if (args && (opts->argCount > 0)) {

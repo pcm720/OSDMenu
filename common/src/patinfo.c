@@ -149,7 +149,10 @@ LoadOptions *parsePATINFO(int argc, char *argv[], char **titleID) {
   SystemCNFOptions opts = {};
   parseSystemCNF(file, &opts, 0);
   fclose(file);
-  opts.titleID = generateTitleID(argv[0]); // Getting title ID from partition name is preferable
+
+  if (!opts.titleID)
+    // If not overridden by the `title_id` argument, title ID from partition name is preferable
+    opts.titleID = generateTitleID(argv[0]);
 
   DPRINTF("====\nSYSTEM.CNF:\n");
   if (opts.bootPath)
