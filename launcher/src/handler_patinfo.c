@@ -23,6 +23,12 @@ int handlePATINFO(int argc, char *argv[]) {
   // Apply DEV9 options to other handlers
   settings.dev9ShutdownType = lopts->dev9ShutdownType;
 
+  if (settings.titleID) {
+    free(titleID);
+    titleID = settings.titleID;
+    DPRINTF("Title ID is overriden to %s\n", settings.titleID);
+  }
+
   if (titleID) {
     updateLaunchHistory(titleID, ((settings.titleID) ? 1 : 0));
     free(titleID);
