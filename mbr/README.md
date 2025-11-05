@@ -80,11 +80,11 @@ OSDMenu MBR supports additional SYSTEM.CNF arguments for `:PATINFO` paths.
 - `path` — custom ELF path (only `hdd0` and `mc?` paths are supported) 
 - `arg` — custom argument to pass to the ELF file. More than one `arg` lines are supported.
 - `skip_argv0` — if set to `1`, the target ELF will only receive argv built from `arg` lines (useful for running POPStarter).
+- `titleid` — will use this title ID for the history file and visual game ID
 
 ### Embedded Neutrino GSM (eGSM)
 
 OSDMenu MBR supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/egsm/) by automatically loading and applying the per-title options from `hdd0:__sysconf/osdmenu/OSDGSM.CNF`.  
-Additionally, it will run the target ELF from the `OSDMBR.CNF` via the [embedded Neutrino GSM](utils/egsm/) when the last argument is `-gsm=<>`.
 
 See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/loader/README.md#egsm) README for more information on the eGSM argument format.
 

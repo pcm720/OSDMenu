@@ -210,12 +210,7 @@ start:
     }
   }
 
-  LoadOptions opts = {};
-  if (argc > 1 && !strncmp(argv[argc - 1], "-gsm=", 5)) {
-    opts.eGSM = strdup(&argv[argc - 1][5]);
-    argc--;
-  }
-
+  LoadOptions opts = {0};
   opts.argc = argc;
   opts.argv = argv;
   return loadELF(&opts);
