@@ -110,3 +110,6 @@ New to OSDMenu/HOSDMenu:
 Options exclusive to OSDMenu:
 
 31. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF. The path MUST be on the memory card
+
+To add a custom separator to the menu, add a `name_OSDSYS_ITEM_???` entry that starts with `$!`.  
+This will make the entry inactive, but still show it in the OSD without the `$!` prefix.

@@ -37,6 +37,9 @@ int handleMenuEntry(int selected) {
   if (selected - 2 < 0)
     return 0;
 
+  if (settings.menuItemName[selected - 2][0] == '$' && settings.menuItemName[selected - 2][1] == '!')
+    return 0;
+
   // Build the item string for the launcher
   int idx = settings.menuItemIdx[selected - 2];
 
@@ -60,8 +63,12 @@ int handleMenuEntry(int selected) {
 
 // Returns the pointer to OSD string
 const char *getStringPointer(const char **strings, uint32_t index) {
-  if ((index & 0xffff0000) == OSD_MAGIC)
-    return settings.menuItemName[index & 0xffff];
+  if ((index & 0xffff0000) == OSD_MAGIC) {
+    char *str = settings.menuItemName[index & 0xffff];
+    if (str[0] == '$' && str[1] == '!')
+      return str + 2;
+    return str;
+  }
 
   return strings[index];
 }
