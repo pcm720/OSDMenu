@@ -24,7 +24,7 @@ int handlePATINFO(int argc, char *argv[]) {
   settings.dev9ShutdownType = lopts->dev9ShutdownType;
 
   if (titleID) {
-    updateLaunchHistory(titleID, 0);
+    updateLaunchHistory(titleID, ((settings.titleID) ? 1 : 0));
     free(titleID);
   }
 

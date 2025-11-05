@@ -4,6 +4,7 @@
 #include "handlers.h"
 #include "init.h"
 #include "loader.h"
+#include <ctype.h>
 #include <debug.h>
 #include <fcntl.h>
 #include <kernel.h>
@@ -307,26 +308,45 @@ int parseGlobalFlags(int argc, char *argv[]) {
   if (argc < 2)
     return argc;
 
+  char *valuePtr = NULL;
   for (int i = argc - 1; i > 0; i--) {
-    if (!strncmp(argv[i], "-gsm=", 5)) {
+    // Find the start of the value
+    valuePtr = strchr(argv[i], '=');
+    if (valuePtr) {
+      // Trim whitespace and terminate the value
+      do {
+        valuePtr++;
+      } while (isspace((int)*valuePtr));
+      valuePtr[strcspn(valuePtr, "\r\n")] = '\0';
+    }
+
+    if (valuePtr && !strncmp(argv[i], "-gsm=", 5)) {
       // eGSM argument
-      settings.gsmArgument = strdup(&argv[i][5]);
+      settings.gsmArgument = strdup(valuePtr);
       DPRINTF("Applying eGSM options: %s\n", settings.gsmArgument);
       argc--;
     } else if (!strcmp(argv[i], "-osd")) {
       settings.flags |= FLAG_BOOT_OSD;
+      DPRINTF("Setting OSD flag\n");
       argc--;
     } else if (!strcmp(argv[i], "-appid")) {
       settings.flags |= FLAG_APP_GAMEID;
+      DPRINTF("Enabling game ID for apps\n");
       argc--;
     } else if (!strcmp(argv[i], "-patinfo")) {
       settings.flags |= FLAG_BOOT_PATINFO;
+      DPRINTF("Setting PATINFO flag\n");
       argc--;
-    } else if (!strncmp(argv[i], "-dev9", 5)) {
-      if (strstr(argv[i], "NICHDD"))
+    } else if (valuePtr && !strncmp(argv[i], "-titleid=", 9)) {
+      settings.titleID = strdup(valuePtr);
+      DPRINTF("Using custom title ID: %s\n", settings.titleID);
+      argc--;
+    } else if (valuePtr && !strncmp(argv[i], "-dev9", 5)) {
+      if (!strcmp(valuePtr, "NICHDD"))
         settings.dev9ShutdownType = ShutdownType_None;
-      else if (strstr(argv[i], "NIC"))
+      else if (!strcmp(valuePtr, "NIC"))
         settings.dev9ShutdownType = ShutdownType_HDD;
+      DPRINTF("DEV9 Shutdown Type: %d\n", settings.dev9ShutdownType);
       argc--;
     }
   }
@@ -335,8 +355,10 @@ int parseGlobalFlags(int argc, char *argv[]) {
 }
 
 int LoadELFFromFile(int argc, char *argv[]) {
-  if (settings.flags & FLAG_APP_GAMEID) {
-    char *titleID = generateTitleID(argv[0]);
+  if (settings.titleID || (settings.flags & FLAG_APP_GAMEID)) {
+    char *titleID = settings.titleID;
+    if (!titleID)
+      titleID = generateTitleID(argv[0]);
     if (titleID) {
       DPRINTF("Title ID is %s\n", titleID);
       gsDisplayGameID(titleID);

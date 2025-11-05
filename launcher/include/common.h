@@ -38,11 +38,12 @@ typedef enum {
 
 // Defines global launcher options
 typedef struct {
-  uint8_t flags;         // Whether the launcher was started from OSDMenu
-  DeviceType deviceHint; // The device the launcher has been launched from. Only HDD and memory cards are supported
-  int mcHint;            // Memory card number when the deviceHint is Device_MemoryCard
-  char *gsmArgument;     // eGSM argument
-  ShutdownType dev9ShutdownType;
+  uint8_t flags;                 // Whether the launcher was started from OSDMenu
+  DeviceType deviceHint;         // The device the launcher has been launched from. Only HDD and memory cards are supported
+  int mcHint;                    // Memory card number when the deviceHint is Device_MemoryCard
+  char *gsmArgument;             // eGSM argument
+  char *titleID;                 // Custom title ID
+  ShutdownType dev9ShutdownType; // DEV9 Shutdown type override
 } launcherOptions;
 
 extern launcherOptions settings;

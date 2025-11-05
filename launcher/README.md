@@ -28,6 +28,7 @@ The launcher supports the following global arguments:
   Must always be the last argument. Does not apply to `rom?:` paths.
 - `-appid` — enables visual Game ID for applications. The ID is generated from the ELF name (up to 11 characters).
 - `-patinfo` — when handling PATINFO paths, will ignore the `BOOT2`/`path` line from SYSTEM.CNF and use the first argument as target ELF path.
+- `-titleid` — when launching ELFs, will use this title ID for the history file and visual game ID. Only valid IDs will be written to the history file
 - `-dev9=` — will pass DEV9 shutdown flags to the loader. Supported values are:
   - `NICHDD` — will keep both the network adapter and HDD on
   - `NIC` — will keep only the network adapter on 
