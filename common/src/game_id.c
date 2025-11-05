@@ -82,9 +82,10 @@ void updateLaunchHistory(char *titleID, int showAppID) {
   if (!titleID || titleID[0] == '\0')
     return;
 
-  if (!((titleID[4] == '_') && ((titleID[7] == '.') || (titleID[8] == '.')))) {
+  // Ignore SCPN (PS BBN) prefix
+  if (!strncmp(titleID, "SCPN", 4) || !((titleID[4] == '_') && ((titleID[7] == '.') || (titleID[8] == '.')))) {
     if (showAppID)
-      // Display game ID even if the title ID is not a valid PS2 title ID
+      // Display game ID even if the title ID is not a valid PS2 title ID or has a BBN-exclusive prefix
       gsDisplayGameID(titleID);
     return;
   }
