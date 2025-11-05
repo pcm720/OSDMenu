@@ -348,7 +348,8 @@ int parseGlobalFlags(int argc, char *argv[]) {
         settings.dev9ShutdownType = ShutdownType_HDD;
       DPRINTF("DEV9 Shutdown Type: %d\n", settings.dev9ShutdownType);
       argc--;
-    }
+    } else
+      break; // Exit to preserve application arguments
   }
 
   return argc;

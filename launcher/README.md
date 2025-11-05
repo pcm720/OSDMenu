@@ -92,4 +92,4 @@ arg=-testarg2
 
 `boot` — path relative to the config file  
 `path` — absolute paths  
-`arg` — arguments that will be passed to the ELF file 
+`arg` — global launcher arguments or arguments that will be passed to the ELF file 

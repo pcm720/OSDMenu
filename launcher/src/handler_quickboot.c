@@ -128,6 +128,9 @@ int handleQuickboot(char *cnfPath) {
     free(targetArgs);
   }
 
+  // Parse arguments for global flags
+  targetArgc = parseGlobalFlags(targetArgc, targetArgv);
+
   // Try every path
   tlstr = targetPaths;
   while (tlstr) {
