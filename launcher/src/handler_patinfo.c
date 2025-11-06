@@ -30,7 +30,7 @@ int handlePATINFO(int argc, char *argv[]) {
   }
 
   if (titleID) {
-    updateLaunchHistory(titleID, ((settings.titleID) ? 1 : 0));
+    updateLaunchHistory(titleID, 1);
     free(titleID);
   }
 
