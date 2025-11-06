@@ -150,7 +150,7 @@ LoadOptions *parsePATINFO(int argc, char *argv[], char **titleID) {
   parseSystemCNF(file, &opts, 0);
   fclose(file);
 
-  if (!opts.titleID)
+  if (!opts.titleID && validateTitleID(argv[0]))
     // If not overridden by the `title_id` argument, title ID from partition name is preferable
     opts.titleID = generateTitleID(argv[0]);
 

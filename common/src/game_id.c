@@ -77,6 +77,15 @@ void gsDisplayGameID(const char *gameID) {
   gsKit_deinit_global(gsGlobal);
 }
 
+// Returns 1 if ID is a valid PS2 title ID
+int validateTitleID(char *titleID) {
+  if ((titleID[4] == '_') && ((titleID[7] == '.') || (titleID[8] == '.'))) {
+    return 1;
+  }
+
+  return 0;
+}
+
 // Updates the history file and shows game ID
 void updateLaunchHistory(char *titleID, int showAppID) {
   if (!titleID || titleID[0] == '\0')
