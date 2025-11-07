@@ -15,7 +15,8 @@ int handlePATINFO(int argc, char *argv[]) {
     return res;
 
   char *titleID = NULL;
-  LoadOptions *lopts = parsePATINFO(argc, argv, &titleID);
+  int disableHistory = 0;
+  LoadOptions *lopts = parsePATINFO(argc, argv, &titleID, &disableHistory);
   if (!lopts)
     return -ENOENT;
 
@@ -30,7 +31,11 @@ int handlePATINFO(int argc, char *argv[]) {
   }
 
   if (titleID) {
-    updateLaunchHistory(titleID, 1);
+    if (disableHistory)
+      gsDisplayGameID(titleID);
+    else
+      updateLaunchHistory(titleID, (settings.flags & FLAG_APP_GAMEID));
+
     free(titleID);
   }
 
