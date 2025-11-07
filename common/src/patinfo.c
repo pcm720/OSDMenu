@@ -91,7 +91,7 @@ int readPATINFOFile(void *dst, int partFd, AttributeAreaFile file, uint32_t *dec
 
 // Processes partition attribute area into LoadOptions for the loader
 // Will set the titleID argument to parsed titleID if titleID is not NULL
-LoadOptions *parsePATINFO(int argc, char *argv[], char **titleID) {
+LoadOptions *parsePATINFO(int argc, char *argv[], char **titleID, int *disableHistory) {
   // Terminate the path at partition name
   char *v;
   if ((strlen(argv[0]) > 5) && (v = strchr(&argv[0][5], ':')))
@@ -146,13 +146,18 @@ LoadOptions *parsePATINFO(int argc, char *argv[], char **titleID) {
   }
 
   // Parse SYSTEM.CNF file from the attribute area
-  SystemCNFOptions opts = {};
+  SystemCNFOptions opts = {0};
   parseSystemCNF(file, &opts, 0);
   fclose(file);
 
-  if (!opts.titleID && validateTitleID(argv[0]))
+  if (!opts.titleID) {
     // If not overridden by the `title_id` argument, title ID from partition name is preferable
     opts.titleID = generateTitleID(argv[0]);
+    if (opts.titleID && !validateTitleID(opts.titleID)) {
+      free(opts.titleID);
+      opts.titleID = NULL;
+    }
+  }
 
   DPRINTF("====\nSYSTEM.CNF:\n");
   if (opts.bootPath)
@@ -177,6 +182,7 @@ LoadOptions *parsePATINFO(int argc, char *argv[], char **titleID) {
   LoadOptions *lopts = calloc(sizeof(LoadOptions), 1);
   lopts->skipArgv0 = opts.skipArgv0;
   lopts->dev9ShutdownType = opts.dev9ShutdownType;
+  *disableHistory = opts.noHistory;
 
   // IOPRP
   if (opts.ioprpPath && opts.ioprpPath[0] != '\0') {

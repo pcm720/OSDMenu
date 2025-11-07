@@ -5,6 +5,6 @@
 
 // Processes partition attribute area into LoadOptions for the loader
 // Will set the titleID argument to parsed titleID if titleID is not NULL
-LoadOptions *parsePATINFO(int argc, char *argv[], char **titleID);
+LoadOptions *parsePATINFO(int argc, char *argv[], char **titleID, int *disableHistory);
 
 #endif

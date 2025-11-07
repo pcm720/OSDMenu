@@ -25,6 +25,7 @@ typedef struct {
   char *titleVersion;
   char *titleID;
   int skipArgv0;
+  int noHistory;
   int argCount;
   char **args;
   ShutdownType dev9ShutdownType;

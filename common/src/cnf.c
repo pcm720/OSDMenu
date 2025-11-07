@@ -82,6 +82,10 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts, int gTID) {
       opts->skipArgv0 = atoi(valuePtr);
       continue;
     }
+    if (!strncmp(lineBuffer, "nohistory", 9)) { // Skip argv[0] flag
+      opts->noHistory = atoi(valuePtr);
+      continue;
+    }
     if (!strncmp(lineBuffer, "arg", 3)) { // Custom argument
       args = addStr(args, valuePtr);
       opts->argCount++;
