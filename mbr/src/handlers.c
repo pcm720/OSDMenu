@@ -220,7 +220,8 @@ start:
 // Assumes argv[0] is the partition path
 int handleHDDApplication(int argc, char *argv[]) {
   char *titleID = NULL;
-  LoadOptions *lopts = parsePATINFO(argc, argv, &titleID);
+  int disableHistory = 0;
+  LoadOptions *lopts = parsePATINFO(argc, argv, &titleID, &disableHistory);
   if (!lopts)
     return -ENOENT;
 
@@ -244,7 +245,10 @@ int handleHDDApplication(int argc, char *argv[]) {
   }
 
   if (titleID) {
-    updateLaunchHistory(titleID, (settings.flags & FLAG_APP_GAMEID));
+    if (disableHistory)
+      gsDisplayGameID(titleID);
+    else
+      updateLaunchHistory(titleID, (settings.flags & FLAG_APP_GAMEID));
   }
 
   if (!strcmp(lopts->argv[lopts->argc - 1], "-patinfo"))

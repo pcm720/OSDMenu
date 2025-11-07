@@ -81,6 +81,7 @@ OSDMenu MBR supports additional SYSTEM.CNF arguments for `:PATINFO` paths.
 - `arg` — custom argument to pass to the ELF file. More than one `arg` lines are supported.
 - `skip_argv0` — if set to `1`, the target ELF will only receive argv built from `arg` lines (useful for running POPStarter).
 - `titleid` — will use this title ID for the history file and visual game ID
+- `nohistory` — if set to `1`, will disable writes to the history file while still showing game ID
 
 ### Embedded Neutrino GSM (eGSM)
 
