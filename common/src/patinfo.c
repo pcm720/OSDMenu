@@ -166,7 +166,7 @@ LoadOptions *parsePATINFO(int argc, char *argv[], char **titleID, int *disableHi
     DPRINTF("Title ID: %s\n", opts.titleID);
   if (opts.ioprpPath)
     DPRINTF("IOPRP Path: %s\n", opts.ioprpPath);
-  DPRINTF("DEV9 Shutdown Type: %d\nSkip argv[0] = %d\nAdditional arguments:\n", opts.dev9ShutdownType, opts.skipArgv0);
+  DPRINTF("DEV9 Shutdown Type: %d\nSkip argv[0] = %d\nDisable history: %d\nAdditional arguments:\n", opts.dev9ShutdownType, opts.skipArgv0, opts.noHistory);
   for (int i = 0; i < opts.argCount; i++)
     DPRINTF("argv[%d]: %s\n", i, opts.args[i]);
   DPRINTF("====\n");
