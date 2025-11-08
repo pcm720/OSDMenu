@@ -540,6 +540,9 @@ void patchDiscLaunch(uint8_t *osd) {
   discLaunchHandlers[0] = (uint32_t)launchDisc; // Overwrite PS2 DVD function pointer
   discLaunchHandlers[1] = (uint32_t)launchDisc; // Overwrite PS2 CD function pointer
   discLaunchHandlers[2] = (uint32_t)launchDisc; // Overwrite PS1 function pointer
+#ifdef HOSD
+  discLaunchHandlers[7] = (uint32_t)launchHDDApplication; // Overwrite HDD application function pointer
+#endif
 }
 
 // Patches automatic disc launch for OSDMenu

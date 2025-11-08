@@ -10,6 +10,7 @@
 #include <malloc.h>
 #include <osd_config.h>
 #include <sifrpc.h>
+#include <stdio.h>
 #include <string.h>
 
 char *argv[7] = {0};
@@ -96,6 +97,8 @@ void launchItem(char *item) {
   }
 #ifndef HOSD
   argv[argc++] = "-osd";
+#else
+  argv[argc++] = "-hosd";
 #endif
 
 #ifndef HOSD
@@ -113,6 +116,17 @@ void launchItem(char *item) {
 
 // Uses the launcher to run the disc
 void launchDisc() { launchItem("cdrom"); }
+
+// Uses the launcher to run the HDD app
+void launchHDDApplication() {
+  // Data is placed at fixed locations.
+  // 0x1F009C — device name
+  // 0x1F00A4 — partition name
+  // 0x1F00C6 — filepath (PATINFO/pfs:)
+  char path[1024] = {0};
+  snprintf(path, 100, "%s%s:%s", (char *)0x1f009c, (char *)0x1f00a4, (char *)0x1f00c6);
+  launchItem(path);
+}
 
 //
 // All of the following code is a modified version of elf.c from PS2SDK with unneeded bits removed

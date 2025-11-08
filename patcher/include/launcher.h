@@ -19,4 +19,7 @@ void launchItem(char *item);
 // Uses the launcher to run the disc
 void launchDisc();
 
+// Uses the launcher to run the HDD app
+void launchHDDApplication();
+
 #endif
