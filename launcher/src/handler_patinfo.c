@@ -34,7 +34,7 @@ int handlePATINFO(int argc, char *argv[]) {
     if (disableHistory)
       gsDisplayGameID(titleID);
     else
-      updateLaunchHistory(titleID, (settings.flags & FLAG_APP_GAMEID));
+      updateLaunchHistory(titleID, 1);
 
     free(titleID);
   }
