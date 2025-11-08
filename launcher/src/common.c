@@ -329,6 +329,10 @@ int parseGlobalFlags(int argc, char *argv[]) {
       settings.flags |= FLAG_BOOT_OSD;
       DPRINTF("Setting OSD flag\n");
       argc--;
+    } else if (!strcmp(argv[i], "-hosd")) {
+      settings.flags |= FLAG_BOOT_HOSD;
+      DPRINTF("Setting HOSD flag\n");
+      argc--;
     } else if (!strcmp(argv[i], "-appid")) {
       settings.flags |= FLAG_APP_GAMEID;
       DPRINTF("Enabling game ID for apps\n");

@@ -10,7 +10,7 @@
 // Starts application using data from the HDD partition attribute area header
 // Assumes argv[0] is the partition path
 int handlePATINFO(int argc, char *argv[]) {
-  int res = initPFS(NULL, 0, Device_ATA);
+  int res = initPFS(NULL, (settings.flags & FLAG_BOOT_HOSD), Device_ATA);
   if (res)
     return res;
 

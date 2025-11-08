@@ -192,14 +192,15 @@ int initModules(DeviceType device, int clearSPU) {
 
   // Initialize the RPC manager and reboot the IOP
   sceSifInitRpc(0);
-  while (!SifIopReset("", 0)) {
-  };
-  while (!SifIopSync()) {
-  };
 
   // Clear SPU after OSDSYS
   if (clearSPU)
     SifLoadModule("rom0:CLEARSPU", 0, 0);
+
+  while (!SifIopReset("", 0)) {
+  };
+  while (!SifIopSync()) {
+  };
 
   // Initialize the RPC manager
   sceSifInitRpc(0);
