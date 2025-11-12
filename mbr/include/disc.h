@@ -14,6 +14,7 @@ int startDVDVideo();
 void cdAutoAdjust(int mode);
 
 // Updates MechaCon NVRAM config with selected PS1DRV options, screen type and language.
-void updateOSDSettings();
+// Applies kernel patches and sets the OSD configuration
+void initializeOSDConfig();
 
 #endif

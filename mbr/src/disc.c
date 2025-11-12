@@ -321,12 +321,21 @@ typedef struct {
   // Byte 1
   uint8_t ps2NewLanguage : 5;
   uint8_t ps2MaxVersion : 3;
-  // Bytes 2-14, the rest of config block
-  uint8_t unused2[13];
+  // Byte 2
+  uint8_t ps2TimezoneHigh : 3;
+  uint8_t ps2DaylightSavings : 1;
+  uint8_t ps2TimeNotation : 1;
+  uint8_t ps2DateNotation : 2;
+  uint8_t ps2OOBEFlag : 1;
+  // Byte 3
+  uint8_t ps2TimezoneLow;
+  // Bytes 4-14, the rest of config block
+  uint8_t unused2[11];
 } OSDNVRAMConfig;
 
 // Updates MechaCon NVRAM config with selected PS1DRV options, screen type and language.
-void updateOSDSettings() {
+// Applies kernel patches and sets the OSD configuration
+void initializeOSDConfig() {
   sceCdInit(SCECdINoD);
   int res;
   uint32_t status;
@@ -347,51 +356,106 @@ void updateOSDSettings() {
   } while ((status & 0x81) || (res == 0));
 
   OSDNVRAMConfig *cnf = (OSDNVRAMConfig *)buffer;
-  DPRINTF("NVRAM Settings:\nPS1DRV: disc speed: %d, mapping: %d\n", cnf->ps1drvDiscSpeed, cnf->ps1drvTextureMapping);
-  DPRINTF("OSD: SPDIF: %d, Screen: %d, Video Out: %d, Old language: %d, Config version: %d, Language: %d, Max version: %d\n", cnf->ps2SpdifDisabled,
-          cnf->ps2ScreenType, cnf->ps2VideoOutput, cnf->ps2OldLanguage, cnf->ps2ConfigVersion, cnf->ps2NewLanguage, cnf->ps2MaxVersion);
+  DPRINTF("NVRAM Settings:\n\tPS1DRV:\n\t\tDisc speed: %d\n\t\tMapping: %d\n\tOSD:\n\t\tSPDIF: %d\n\t\tScreen: %d\n\t\tVideo Out: %d\n\t\tOld "
+          "language: %d\n\t\tConfig version: %d\n\t\tLanguage: %d\n\t\tMax version: %d\n\t\tTimezoneH: "
+          "%d\n\t\tTimezoneL: %d\n",
+          cnf->ps1drvDiscSpeed, cnf->ps1drvTextureMapping, cnf->ps2SpdifDisabled, cnf->ps2ScreenType, cnf->ps2VideoOutput, cnf->ps2OldLanguage,
+          cnf->ps2ConfigVersion, cnf->ps2NewLanguage, cnf->ps2MaxVersion, cnf->ps2TimezoneHigh, cnf->ps2TimezoneLow);
 
   int isUpdated = 0;
   // Set PS1DRV flags
   if ((settings.flags & FLAG_PS1DRV_FAST) && (!cnf->ps1drvDiscSpeed)) {
+    DPRINTF("Enabling fast PS1 disc speed\n");
     isUpdated = 1;
     cnf->ps1drvDiscSpeed = 1;
   }
   if ((settings.flags & FLAG_PS1DRV_SMOOTH) && (!cnf->ps1drvTextureMapping)) {
+    DPRINTF("Enabling smooth PS1 texture mapping\n");
     isUpdated = 1;
     cnf->ps1drvTextureMapping = 1;
   }
 
   // Set OSD options
   if ((settings.osdScreenType >= 0) && (settings.osdScreenType != cnf->ps2ScreenType)) {
+    DPRINTF("Changing screen type to %d\n", settings.osdScreenType);
     isUpdated = 1;
     cnf->ps2ScreenType = settings.osdScreenType;
   }
   if ((settings.osdLanguage >= LANGUAGE_JAPANESE) && (cnf->ps2NewLanguage != settings.osdLanguage)) {
+    DPRINTF("Changing language to %d\n", settings.osdLanguage);
     isUpdated = 1;
     cnf->ps2OldLanguage = (settings.osdLanguage == LANGUAGE_JAPANESE) ? settings.osdLanguage : LANGUAGE_ENGLISH;
     cnf->ps2NewLanguage = settings.osdLanguage;
   }
 
-  if (!isUpdated)
-    return;
+  if (isUpdated) {
+    // Update NVRAM config
+    DPRINTF("Updating NVRAM config\n");
 
-  DPRINTF("New NVRAM Settings:\nPS1DRV: disc speed: %d, mapping: %d\n", cnf->ps1drvDiscSpeed, cnf->ps1drvTextureMapping);
-  DPRINTF("OSD: SPDIF: %d, Screen: %d, Video Out: %d, Old language: %d, Config version: %d, Language: %d, Max version: %d\n", cnf->ps2SpdifDisabled,
-          cnf->ps2ScreenType, cnf->ps2VideoOutput, cnf->ps2OldLanguage, cnf->ps2ConfigVersion, cnf->ps2NewLanguage, cnf->ps2MaxVersion);
-  do {
-    res = sceCdOpenConfig(1, 1, 2, (u32 *)&status);
-    if (!res)
-      return;
-  } while (status & 0x09);
+    do {
+      res = sceCdOpenConfig(1, 1, 2, (u32 *)&status);
+      if (!res)
+        return;
+    } while (status & 0x09);
 
-  do {
-    res = sceCdWriteConfig(buffer, (u32 *)&status);
-  } while ((status & 0x09) || (res == 0));
+    do {
+      res = sceCdWriteConfig(buffer, (u32 *)&status);
+    } while ((status & 0x09) || (res == 0));
 
-  do {
-    res = sceCdCloseConfig((u32 *)&status);
-  } while ((status & 0x09) || (res == 0));
-
+    do {
+      res = sceCdCloseConfig((u32 *)&status);
+    } while ((status & 0x09) || (res == 0));
+  }
   sceCdInit(SCECdEXIT);
+
+  // Apply kernel patches for early kernels
+  InitOsd();
+
+  // Set kernel config
+  ConfigParam osdConfig = {0};
+  // Initialize ConfigParam values
+  osdConfig.version = 2;
+  osdConfig.spdifMode = cnf->ps2SpdifDisabled;
+  osdConfig.screenType = cnf->ps2ScreenType;
+  osdConfig.videoOutput = cnf->ps2VideoOutput;
+  osdConfig.timezoneOffset = ((uint32_t)cnf->ps2TimezoneHigh << 8 | (uint32_t)cnf->ps2TimezoneLow) & 0x7FF;
+
+  if (cnf->ps1drvDiscSpeed)
+    osdConfig.ps1drvConfig |= CDROM_PS1_FAST;
+  if (cnf->ps1drvTextureMapping)
+    osdConfig.ps1drvConfig |= CDROM_PS1_SMOOTH;
+
+  // Force ConfigParam language to English if one of extended languages is used
+  osdConfig.language = (cnf->ps2NewLanguage > LANGUAGE_PORTUGUESE) ? LANGUAGE_ENGLISH : cnf->ps2NewLanguage;
+  osdConfig.japLanguage = (cnf->ps2OldLanguage == LANGUAGE_JAPANESE) ? cnf->ps2OldLanguage : LANGUAGE_ENGLISH;
+
+  // Set ConfigParam and check whether the version was not set
+  // Early kernels can't retain the version value
+  SetOsdConfigParam(&osdConfig);
+  GetOsdConfigParam(&osdConfig);
+
+  DPRINTF("Kernel Settings:\n\tOSD1:\n\t\tVersion: %d\n\t\tSPDIF: %d\n\t\tScreen Type: %d\n\t\tVideo Output: %d\n\t\tLanguage 1: %d\n\t\tLanguage 2: "
+          "%d\n\t\tTZ Offset: "
+          "%d\n\t\tPS1DRV: %d\n",
+          osdConfig.version, osdConfig.spdifMode, osdConfig.screenType, osdConfig.videoOutput, osdConfig.japLanguage, osdConfig.language,
+          osdConfig.timezoneOffset, osdConfig.ps1drvConfig);
+
+  if (osdConfig.version != 0) {
+    // This kernel supports ConfigParam2.
+    // Initialize ConfigParam2 values
+    Config2Param osdConfig2 = {0};
+    GetOsdConfigParam2(&osdConfig2, sizeof(osdConfig2), 0);
+
+    osdConfig2.format = 2;
+    osdConfig2.version = 2;
+    osdConfig2.language = cnf->ps2NewLanguage;
+    osdConfig2.timeFormat = cnf->ps2TimeNotation;
+    osdConfig2.dateFormat = cnf->ps2DateNotation;
+    osdConfig2.daylightSaving = cnf->ps2DaylightSavings;
+
+    SetOsdConfigParam2(&osdConfig2, sizeof(osdConfig2), 0);
+
+    DPRINTF("\tOSD2:\n\t\tVersion: %d\n\t\tFormat: %d\n\t\tDaylight Savings: %d\n\t\tTime Format: %d\n\t\tDate Format: %d\n\t\tLanguage: %d\n",
+            osdConfig2.format, osdConfig2.daylightSaving, osdConfig2.timeFormat, osdConfig2.dateFormat, osdConfig2.version, osdConfig2.language);
+  }
 }

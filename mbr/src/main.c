@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
   if ((res = loadConfig()))
     DPRINTF("WARN: Failed to load the config file: %d, will use defaults\n", res);
 
-  updateOSDSettings();
+  initializeOSDConfig();
 
   // Handle OSD arguments when there are any additional arguments when running as rom0:MBRBOOT or rom0:HDDBOOT
   if ((argc > 1) && (!strcmp(argv[0], "rom0:MBRBOOT") || !strcmp(argv[0], "rom0:HDDBOOT")) && (strlen(argv[1]) > 0))
