@@ -366,8 +366,8 @@ void patchBrowserHiddenPartitions() {
 extern unsigned char legacy_ps2atad_irx[] __attribute__((aligned(16)));
 extern uint32_t size_legacy_ps2atad_irx;
 
-// Patches newer 48-bit capable atad driver into HDD-OSD
-void patchATAD() {
+// Patches newer IOP modules into HDD-OSD
+void patchHOSDModules() {
   // Check for ELF magic at offset 0x0058cd80 and replace the atad driver
   if (_lw(0x0058cd80) == 0x464c457f) {
     memset((void *)0x0058cd80, 0x0, 0x0058fbfd - 0x0058cd80);

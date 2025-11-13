@@ -113,7 +113,6 @@ iop/atad/ps2atad.irx: iop/atad
 	$(BIN2C) $(CNF_FILE) $@ embedded_cnf
 	sed -i 's/= {/__attribute__((section("._cnf"))) = {/' $@
 
-
 # Launcher
 launcher.elf:
 	$(MAKE) -C ../launcher/$<

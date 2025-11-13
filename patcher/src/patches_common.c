@@ -136,8 +136,8 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))
     args[n++] = "BootClock"; // Pass BootClock to skip OSDSYS intro
 
-  // Update atad
-  patchATAD();
+  // Update IOP modules
+  patchHOSDModules();
 
   // Patch-in support for hidden partitions
   patchBrowserHiddenPartitions();
@@ -196,6 +196,41 @@ void launchOSDSYS(int argc, char *argv[]) {
   Exit(-1);
 }
 
+#ifdef HOSD
+#define OHCI_REG_BASE 0xbf801600
+#define HcControl (OHCI_REG_BASE + 0x04)
+#define HcCommandStatus (OHCI_REG_BASE + 0x08)
+#define HcInterruptDisable (OHCI_REG_BASE + 0x14)
+
+#define OHCI_COM_HCR (1 << 0)
+
+// Resets USB host controller by writing directly to OHCI registers
+// Avoids IOP memory corruption in the launcher caused by incomplete usbd deinit during IOP reset
+void resetOHCI() {
+  // Enter the kernel mode to access memory-mapped I/O
+  ee_kmode_enter();
+  *(volatile uint32_t *)HcInterruptDisable = ~0;
+  *(volatile uint32_t *)HcControl &= ~0x3Cu;
+
+  // Wait ~2 milliseconds (replicates usbd behavior)
+  int i = 0x500;
+  while (i--)
+    asm("nop\nnop\nnop\nnop");
+
+  // Send HC Reset command
+  *(volatile uint32_t *)HcCommandStatus = OHCI_COM_HCR;
+  *(volatile uint32_t *)HcControl = 0;
+  for (i = 0; i < 1000; i++)
+    if (!(*(volatile uint32_t *)HcCommandStatus & OHCI_COM_HCR))
+      break;
+
+  // Exit the kernel mode
+  ee_kmode_exit();
+  return;
+}
+
+#endif
+
 // Calls OSDSYS deinit function
 void deinitOSDSYS() {
 #ifdef HOSD
@@ -207,12 +242,19 @@ void deinitOSDSYS() {
 
   if (osdsysDeinit)
     osdsysDeinit(1);
+
+#ifdef HOSD
+  resetOHCI();
+#endif
 }
 
 #ifndef HOSD
 //
 // Protokernel functions
 //
+static void (*protoSceSifLoadModule)(const char *path, int arg_len, const char *args) = NULL;
+// Loads rom0:CLEARSPU module
+void protokernelDeinit(uint32_t flags) { protoSceSifLoadModule("rom0:CLEARSPU", 0, 0); }
 
 // Applies patches and executes OSDSYS
 static void *protoEPC;
@@ -264,6 +306,15 @@ void launchProtokernelOSDSYS() {
   uint32_t tmp = 0x08000000;
   tmp |= ((uint32_t)applyProtokernelPatches >> 2);
   _sw(tmp, (uint32_t)(ptr + 0x3c)); // j applyProtokernelPatches
+
+  // Find OSDSYS SifLoadModule function for deinit
+  ptr = findPatternWithMask((uint8_t *)exec.epc, 0x100000, (uint8_t *)patternProtokernelSifLoadModule,
+                            (uint8_t *)patternProtokernelSifLoadModule_mask, sizeof(patternProtokernelSifLoadModule));
+  if (ptr) {
+    // Set the deinit function
+    protoSceSifLoadModule = (void *)ptr + 0x4;
+    osdsysDeinit = protokernelDeinit;
+  }
 
   // Set OSDSYS address
   protoEPC = (void *)exec.epc;

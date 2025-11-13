@@ -47,6 +47,19 @@ static uint32_t patternOSDSYSProtokernelInit[] = {
 static uint32_t patternOSDSYSProtokernelInit_mask[] = {
     0xffffffff, 0xffffffff, 0xffffffff, 0xffff0000, 0xffffffff,
 };
+
+// Used to load rom0:CLEARSPU before forwarding to the launcher
+// Add 0x04 to the result to get the pointer
+static uint32_t patternProtokernelSifLoadModule[] = {
+    0x00000000, // nop
+    0x27bdff90, // addiu sp,sp,0xFF90
+    0xffb40050, // sd    s4,0x0050,sp
+    0xffb30040, // sd    s3,0x0040,sp
+    0x00e0a02d, // daddu s4,a3,zero
+};
+static uint32_t patternProtokernelSifLoadModule_mask[] = {
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+};
 #else
 //
 // HDD-OSD patterns

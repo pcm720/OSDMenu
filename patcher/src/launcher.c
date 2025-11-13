@@ -57,8 +57,6 @@ void launchItem(char *item) {
   FlushCache(0);
   FlushCache(2);
 
-  // Launcher will do the rest of the cleanup
-
   // Build argv for the launcher
   if (strcmp(item, "cdrom")) {
     if (!strncmp(item, "osdm", 4))
