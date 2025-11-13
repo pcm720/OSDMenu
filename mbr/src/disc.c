@@ -205,7 +205,6 @@ void handlePS2Disc(char *bootPath, char *eGSMArgument) {
     opts.eGSM = eGSMArgument;
   }
 
-  DPRINTF("argc = %d; argv[0] = %s; argv[1] = %s;\n", opts.argc, opts.argv[0], opts.argv[1]);
   loadELF(&opts);
 }
 

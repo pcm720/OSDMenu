@@ -48,6 +48,6 @@ extern Settings settings;
 int loadConfig(void);
 
 // Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
-char *getOSDGSMArgument(char *titleID);
+char *getOSDGSMArgument(const char *titleID);
 
 #endif

@@ -134,9 +134,9 @@ int loadConfig() {
     }
     if (!strncmp(lineBuffer, "cdrom_disable_gameid", 20)) {
       if (atoi(valuePtr))
-        settings.flags |= FLAG_ENABLE_GAMEID;
-      else
         settings.flags &= ~(FLAG_ENABLE_GAMEID);
+      else
+        settings.flags |= FLAG_ENABLE_GAMEID;
       continue;
     }
     if (!strncmp(lineBuffer, "cdrom_use_dkwdrv", 16)) {
@@ -224,7 +224,7 @@ int loadConfig() {
 }
 
 // Attempts to load per-title GSM argument from the GSM_CONF_PATH/HOSDGSM_CONF_PATH depending on the device hint
-char *getOSDGSMArgument(char *titleID) {
+char *getOSDGSMArgument(const char *titleID) {
   if (!titleID)
     return NULL;
 
