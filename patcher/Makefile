@@ -94,9 +94,11 @@ kelf: $(EE_BIN_PKD)
 # IRX files
 %_irx.c:
 	$(BIN2C) $(PS2SDK)/iop/irx/$(*:$(EE_SRC_DIR)%=%).irx $@ $(*:$(EE_SRC_DIR)%=%)_irx
+	sed -i 's/= {/__attribute__((section("._irx"))) = {/' $@
 
 %ps2hdd-osd_irx.c:
 	$(BIN2C) $(PS2SDK)/iop/irx/ps2hdd-osd.irx $@ $(*:$(EE_SRC_DIR)%=%)ps2hdd_osd_irx
+	sed -i 's/= {/__attribute__((section("._irx"))) = {/' $@
 
 # Legacy ps2atad.irx
 iop/atad/ps2atad.irx: iop/atad
@@ -104,6 +106,7 @@ iop/atad/ps2atad.irx: iop/atad
 
 %legacy_ps2atad_irx.c: iop/atad/ps2atad.irx
 	$(BIN2C) iop/atad/$(*:$(EE_SRC_DIR)%=%)ps2atad.irx $@ $(*:$(EE_SRC_DIR)%=%)legacy_ps2atad_irx
+	sed -i 's/= {/__attribute__((section("._legacy_atad"))) = {/' $@
 
 # Embedded CNF file
 %.CNF.c:

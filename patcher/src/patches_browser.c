@@ -1,5 +1,6 @@
 #include "launcher.h"
 #include "patches_common.h"
+#include "patches_osdmenu.h"
 #include "patterns_browser.h"
 #include <debug.h>
 #include <string.h>
@@ -270,7 +271,7 @@ out:
 }
 
 // Browser application launch patch
-void patchBrowserApplicationLaunch(uint8_t *osd) {
+void patchBrowserApplicationLaunch(uint8_t *osd, int isProtokernel) {
   // Find buildIconData address
   uint8_t *ptr1 =
       findPatternWithMask(osd, 0x100000, (uint8_t *)patternBuildIconData, (uint8_t *)patternBuildIconData_mask, sizeof(patternBuildIconData));
@@ -362,16 +363,16 @@ void patchBrowserHiddenPartitions() {
   _sw(0x00000000, (uint32_t)0x0025cf7c);                                         // nop out the branch delay slot
 }
 
-// Homebrew atad driver with LBA48 support
-extern unsigned char legacy_ps2atad_irx[] __attribute__((aligned(16)));
-extern uint32_t size_legacy_ps2atad_irx;
+uint8_t *legacy_ps2atad_irx_addr = NULL;
 
 // Patches newer IOP modules into HDD-OSD
 void patchHOSDModules() {
   // Check for ELF magic at offset 0x0058cd80 and replace the atad driver
   if (_lw(0x0058cd80) == 0x464c457f) {
     memset((void *)0x0058cd80, 0x0, 0x0058fbfd - 0x0058cd80);
-    memcpy((void *)0x0058cd80, legacy_ps2atad_irx, size_legacy_ps2atad_irx);
+    memcpy((void *)0x0058cd80, legacy_ps2atad_irx_addr, size_legacy_ps2atad_irx);
   }
+  // Clear the memory
+  memset((void *)legacy_ps2atad_irx_addr, 0, size_legacy_ps2atad_irx);
 }
 #endif

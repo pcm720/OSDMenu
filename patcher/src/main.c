@@ -3,6 +3,7 @@
 #include "init.h"
 #include "launcher.h"
 #include "patches_common.h"
+#include "patches_osdmenu.h"
 #include "settings.h"
 #include "splash.h"
 #include <kernel.h>
@@ -92,10 +93,11 @@ int checkFile(char *path);
 int main(int argc, char *argv[]) {
   // Clear memory while avoiding the embedded data in the OSD memory region
   memset((void *)EXTRA_SECTION_END, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
-  // Relocate the embedded launcher to the memory unused by the OSD code
-  void *relocAddr = (void *)(EXTRA_RELOC_ADDR + launcher_elf - EXTRA_SECTION_START);
-  memcpy(relocAddr, (void *)launcher_elf, size_launcher_elf);
-  launcher_elf_addr = relocAddr;
+  // Relocate the embedded launcher and the legacy ps2atad module to the memory unused by the OSD code
+  memcpy((void *)EXTRA_RELOC_ADDR, (void *)launcher_elf, size_launcher_elf);
+  launcher_elf_addr = (void *)EXTRA_RELOC_ADDR;
+  memcpy((void *)(EXTRA_RELOC_ADDR + size_launcher_elf), (void *)legacy_ps2atad_irx, size_legacy_ps2atad_irx);
+  legacy_ps2atad_irx_addr = (void *)(EXTRA_RELOC_ADDR + size_launcher_elf);
 
   if ((argc > 1) && !strcmp(argv[argc - 1], "-mbrboot")) {
     // Skip the full init and just initialize fileXio if the last argument is -mbrboot

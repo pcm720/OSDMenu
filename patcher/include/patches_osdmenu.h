@@ -35,6 +35,13 @@ void patchPS1DRVConfigProtokernel();
 #else
 // HDD-OSD patches
 
+// Homebrew atad driver with LBA48 support
+extern unsigned char legacy_ps2atad_irx[] __attribute__((aligned(16)));
+extern uint32_t size_legacy_ps2atad_irx;
+
+// Used for relocating the legacy ps2atad module during HDD-OSD decompression
+extern uint8_t *legacy_ps2atad_irx_addr;
+
 // Patches newer IOP modules into HDD-OSD
 void patchHOSDModules();
 
