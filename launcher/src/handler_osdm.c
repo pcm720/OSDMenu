@@ -57,7 +57,7 @@ int handleOSDM(int argc, char *argv[]) {
       settings.deviceHint = Device_APA;
 
       // Handle HOSDMenu launch
-      if ((res = initPFS(HOSD_CONF_PARTITION, 1, Device_Basic | Device_CDROM)))
+      if ((res = initPFS(HOSD_CONF_PARTITION, Device_Basic | Device_CDROM)))
         return res;
 
       // Build path to OSDMENU.CNF
@@ -65,7 +65,7 @@ int handleOSDM(int argc, char *argv[]) {
       strcat(cnfPath, HOSD_CONF_PATH);
     } else if (target < 2) {
       // Handle OSDMenu launch
-      int res = initModules(Device_Basic | Device_CDROM, 1);
+      int res = initModules(Device_Basic | Device_CDROM);
       if (res)
         return res;
 

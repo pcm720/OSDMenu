@@ -22,7 +22,7 @@ int handleBDM(DeviceType device, int argc, char *argv[]) {
     return -ENODEV;
 
   // Initialize device modules
-  int res = initModules(device, 0);
+  int res = initModules(device);
   if (res)
     return res;
 

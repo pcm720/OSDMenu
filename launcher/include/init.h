@@ -13,6 +13,6 @@ void shutdownPS2();
 void applyXPARAM(char *gameID);
 
 // Initializes IOP modules for given device type
-int initModules(DeviceType device, int clearSPU);
+int initModules(DeviceType device);
 
 #endif

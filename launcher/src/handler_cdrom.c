@@ -77,10 +77,10 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
     int res = 0;
 #ifdef APA
     if (settings.deviceHint == Device_APA)
-      res = initPFS(HOSD_CONF_PARTITION, 0, Device_CDROM);
+      res = initPFS(HOSD_CONF_PARTITION, Device_CDROM);
     else
 #endif
-      res = initModules(Device_CDROM, 0);
+      res = initModules(Device_CDROM);
     if (res) {
       msg("CDROM ERROR: Failed to initialize modules\n");
       return res;

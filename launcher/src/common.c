@@ -252,13 +252,13 @@ int mountPFS(char *path) {
 }
 
 // Initializes APA-formatted HDD and mounts the partition if specified
-int initPFS(char *path, int clearSPU, DeviceType additionalDevices) {
+int initPFS(char *path, DeviceType additionalDevices) {
 #ifndef APA
   return -ENODEV;
 #else
   int res;
   // Reset IOP
-  if ((res = initModules(Device_APA | additionalDevices, clearSPU)))
+  if ((res = initModules(Device_APA | additionalDevices)))
     return res;
 
   // Wait for IOP to initialize device driver

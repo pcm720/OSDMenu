@@ -20,7 +20,7 @@ int handlePFS(int argc, char *argv[]) {
     return -EINVAL;
   }
 
-  int res = initPFS(argv[0], 0, Device_None);
+  int res = initPFS(argv[0], Device_None);
   if (res)
     return res;
 

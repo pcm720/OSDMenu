@@ -12,7 +12,7 @@ int handleMC(int argc, char *argv[]) {
     return -EINVAL;
   }
 
-  int res = initModules(Device_Basic, 0);
+  int res = initModules(Device_Basic);
   if (res)
     return res;
 
@@ -39,7 +39,7 @@ int handleMMCE(int argc, char *argv[]) {
     return -EINVAL;
   }
 
-  int res = initModules(Device_MMCE, 0);
+  int res = initModules(Device_MMCE);
   if (res)
     return res;
 

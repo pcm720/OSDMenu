@@ -67,7 +67,7 @@ char *normalizePath(char *path, DeviceType type);
 // Attempts to launch ELF from device and path in argv[0]
 int launchPath(int argc, char *argv[]);
 // Initializes APA-formatted HDD and mounts the partition
-int initPFS(char *path, int clearSPU, DeviceType additionalDevices);
+int initPFS(char *path, DeviceType additionalDevices);
 
 // Mounts the partition specified in path
 int mountPFS(char *path);
