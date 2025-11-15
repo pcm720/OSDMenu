@@ -124,7 +124,6 @@ int main(int argc, char *argv[]) {
   if (fileXioMount("pfs0:", HOSD_SYS_PARTITION, 0))
     launchPayload(RECOVERY_PAYLOAD_PATH);
 
-#ifdef ENABLE_SPLASH
   GSVideoMode vmode = GS_MODE_NTSC; // Use NTSC by default
 
   // Respect preferred mode
@@ -135,7 +134,11 @@ int main(int argc, char *argv[]) {
   } else if (settings.videoMode == GS_MODE_PAL)
     vmode = GS_MODE_PAL;
 
+#ifdef ENABLE_SPLASH
   gsDisplaySplash(vmode);
+#else
+  gsInit(vmode);
+  gsClearScreen();
 #endif
 
   // Check if HDD OSD executable exists

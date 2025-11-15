@@ -113,3 +113,14 @@ Options exclusive to OSDMenu:
 
 To add a custom separator to the menu, add a `name_OSDSYS_ITEM_???` entry that starts with `$!`.  
 This will make the entry inactive, but still show it in the OSD without the `$!` prefix.
+
+By default, OSDMenu uses custom menu coordinates to make the menu appear in the center of the screen.  
+To get the original OSDSYS look, set the following values in `OSDMENU.CNF`:
+```
+OSDSYS_menu_x = 430
+OSDSYS_menu_y = 110
+OSDSYS_enter_x = -1
+OSDSYS_enter_y = -1
+OSDSYS_version_x = -1
+OSDSYS_version_y = -1
+```
