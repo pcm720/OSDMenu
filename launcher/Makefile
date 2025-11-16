@@ -38,6 +38,10 @@ EE_BIN_KELF = LAUNCHER.XLF
 EE_OBJS = main.o common.o init.o loader.o
 EE_OBJS += handler_mc.o handler_quickboot.o
 
+# Game ID/launch history files
+EE_OBJS += history.o game_id.o cnf.o
+RES_FILES += icon_A.sys icon_C.sys icon_J.sys
+
 # Base modules
 IRX_FILES += iomanX.irx fileXio.irx
 ELF_FILES += loader.elf
@@ -99,8 +103,7 @@ endif
 
 ifeq ($(CDROM),1)
  EE_CFLAGS += -DCDROM
- EE_OBJS += handler_cdrom.o history.o game_id.o cnf.o
- RES_FILES += icon_A.sys icon_C.sys icon_J.sys
+ EE_OBJS += handler_cdrom.o
  IRX_FILES += xparam.irx
  ELF_FILES += ps1vn.elf
 endif
