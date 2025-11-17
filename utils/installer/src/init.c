@@ -44,10 +44,8 @@ int initModules(void) {
   int ret = 0;
   int iopret = 0;
   // Apply patches required to load executables from EE RAM
-  if ((ret = sbv_patch_enable_lmb()))
-    return ret;
-  if ((ret = sbv_patch_disable_prefix_check()))
-    return ret;
+  sbv_patch_enable_lmb();
+  sbv_patch_disable_prefix_check();
 
   IRX_LOAD(iomanX, 0, NULL)
   IRX_LOAD(fileXio, 0, NULL)
