@@ -22,7 +22,7 @@ char configPath[] = "pfs0:" HOSDMBR_CONF_PATH;
 int loadConfig() {
   // Init default values
   settings.flags = FLAG_ENABLE_GAMEID;
-  settings.osdLanguage = 1;
+  settings.osdLanguage = -1;
   settings.osdScreenType = -1;
 
   // Mount the config partition
