@@ -38,6 +38,6 @@ path1_OSDSYS_ITEM_2 = mc?:/BOOT/BOOT.ELF
 path2_OSDSYS_ITEM_2 = mmce?:/apps/wLaunchELF.elf
 path3_OSDSYS_ITEM_2 = usb:/apps/wLaunchELF.elf
 # --------------------------------------------------
-name_OSDSYS_ITEM_250 = Shutdown
-path1_OSDSYS_ITEM_250 = POWEROFF
+name_OSDSYS_ITEM_200 = Shutdown
+path1_OSDSYS_ITEM_200 = POWEROFF
 # --------------------------------------------------
