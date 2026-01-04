@@ -168,7 +168,7 @@ int handleOSDM(int argc, char *argv[]) {
       continue;
     }
     if (!strncmp(lineBuffer, "cdrom_use_dkwdrv", 16)) {
-      useDKWDRV = 1;
+      useDKWDRV = atoi(valuePtr);
       continue;
     }
     if (!(target == 9) && !strncmp(lineBuffer, "path_DKWDRV_ELF", 15)) {
