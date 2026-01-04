@@ -52,11 +52,13 @@ char *findString(const char *string, char *buf, uint32_t bufsize) {
 
 // Applies patches and executes OSDSYS
 void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
-  // If hacked OSDSYS is enabled, apply menu patch
-  patchMenu((uint8_t *)epc);
-  patchMenuDraw((uint8_t *)epc);
-  patchMenuInfiniteScrolling((uint8_t *)epc, 0);
-  patchMenuButtonPanel((uint8_t *)epc);
+  // If custom menu is enabled, apply menu patch
+  if (settings.patcherFlags & FLAG_CUSTOM_MENU) {
+    patchMenu((uint8_t *)epc);
+    patchMenuDraw((uint8_t *)epc);
+    patchMenuInfiniteScrolling((uint8_t *)epc, 0);
+    patchMenuButtonPanel((uint8_t *)epc);
+  }
 
   // Apply browser application launch patch
   patchBrowserApplicationLaunch((uint8_t *)epc, 0);
@@ -259,10 +261,12 @@ void protokernelDeinit(uint32_t flags) { protoSceSifLoadModule("rom0:CLEARSPU", 
 // Applies patches and executes OSDSYS
 static void *protoEPC;
 void applyProtokernelPatches() {
-  // If hacked OSDSYS is enabled, apply menu patch
-  patchMenuProtokernel((uint8_t *)protoEPC);
-  patchMenuDrawProtokernel((uint8_t *)protoEPC);
-  patchMenuInfiniteScrolling((uint8_t *)protoEPC, 1);
+  if (settings.patcherFlags & FLAG_CUSTOM_MENU) {
+    // If custom menu is enabled, apply menu patch
+    patchMenuProtokernel((uint8_t *)protoEPC);
+    patchMenuDrawProtokernel((uint8_t *)protoEPC);
+    patchMenuInfiniteScrolling((uint8_t *)protoEPC, 1);
+  }
 
   // Apply browser application launch patch
   patchBrowserApplicationLaunch((uint8_t *)protoEPC, 1);

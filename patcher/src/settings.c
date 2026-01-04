@@ -229,6 +229,13 @@ int loadConfig(void) {
 
       continue;
     }
+    if (!strcmp(name, "OSDSYS_custom_menu")) {
+      if (atoi(value))
+        settings.patcherFlags |= FLAG_CUSTOM_MENU;
+      else
+        settings.patcherFlags &= ~(FLAG_CUSTOM_MENU);
+      continue;
+    }
     if (!strcmp(name, "OSDSYS_scroll_menu")) {
       if (atoi(value))
         settings.patcherFlags |= FLAG_SCROLL_MENU;
@@ -324,7 +331,7 @@ void initVariables() {
 
 // Loads defaults
 void initConfig(void) {
-  settings.patcherFlags = FLAG_SCROLL_MENU | FLAG_SKIP_SCE_LOGO | FLAG_SKIP_DISC;
+  settings.patcherFlags = FLAG_CUSTOM_MENU | FLAG_SCROLL_MENU | FLAG_SKIP_SCE_LOGO | FLAG_SKIP_DISC;
   settings.videoMode = 0;
   settings.menuX = 320;
   settings.menuY = 110;

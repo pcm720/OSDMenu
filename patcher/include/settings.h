@@ -17,17 +17,18 @@ extern uint8_t *embedded_cnf_addr;
 #define NAME_LEN 80      // Max menu item length (incl. the string terminator)
 
 typedef enum {
-  FLAG_SKIP_DISC = (1 << 0),        // Disable disc autolaunch
-  FLAG_SKIP_SCE_LOGO = (1 << 1),    // Skip SCE logo on boot
-  FLAG_BOOT_BROWSER = (1 << 2),     // Boot directly to MC browser
-  FLAG_SCROLL_MENU = (1 << 3),      // Enable infinite scrolling
-  FLAG_SKIP_PS2_LOGO = (1 << 4),    // Skip PS2LOGO when booting discs
-  FLAG_DISABLE_GAMEID = (1 << 5),   // Disable PixelFX game ID
-  FLAG_USE_DKWDRV = (1 << 6),       // Use DKWDRV for PS1 discs
-  FLAG_PS1DRV_FAST = (1 << 7),      // If set, will force PS1DRV fast disc speed
-  FLAG_PS1DRV_SMOOTH = (1 << 8),    // If set, will force PS1DRV texture smoothing
-  FLAG_PS1DRV_USE_VN = (1 << 9),   // If set, run PS1DRV via the PS1DRV Video Mode Negator
-  FLAG_APP_GAMEID = (1 << 10),      // Used to show OSDMenu game ID on the splash screen
+  FLAG_SKIP_DISC = (1 << 0),      // Disable disc autolaunch
+  FLAG_SKIP_SCE_LOGO = (1 << 1),  // Skip SCE logo on boot
+  FLAG_BOOT_BROWSER = (1 << 2),   // Boot directly to MC browser
+  FLAG_SCROLL_MENU = (1 << 3),    // Enable infinite scrolling
+  FLAG_SKIP_PS2_LOGO = (1 << 4),  // Skip PS2LOGO when booting discs
+  FLAG_DISABLE_GAMEID = (1 << 5), // Disable PixelFX game ID
+  FLAG_USE_DKWDRV = (1 << 6),     // Use DKWDRV for PS1 discs
+  FLAG_PS1DRV_FAST = (1 << 7),    // If set, will force PS1DRV fast disc speed
+  FLAG_PS1DRV_SMOOTH = (1 << 8),  // If set, will force PS1DRV texture smoothing
+  FLAG_PS1DRV_USE_VN = (1 << 9),  // If set, run PS1DRV via the PS1DRV Video Mode Negator
+  FLAG_APP_GAMEID = (1 << 10),    // Used to show OSDMenu game ID on the splash screen
+  FLAG_CUSTOM_MENU = (1 << 11),   // Apply menu patches
 } PatcherFlags;
 
 // Patcher settings struct, contains all configurable patch settings and menu items
