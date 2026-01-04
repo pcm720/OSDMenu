@@ -13,7 +13,7 @@
 #include <hdd-ioctl.h>
 
 // Number of attempts initModules() will wait for hdd0 before returning
-#define DELAY_ATTEMPTS 20
+#define DELAY_ATTEMPTS 60
 
 // Macros for loading embedded IOP modules
 #define IRX_DEFINE(mod)                                                                                                                              \
