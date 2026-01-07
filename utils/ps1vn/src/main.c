@@ -130,15 +130,19 @@ static void parseDiscRegion(const char *id) {
   // SxPx - Japan
   // SxUx - USA
   // SxEx - Europe
+  // Some title IDs might be lower-case
   if (strlen(id) >= 3) {
     switch (id[2]) {
     case 'P':
+    case 'p':
       discRegion = DISC_REGION_JAPAN;
       break;
     case 'U':
+    case 'u':
       discRegion = DISC_REGION_USA;
       break;
     case 'E':
+    case 'e':
       discRegion = DISC_REGION_EUROPE;
       break;
     default:
