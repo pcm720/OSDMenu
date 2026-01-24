@@ -28,14 +28,11 @@
 // Embedded IOP modules
 IRX_DEFINE(iomanX);
 IRX_DEFINE(fileXio);
-
-#ifndef USE_ROM_MODULES
+IRX_DEFINE(sio2man);
 IRX_DEFINE(mcman);
 IRX_DEFINE(mcserv);
-#endif
 
 #ifdef MMCE
-#define SIO2MAN
 IRX_DEFINE(mmceman);
 #endif
 
@@ -52,7 +49,6 @@ IRX_DEFINE(usbmass_bd_mini);
 #endif
 
 #ifdef MX4SIO
-#define SIO2MAN
 #define BDM
 IRX_DEFINE(mx4sio_bd_mini);
 #endif
@@ -80,10 +76,6 @@ IRX_DEFINE(secrsif);
 IRX_DEFINE(xparam);
 #endif
 
-#ifdef SIO2MAN
-IRX_DEFINE(sio2man);
-#endif
-
 #ifdef DEV9
 IRX_DEFINE(ps2dev9);
 #endif
@@ -93,12 +85,14 @@ IRX_DEFINE(bdm);
 IRX_DEFINE(bdmfs_fatfs);
 #endif
 
-#ifdef FMCB
+#ifdef OSDM
 IRX_DEFINE(poweroff);
 #endif
 
 #ifdef ENABLE_PRINTF
+#ifndef UDPBD
 IRX_DEFINE(smap_udptty);
+#endif
 const char udpbd_ip[] = "ip=" UDPTTYIP;
 #endif
 
@@ -127,18 +121,9 @@ char *initPS2FSArguments(uint32_t *argLength);
 static ModuleListEntry moduleList[] = {
     INT_MODULE(iomanX, NULL, Device_Basic),
     INT_MODULE(fileXio, NULL, Device_Basic),
-#ifdef SIO2MAN
     INT_MODULE(sio2man, NULL, Device_Basic),
-#else
-    EXT_MODULE(sio2man, "rom0:SIO2MAN", NULL, Device_Basic),
-#endif
-#ifndef USE_ROM_MODULES
     INT_MODULE(mcman, NULL, Device_Basic),
     INT_MODULE(mcserv, NULL, Device_Basic),
-#else
-    EXT_MODULE(mcman, "rom0:MCMAN", NULL, Device_Basic),
-    EXT_MODULE(mcserv, "rom0:MCSERV", NULL, Device_Basic),
-#endif
 #ifdef MMCE
     INT_MODULE(mmceman, NULL, Device_MMCE),
 #endif
@@ -149,10 +134,10 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(bdm, NULL, Device_BDM | Device_APA),
     INT_MODULE(bdmfs_fatfs, NULL, Device_BDM | Device_APA),
 #endif
-#ifdef ENABLE_PRINTF
+#ifdef UDPBD
+    INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD | Device_Debug),
+#elif defined(ENABLE_PRINTF)
     INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
-#elif defined(UDPBD)
-    INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD),
 #endif
 #if defined(ATA) || defined(APA)
     INT_MODULE(ata_bd, NULL, Device_ATA | Device_APA),
@@ -271,7 +256,7 @@ void execROMPath(int argc, char *argv[]) {
   LoadExecPS2(argv[0], argc, &argv[1]);
 }
 
-#ifdef FMCB
+#ifdef OSDM
 // Shuts down the console.
 // Needs initModules(Device_Basic) to be called first
 void shutdownPS2() {

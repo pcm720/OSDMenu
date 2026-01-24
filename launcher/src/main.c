@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 
   argc = parseGlobalFlags(argc, argv);
 
-#ifdef FMCB
+#ifdef OSDM
   if (!strncmp("osdm", argv[0], 4)) {
     settings.flags |= FLAG_BOOT_OSD;
     fail("Failed to launch %s: %d", argv[0], handleOSDM(argc, argv));

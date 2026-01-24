@@ -1,4 +1,4 @@
-obj/
+build*/
 .vscode/settings.json
 *.elf
 *.kelf
