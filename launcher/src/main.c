@@ -16,11 +16,12 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 launcherOptions settings;
 
 int main(int argc, char *argv[]) {
-  // Process global options
+  // Initialize settings
   settings.flags = 0;
-  settings.gsmArgument = NULL;
   settings.deviceHint = Device_MemoryCard;
   settings.mcHint = 0;
+  settings.gsmArgument = NULL;
+  settings.titleID = NULL;
   settings.dev9ShutdownType = ShutdownType_All;
 
   // Try to guess the device type using argv[0]
@@ -29,6 +30,7 @@ int main(int argc, char *argv[]) {
   if (!strncmp(argv[0], "pfs", 3) || !strncmp(argv[0], "hdd", 3))
     settings.deviceHint = Device_APA;
 
+  // Process global options
   argc = parseGlobalFlags(argc, argv);
 
 #ifdef OSDM
