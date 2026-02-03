@@ -29,8 +29,15 @@ link_newlib_nano(egsm
     kernel
 )
 
+# Create binary version for embedding
+add_custom_command(
+    TARGET egsm POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary -v "$<TARGET_FILE:egsm>" "${CMAKE_CURRENT_BINARY_DIR}/egsm.bin"
+    COMMENT "Creating binary from ELF"
+)
+
 set_target_properties(egsm PROPERTIES
     LINK_FLAGS "-Wl,--gc-sections -s"
     OUTPUT_NAME "egsm"
-    RUNTIME_OUTPUT_NAME "egsm.elf"
+    RUNTIME_OUTPUT_NAME "egsm.bin"
 )

@@ -16,6 +16,7 @@ build*/
 kelftool/
 release/
 PS2KEYS.dat
+TODO.md
 # Created by https://www.toptal.com/developers/gitignore/api/macos,windows,linux
 
 ### Linux ###

@@ -43,8 +43,8 @@ set_target_properties(loader PROPERTIES
     RUNTIME_OUTPUT_NAME "loader.elf"
 )
 
-# Add eGSM ELF as dependency
-elf_to_source(egsm egsm_source egsm_elf "")
+# Add eGSM binary as dependency
+elf_to_source(egsm egsm_source egsm_bin "")
 add_dependencies(loader egsm)
 target_sources(loader PRIVATE ${egsm_source})
-target_compile_definitions(loader PRIVATE EGSM_ELF_SIZE)
+target_compile_definitions(loader PRIVATE EGSM_BIN_SIZE)

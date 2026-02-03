@@ -13,7 +13,7 @@
 #
 */
 
-ENTRY(__start);
+ENTRY(__entrypoint);
 
 MEMORY {
 	bram	: ORIGIN = 0x0080000, LENGTH = 0x4000 /* 0x00080000 - 0x00084000: BIOS unused memory, used by the standalone GSM engine */
@@ -28,7 +28,8 @@ SECTIONS {
 		*(._args)
 	} >bram
 
-	.text : {
+	.text 0x80200 : {
+		*(.text.__entrypoint)
 		_ftext = . ;
 		*(.text)
 		*(.text.*)

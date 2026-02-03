@@ -28,8 +28,8 @@
 #include <io_common.h>
 
 // eGSM variables
-extern uint8_t egsm_elf[];
-extern int size_egsm_elf;
+extern uint8_t egsm_bin[];
+extern int size_egsm_bin;
 
 void _libcglue_init() {}
 void _libcglue_deinit() {}
@@ -240,13 +240,11 @@ int loadELF(int elfMem) {
 
 // Runs the target executable via eGSM to force the GS mode
 int runeGSM(eGSMArguments *pArgs) {
-  int gsmEntry = loadELF((int)egsm_elf);
-  if (gsmEntry < 0)
-    return -1;
-
+  // Loader embeds the stripped eGSM binary with entrypoint at 0x80200
+  memcpy((void *)0x80200, egsm_bin, size_egsm_bin);
   // Pass a pointer to pArgs to work around ExecPS2 copying strings
   char *eargv[] = {(char *)&pArgs};
-  return ExecPS2((void *)gsmEntry, NULL, 1, eargv);
+  return ExecPS2((void *)0x80200, NULL, 1, eargv);
 }
 
 // Loads and executes the ELF elfPath points to.
@@ -490,56 +488,56 @@ void resetIOP() {
 uint32_t parseGSMFlags(char *gsmArg) {
   uint32_t flags = 0;
   if (!gsmArg[0])
-    goto done;
+    return 0;
 
-  if (gsmArg[0] != ':') {
-    // Interlaced field mode
-    if (!strncmp(gsmArg, "fp", 2)) { // Force progressive (480/576p)
-      flags |= EGSM_FLAG_FLD_FP;
-      gsmArg += 2;
-    } else
+  if (!strncmp(gsmArg, "fp", 2)) {
+    switch (gsmArg[2]) {
+    case '1':
+      flags |= EGSM_FLAG_VMODE_FP1;
+      break;
+    case '2':
+      flags |= EGSM_FLAG_VMODE_FP2;
+      break;
+    default:
       return 0;
-  }
-
-  if (!gsmArg[0])
-    goto done;
-
-  if (gsmArg[0] == ':') {
-    // Interlaced frame mode
-    gsmArg++;
-    if (gsmArg[0] != ':') {
-      if (!strncmp(gsmArg, "fp1", 3)) { // Force progressive 1 (240/288p)
-        flags |= EGSM_FLAG_FRM_FP1;
-        gsmArg += 3;
-      } else if (!strncmp(gsmArg, "fp2", 3)) { // Force progressive 2 (480/576p via line-doubling)
-        flags |= EGSM_FLAG_FRM_FP2;
-        gsmArg += 3;
-      } else
-        return 0;
     }
-  }
+    gsmArg += 3;
+  } else if (!strncmp(gsmArg, "1080ix", 6)) {
+    switch (gsmArg[6]) {
+    case '1':
+      flags |= EGSM_FLAG_VMODE_1080I_X1;
+      break;
+    case '2':
+      flags |= EGSM_FLAG_VMODE_1080I_X2;
+      break;
+    case '3':
+      flags |= EGSM_FLAG_VMODE_1080I_X3;
+      break;
+    default:
+      return 0;
+    }
+    gsmArg += 7;
+  } else
+    return 0;
 
   if (gsmArg[0] == ':') {
     // Compatibility mode
     gsmArg++;
     switch (gsmArg[0]) {
     case '1': // Mode 1
-      flags |= EGSM_FLAG_C_1;
+      flags |= EGSM_FLAG_COMP_1;
       break;
     case '2': // Mode 2
-      flags |= EGSM_FLAG_C_2;
+      flags |= EGSM_FLAG_COMP_2;
       break;
     case '3': // Mode 3
-      flags |= EGSM_FLAG_C_3;
+      flags |= EGSM_FLAG_COMP_3;
       break;
-    default:
-      return 0;
     }
     gsmArg += 1;
   }
 
-done:
-  if (flags & (EGSM_FLAG_FLD_FP | EGSM_FLAG_FRM_FP1 | EGSM_FLAG_FRM_FP2)) {
+  if (flags) {
     // 576p mode is unsupported on PS2s with ROMVER <210, so check the ROMVER
     // and force disable progressive PAL mode if the console is earlier
     int fd = fileXioOpen("rom0:ROMVER", FIO_O_RDONLY);
