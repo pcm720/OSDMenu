@@ -168,7 +168,7 @@ int handleOSDM(int argc, char *argv[]) {
       continue;
     }
     if (!strncmp(lineBuffer, "cdrom_use_dkwdrv", 16)) {
-      useDKWDRV = 1;
+      useDKWDRV = atoi(valuePtr);
       continue;
     }
     if (!(target == 9) && !strncmp(lineBuffer, "path_DKWDRV_ELF", 15)) {
@@ -186,11 +186,13 @@ int handleOSDM(int argc, char *argv[]) {
       continue;
     }
     if (!strncmp(lineBuffer, "ps1drv_use_ps1vn", 16)) {
-      ps1drvFlags |= CDROM_PS1_VN;
+      if (atoi(valuePtr))
+        ps1drvFlags |= CDROM_PS1_VN;
       continue;
     }
     if (!strncmp(lineBuffer, "app_gameid", 10)) {
-      settings.flags |= FLAG_APP_GAMEID;
+      if (atoi(valuePtr))
+        settings.flags |= FLAG_APP_GAMEID;
       continue;
     }
   }

@@ -32,6 +32,12 @@ void gsDisplayGameID(const char *gameID) {
 
   // Init screen
   gsKit_init_screen(gsGlobal);
+  if (!gameID) {
+    // Deinit gsKit and return if there's nothing to draw
+    gsKit_deinit_global(gsGlobal);
+    return;
+  }
+
   gsKit_display_buffer(gsGlobal); // Switch display buffer to avoid garbage appearing on screen
   gsKit_mode_switch(gsGlobal, GS_ONESHOT);
   gsKit_clear(gsGlobal, GS_SETREG_RGBA(0x00, 0x00, 0x00, 0x00));

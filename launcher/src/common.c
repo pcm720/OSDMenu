@@ -367,9 +367,10 @@ int LoadELFFromFile(int argc, char *argv[]) {
     if (titleID) {
       DPRINTF("Title ID is %s\n", titleID);
       gsDisplayGameID(titleID);
-      free(titleID);
     }
-  }
+  } else
+    // Always reset GS
+    gsDisplayGameID(NULL);
 
   LoadOptions opts = {
       .argc = argc,

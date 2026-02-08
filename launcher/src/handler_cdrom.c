@@ -229,7 +229,6 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       char *argv[] = {bootPath};
       LoadELFFromFile(1, argv);
     } else {
-      // Launch PS2 game with rom0:PS2LOGO
       char *argv[] = {"rom0:PS2LOGO", bootPath};
       LoadELFFromFile(2, argv);
     }

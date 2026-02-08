@@ -28,7 +28,7 @@ IRX_DEFINE(iomanX);
 IRX_DEFINE(fileXio);
 IRX_DEFINE(ps2dev9);
 IRX_DEFINE(ps2atad);
-IRX_DEFINE(ps2hdd);
+IRX_DEFINE(ps2hdd_osd);
 IRX_DEFINE(ps2fs);
 
 // Loads IOP modules
@@ -44,16 +44,14 @@ int initModules(void) {
   int ret = 0;
   int iopret = 0;
   // Apply patches required to load executables from EE RAM
-  if ((ret = sbv_patch_enable_lmb()))
-    return ret;
-  if ((ret = sbv_patch_disable_prefix_check()))
-    return ret;
+  sbv_patch_enable_lmb();
+  sbv_patch_disable_prefix_check();
 
   IRX_LOAD(iomanX, 0, NULL)
   IRX_LOAD(fileXio, 0, NULL)
   IRX_LOAD(ps2dev9, 0, NULL)
   IRX_LOAD(ps2atad, 0, NULL)
-  IRX_LOAD(ps2hdd, 0, NULL)
+  IRX_LOAD(ps2hdd_osd, 0, NULL)
   IRX_LOAD(ps2fs, 0, NULL)
 
   fileXioInit();

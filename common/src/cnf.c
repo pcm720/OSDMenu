@@ -27,6 +27,7 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts, int gTID) {
   opts->skipArgv0 = 0;
   opts->argCount = 0;
   opts->dev9ShutdownType = ShutdownType_All;
+  opts->videoMode = VideoMode_NTSC;
 
   char lineBuffer[255] = {0};
   char *valuePtr = NULL;
@@ -53,6 +54,10 @@ ExecType parseSystemCNF(FILE *cnfFile, SystemCNFOptions *opts, int gTID) {
       type = ExecType_PS1;
       opts->bootPath = strdup(valuePtr);
       continue;
+    }
+    if (!strncmp(lineBuffer, "VMODE", 5)) { // Video mode
+      if (!strncmp(valuePtr, "PAL", 3))
+        opts->videoMode = VideoMode_PAL;
     }
     if (!strncmp(lineBuffer, "HDDUNITPOWER", 12)) { // DEV9 Power
       if (!strncmp(valuePtr, "NICHDD", 6))

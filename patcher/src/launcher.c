@@ -64,6 +64,8 @@ void launchItem(char *item) {
     else {
       argv[argc++] = "";
       argv[argc++] = item;
+      // For generic paths, add -appid flag if app game ID is enabled
+      argv[argc++] = (settings.patcherFlags & FLAG_APP_GAMEID) ? "-appid" : "";
     }
   } else {
     // Handle CDROM
@@ -75,15 +77,13 @@ void launchItem(char *item) {
       if (settings.dkwdrvPath[0] == '\0')
         argv[argc++] = "-dkwdrv";
       else {
-        argv[argc++] = malloc(sizeof("-dkwdrv") + strlen(settings.dkwdrvPath) + 1);
-        argv[argc][0] = '\0';
-        strcat(argv[argc], "-dkwdrv=");
-        strcat(argv[argc], settings.dkwdrvPath);
+        argv[argc++] = calloc(sizeof(char), 10 + strlen(settings.dkwdrvPath));
+        strcat(argv[argc - 1], "-dkwdrv=");
+        strcat(argv[argc - 1], settings.dkwdrvPath);
       }
 #else // HOSD DKWDRV path is fixed
       argv[argc++] = "-dkwdrv=" HOSD_DKWDRV_PATH;
 #endif
-      argc++;
     } else {
       // Get OSD config for PS1DRV
       ConfigParam osdConfig;

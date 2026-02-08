@@ -135,7 +135,7 @@ int loadELF(LoadOptions *options) {
     for (int i = 0; i < options->argc; i++)
       argv[i] = options->argv[i];
 
-    // Add loader arguments (ELF, IOPRP and GSM argument order is important)
+    // Add loader arguments (ELF, IOPRP, GSM argument order is important)
     int argvOffset = argc;
     argc += options->argc;
 

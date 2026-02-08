@@ -32,7 +32,7 @@ typedef enum {
 
 typedef enum {
   FLAG_BOOT_OSD = (1 << 0),     // Whether the launcher was started from OSDMenu
-  FLAG_BOOT_HOSD = (1 << 1),     // Whether the launcher was started from HOSDMenu
+  FLAG_BOOT_HOSD = (1 << 1),    // Whether the launcher was started from HOSDMenu
   FLAG_BOOT_PATINFO = (1 << 2), // Whether the launcher was started from the hdd partition area
   FLAG_APP_GAMEID = (1 << 3),   // Enables/disables showing the visual Game ID for applications
 } LauncherFlags;

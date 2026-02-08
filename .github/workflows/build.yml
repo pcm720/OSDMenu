@@ -9,7 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/ps2homebrew/ps2homebrew:main
     steps:
+    - name: Install cmake
+      run: |
+        apk add cmake
+
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
     - name: Fetch full clone
       run: |
@@ -22,7 +28,8 @@ jobs:
           KELFSERVER_API_ADDRESS: ${{ secrets.KELFSERVER_API_ADDRESS }}
           KELFSERVER_API_KEY: ${{ secrets.KELFSERVER_API_KEY }}
       run: |
-        make
+        cmake -B build -DRELEASE=ON
+        cmake --build build
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -30,7 +37,7 @@ jobs:
       with:
         name: artifacts
         path: |
-          release/**
+          build/release/**
 
   release:
     needs: [build]

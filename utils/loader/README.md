@@ -26,26 +26,30 @@ Note:
 
 The syntax for specifying a memory location is `mem:<8-char address in HEX>:<8-char file size in HEX>`
 
+### PS2LOGO patching
+
+When argv[0] is `rom0:PS2LOGO`, the loader gets the target video mode from the disc's `SYSTEM.CNF` and patches `PS2LOGO` to always use the disc region instead of the console region, removing logo checksum check
+
 ### eGSM
 
-This loader supports running the target executable via the embedded [Neutrino GSM](../egsm/), forcing the application video mode.
+Based on [Neutrino GSM](https://github.com/rickgaiser/neutrino) by Rick Gaiser.  
+This loader supports running the target executable via Neutrino GSM, forcing the application video mode.
 
-eGSM options are inherited from Neutrino GSM and defined in the `x:y:z` format, where
-- `x` — interlaced field mode, used when a full-height buffer is used by the title for displaying.  
-  - Empty value — don't force (default)  (480i/576i)
-  - `fp` — force progressive scan (480p/576p)
-- `y` — interlaced frame mode, used when a half-height buffer is used by the title for displaying.  
+eGSM options are inherited from Neutrino GSM and defined in the `v:c` format, where
+- `v` — video mode.  
   - Empty value — don't force (default)  (480i/576i)
   - `fp1` — force progressive scan (240p/288p)
-  - `fp2` — force progressive scan (480p/576p line doubling)
-- `z` — compatibility mode
+  - `fp2` — force progressive scan (480p/576p)
+  - `1080ix1` — force 1080i, width/height x1
+  - `1080ix2` — force 1080i, width/height x2
+  - `1080ix3` — force 1080i, width/height x3
+- `c` — compatibility mode
   - Empty value — no compatibility mode (default)
   - `1` — field flipping type 1 (GSM/OPL)
   - `2` — field flipping type 2
   - `3` — field flipping type 3
 
 Examples:
-- `fp`       - force progressive for full-height buffer titles
-- `fp::1`    - force progressive for full-height buffer titles with compatibility mode 1
-- `:fp2:1`   - force progressive 480p/576p for half-height buffer titles with compatibility mode 1
-- `fp:fp2:2` - force progressive 480p/576p with compatibility mode 2
+- `fp2`     - recommended mode
+- `fp2:1`   - recommended mode with compatibility mode 1
+- `1080ix2` - force 1080i with x2 scaling
