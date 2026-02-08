@@ -11,6 +11,7 @@
 */
 
 #include "egsm_api.h"
+#include "ps2logo.h"
 #include <iopcontrol.h>
 #include <iopcontrol_special.h>
 #include <kernel.h>
@@ -26,10 +27,6 @@
 #include <fileio.h>
 #include <hdd-ioctl.h>
 #include <io_common.h>
-
-// eGSM variables
-extern uint8_t egsm_bin[];
-extern int size_egsm_bin;
 
 void _libcglue_init() {}
 void _libcglue_deinit() {}
@@ -73,6 +70,22 @@ typedef struct {
   uint32_t align;
 } elf_pheader_t;
 
+// Global flags used by load functions
+// Whether IOP reset should be done before loading the ELF
+static int8_t doIOPReset = 0;
+// DEV9 shutdown type
+static ShutdownType dev9ShutdownType = ShutdownType_All;
+// Custom IOPRP path
+static char *ioprpPath = NULL;
+// Target ELF path
+static char *elfPath = NULL;
+// Whether PS2LOGO should be patched
+static int8_t isPS2LOGOPAL = -1;
+// eGSM flags
+static uint32_t eGSMFlags = 0;
+// Whether app argv should start with argv[1]
+static uint32_t skipArgv0 = 0;
+
 // Resets IOP
 void resetIOP();
 
@@ -87,13 +100,16 @@ int loadIOPRP(char *ioprpPath);
 
 // Loads and executes the ELF elfPath points to.
 // elfPath must be mem:<8-char address in HEX>:<8-char file size in HEX>
-int loadEmbeddedELF(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownType, int doIOPReset, uint32_t eGSMFlags, int argc, char *argv[]);
+int loadEmbeddedELF(int argc, char *argv[]);
 
 // Loads and executes the ELF elfPath points to.
-int loadELFFromFile(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownType, int doIOPReset, uint32_t eGSMFlags, int argc, char *argv[]);
+int loadELFFromFile(int argc, char *argv[]);
 
-// Parses the loader eGSM argument into the eGSM flags
+// Parses the loader eGSM argument into eGSM flags
 uint32_t parseGSMFlags(char *gsmArg);
+
+// Returns 1 if PS2LOGO should be patched to PAL, 0 otherwise
+uint32_t parsePS2LOGO(char *ps2logoArg);
 
 // Loads an ELF file from the path specified in argv[0].
 // The loader's behavior can be altered by an optional last command-line argument (argv[argc-1]).
@@ -103,7 +119,8 @@ uint32_t parseGSMFlags(char *gsmArg);
 //   - 'D': Keep both the HDD and DEV9 powered on (HDDUNITPOWER = NICHDD)
 //   - 'I': The argv[argc-2] argument contains IOPRP image path (for HDD, the path must be a pfs: path on the same partition as the ELF file)
 //   - 'E': The argv[argc-2] argument contains ELF memory location to use instead of argv[0]
-//   - 'A': Do not pass argv[0] to the target ELF and start with argv[1].
+//   - 'A': Do not pass argv[0] to the target ELF and start with argv[1]
+//   - 'P': The argv[argc-2] argument contains target PS2LOGO region
 //   - 'G': Force video mode via eGSM. The argv[argc-2] argument contains eGSM arguments:
 //          The argument format is inherited from Neutrino GSM and defined as `x:y:z`, where
 //          x — Interlaced field mode, when a full height buffer is used by the game for displaying. Force video output to:
@@ -130,13 +147,6 @@ int main(int argc, char *argv[]) {
   // arg[0] is the path to ELF
   if (argc < 1)
     return -EINVAL;
-
-  int doIOPReset = 0;
-  ShutdownType dev9ShutdownType = ShutdownType_All;
-  char *ioprpPath = NULL;
-  char *elfPath = NULL;
-  uint32_t eGSMFlags = 0;
-  uint32_t skipArgv0 = 0;
 
   // Init SIF RPC
   sceSifInitRpc(0);
@@ -174,6 +184,11 @@ int main(int argc, char *argv[]) {
       case 'A':
         skipArgv0 = 1;
         break;
+      case 'P':
+        // Patch PS2LOGO
+        isPS2LOGOPAL = parsePS2LOGO(argv[argc - 2]);
+        argc--;
+        break;
       default:
       }
     }
@@ -205,9 +220,9 @@ int main(int argc, char *argv[]) {
 
   // Handle in-memory ELF file
   if (!strncmp(elfPath, "mem:", 4))
-    return loadEmbeddedELF(elfPath, ioprpPath, dev9ShutdownType, doIOPReset, eGSMFlags, argc, argv);
+    return loadEmbeddedELF(argc, argv);
 
-  return loadELFFromFile(elfPath, ioprpPath, dev9ShutdownType, doIOPReset, eGSMFlags, argc, argv);
+  return loadELFFromFile(argc, argv);
 }
 
 // Loads the ELF sections into memory
@@ -238,18 +253,9 @@ int loadELF(int elfMem) {
   return eh->entry;
 }
 
-// Runs the target executable via eGSM to force the GS mode
-int runeGSM(eGSMArguments *pArgs) {
-  // Loader embeds the stripped eGSM binary with entrypoint at 0x80200
-  memcpy((void *)0x80200, egsm_bin, size_egsm_bin);
-  // Pass a pointer to pArgs to work around ExecPS2 copying strings
-  char *eargv[] = {(char *)&pArgs};
-  return ExecPS2((void *)0x80200, NULL, 1, eargv);
-}
-
 // Loads and executes the ELF elfPath points to.
 // elfPath must be mem:<8-char address in HEX>:<8-char file size in HEX>
-int loadEmbeddedELF(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownType, int doIOPReset, uint32_t eGSMFlags, int argc, char *argv[]) {
+int loadEmbeddedELF(int argc, char *argv[]) {
   // Shutdown DEV9
   shutdownDEV9(dev9ShutdownType);
 
@@ -281,23 +287,14 @@ int loadEmbeddedELF(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownTyp
   if (entry < 0)
     return -1;
 
-  if (eGSMFlags) {
-    // Run the target executable via eGSM to force the GS mode
-    eGSMArguments args = {
-        .flags = eGSMFlags,
-        .entry = (void *)entry,
-        .gp = NULL,
-        .argc = argc,
-        .argv = argv,
-    };
-    return runeGSM(&args);
-  }
+  if (eGSMFlags)
+    enableGSM(eGSMFlags);
 
   return ExecPS2((void *)entry, NULL, argc, argv);
 }
 
 // Loads and executes the ELF elfPath points to.
-int loadELFFromFile(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownType, int doIOPReset, uint32_t eGSMFlags, int argc, char *argv[]) {
+int loadELFFromFile(int argc, char *argv[]) {
   // Handle ELF files
   if (ioprpPath && !strncmp(ioprpPath, "mem:", 4)) {
     // Clear the memory without touching the loaded IOPRP
@@ -343,6 +340,12 @@ int loadELFFromFile(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownTyp
   if (!strncmp(argv[0], "cdrom", 5))
     sceCdInit(SCECdEXIT);
 
+  if (!strcmp(argv[0], "rom0:PS2LOGO")) {
+    doIOPReset = 1; // Always reset IOP for PS2LOGO
+    if (isPS2LOGOPAL >= 0)
+      patchPS2LOGO(elfdata.epc, isPS2LOGOPAL);
+  }
+
   if (ioprpPath) {
     // Load IOPRP file
     if (loadIOPRP(ioprpPath) < 0)
@@ -356,17 +359,8 @@ int loadELFFromFile(char *elfPath, char *ioprpPath, ShutdownType dev9ShutdownTyp
   if (ret != 0 || elfdata.epc == 0)
     return -ENOENT;
 
-  if (eGSMFlags) {
-    // Run the target executable via eGSM to force the GS mode
-    eGSMArguments args = {
-        .flags = eGSMFlags,
-        .entry = (void *)elfdata.epc,
-        .gp = (void *)elfdata.gp,
-        .argc = argc,
-        .argv = argv,
-    };
-    return runeGSM(&args);
-  }
+  if (eGSMFlags)
+    enableGSM(eGSMFlags);
 
   return ExecPS2((void *)elfdata.epc, (void *)elfdata.gp, argc, argv);
 }
@@ -487,7 +481,7 @@ void resetIOP() {
 // Parses the loader eGSM argument into the eGSM flags
 uint32_t parseGSMFlags(char *gsmArg) {
   uint32_t flags = 0;
-  if (!gsmArg[0])
+  if (!gsmArg)
     return 0;
 
   if (!strncmp(gsmArg, "fp", 2)) {
@@ -556,4 +550,12 @@ uint32_t parseGSMFlags(char *gsmArg) {
   }
 
   return flags;
+}
+
+// Returns 1 if PS2LOGO should be patched to PAL, 0 otherwise
+uint32_t parsePS2LOGO(char *ps2logoArg) {
+  if (!ps2logoArg)
+    return 0;
+
+  return (ps2logoArg[0] == 'P') ? 1 : 0;
 }

@@ -13,14 +13,6 @@
 #define EGSM_FLAG_COMP_3 (1 << 7)         // Enable field flipping type 3
 #define EGSM_FLAG_NO_576P (1 << 8)        // Disable 576p (not supported on pre-Deckard consoles)
 
-// eGSM argv[0] must be an uint32_t value pointing to an initialized eGSMArguments struct
-typedef struct {
-  uint32_t flags;
-  void *entry;
-  void *gp;
-  char *bootPath; // If not NULL, eGSM will use LoadExecPS2 instead of ExecPS2.
-  int argc;
-  char **argv;
-} eGSMArguments;
+void enableGSM(uint32_t flags);
 
 #endif

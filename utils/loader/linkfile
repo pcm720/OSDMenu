@@ -16,18 +16,35 @@
 ENTRY(__start);
 
 MEMORY {
-	bram	: ORIGIN = 0x00084000, LENGTH = 0x1C000 /* 0x00084000 - 0x00100000: BIOS unused memory */
+	kram	: ORIGIN = 0x0080000, LENGTH = 0x1500  /* 0x00080000 - 0x00081500: BIOS unused memory, used by updates */
+	bram	: ORIGIN = 0x0084000, LENGTH = 0x1c000 /* 0x00084000 - 0x00100000: BIOS unused memory */
 }
 
 PHDRS {
-  text PT_LOAD;
+  egsm PT_LOAD; # eGSM program header
+  text PT_LOAD; # Main program header
 }
 
 SECTIONS {
+	# Place eGSM functions and data at the start of kernel memory
+	# to avoid game compatibility issues
+	.text : {
+		KEEP(*egsm*.obj(.text))
+		KEEP(*egsm*.obj(.text.*))
+	} >kram :egsm
+	.rodata ALIGN(128): {
+		KEEP(*egsm*.obj(.rodata))
+		KEEP(*egsm*.obj(.rodata.*))
+	} >kram
+	.bss ALIGN(128) : {
+		KEEP(*egsm*.obj(.bss))
+		KEEP(*egsm*.obj(.bss.*))
+	} >kram
+
 	.text : {
 		_ftext = . ;
-		*(.text)
-		*(.text.*)
+		*(EXCLUDE_FILE(*egsm*.obj) .text)
+		*(EXCLUDE_FILE(*egsm*.obj) .text.*)
 		*(.gnu.linkonce.t*)
 		KEEP(*(.init))
 		KEEP(*(.fini))
@@ -63,8 +80,8 @@ SECTIONS {
 
 	/* Static data.  */
 	.rodata ALIGN(128): {
-		*(.rodata)
-		*(.rodata.*)
+		*(EXCLUDE_FILE(*egsm*.obj) .rodata)
+		*(EXCLUDE_FILE(*egsm*.obj) .rodata.*)
 		*(.gnu.linkonce.r*)
 	} >bram
 
@@ -94,8 +111,8 @@ SECTIONS {
 	} >bram
 
 	.bss ALIGN(128) : {
-		*(.bss)
-		*(.bss.*)
+		*(EXCLUDE_FILE(*egsm*.obj) .bss)
+		*(EXCLUDE_FILE(*egsm*.obj) .bss.*)
 		*(.gnu.linkonce.b*)
 		*(COMMON)
 	} >bram

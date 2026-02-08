@@ -2,13 +2,14 @@
 
 set(SOURCES
     src/loader.c
+    src/ps2logo.c
+    src/egsm/egsm.c
+    src/egsm/ee_exception_l2.S
 )
-
-add_subdirectory(../egsm ${CMAKE_BINARY_DIR}/utils/egsm)
 
 add_executable(loader ${SOURCES})
 target_include_directories(loader PRIVATE
-    ../egsm/include
+    include
     $ENV{PS2SDK}/ee/include
     $ENV{PS2SDK}/common/include
 )
@@ -43,8 +44,6 @@ set_target_properties(loader PROPERTIES
     RUNTIME_OUTPUT_NAME "loader.elf"
 )
 
-# Add eGSM binary as dependency
-elf_to_source(egsm egsm_source egsm_bin "")
-add_dependencies(loader egsm)
+add_dependencies(loader)
 target_sources(loader PRIVATE ${egsm_source})
 target_compile_definitions(loader PRIVATE EGSM_BIN_SIZE)

@@ -16,6 +16,7 @@ This argument should begin with `-la=`, followed by one or more letters that mod
 - `E` — the `argv[argc-2]` argument contains ELF memory location to use instead of `argv[0]`
 - `A` — do not pass `argv[0]` to the target ELF and start with `argv[1]`
 - `G` — force video mode via eGSM. The `argv[argc-2]` argument contains eGSM arguments  
+- `P` — patch PS2LOGO to selected region if argv[0] is `rom0:PS2LOGO`. The `argv[argc-2]` argument should be `P` for PAL, `N` for NTSC  
 
 Note:
   - `D` and `N` are mutually exclusive; if both are specified, only the last one will take effect.
@@ -28,7 +29,8 @@ The syntax for specifying a memory location is `mem:<8-char address in HEX>:<8-c
 
 ### eGSM
 
-This loader supports running the target executable via the embedded [Neutrino GSM](../egsm/), forcing the application video mode.
+Based on [Neutrino GSM](https://github.com/rickgaiser/neutrino) by Rick Gaiser.  
+This loader supports running the target executable via Neutrino GSM, forcing the application video mode.
 
 eGSM options are inherited from Neutrino GSM and defined in the `v:c` format, where
 - `v` — video mode.  

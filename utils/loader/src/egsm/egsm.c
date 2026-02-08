@@ -9,13 +9,6 @@
 #include <syscallnr.h>
 #include <tamtypes.h>
 
-void _libcglue_init() {}
-void _libcglue_deinit() {}
-void _libcglue_args_parse(int argc, char **argv) {}
-DISABLE_PATCHED_FUNCTIONS();
-DISABLE_EXTRA_TIMERS_FUNCTIONS();
-PS2_DISABLE_AUTOSTART_PTHREAD();
-
 #define MAKE_J(func) (uint32_t)((0x02 << 26) | (((uint32_t)func) / 4)) // Jump (MIPS instruction)
 #define NOP 0x00000000                                                 // No Operation (MIPS instruction)
 
@@ -625,16 +618,10 @@ static void hook_SetGsCrt(short int interlace, short int mode, short int ffmd) {
   }
 }
 
-// argv[0] must be an uint32_t value pointing to a initialized eGSMArguments struct
-int main(int argc, char *argv[]) {
-  if (argc != 1) {
-    return -1;
-  }
-  eGSMArguments *args = (void *)_lw((uint32_t)argv[0]);
-
+void enableGSM(uint32_t flags) {
   volatile uint32_t *v_debug = (volatile uint32_t *)0x80000100;
 
-  state.flags = args->flags;
+  state.flags = flags;
 
   // Hook SetGsCrt
   state.org_SetGsCrt = GetSyscallHandler(__NR_SetGsCrt);
@@ -667,22 +654,5 @@ int main(int argc, char *argv[]) {
   } else {
     _ee_mtdabm(0x1fffff5f);
   }
-
-  // Chainload the executable
-  if (args->bootPath)
-    LoadExecPS2(args->bootPath, args->argc, args->argv);
-  else
-    ExecPS2(args->entry, args->gp, args->argc, args->argv);
 }
 
-// Placeholder entrypoint function for the PS2SDK crt0, to be placed at 0x100000.
-// Jumps to the actual entrypoint (__start)
-__attribute__((weak)) void __start();
-__attribute__((noreturn)) void __entrypoint() {
-  asm volatile("# Jump to crt0 __start \n"
-               "j      %0              \n"
-               :
-               : "Csy"(__start)
-               :);
-  __builtin_unreachable();
-}
