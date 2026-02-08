@@ -11,6 +11,7 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
 - HDD update check bypass
 - Override PS1 and PS2 disc launch functions with the launcher, bringing the following features to OSDSYS/HDD-OSD:
   - Skip the PlayStation 2 logo
+  - Patch the PlayStation 2 logo to work with all disc regions
   - Display the visual Game ID for the PixelFX RetroGM
   - Run disc-based games via the embedded Neutrino GSM (eGSM)
   - Run PS1 discs via the PS1 Video Mode Negator or DKWDRV
@@ -102,7 +103,7 @@ DKWDRV and custom payload paths are limited to 49 characters.
 24. `arg_OSDSYS_ITEM_???` — custom argument to be passed to the ELF. Each argument needs a separate entry.
 
 #### Disc/application launch modifiers
-25. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`. Useful for MechaPwn-patched consoles.
+25. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`
 26. `cdrom_disable_gameid` — disables or enables visual Game ID
 27. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
 28. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
