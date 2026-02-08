@@ -139,7 +139,6 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
   char *bootPath = NULL;
   char *titleID = NULL;
   char *titleVersion = NULL;
-  VideoMode vmode = opts.videoMode;
   if (opts.bootPath)
     bootPath = strdup(opts.bootPath);
   if (opts.titleID)
@@ -157,7 +156,6 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
     DPRINTF("Title version: %s\n", titleVersion);
   if (titleID)
     DPRINTF("Title ID: %s\n", titleID);
-  DPRINTF("Video mode: %s\n", (vmode == VideoMode_PAL) ? "PAL" : "NTSC");
   DPRINTF("====\n");
 
   if (titleID && titleID[0] != '\0') {
@@ -231,8 +229,6 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
       char *argv[] = {bootPath};
       LoadELFFromFile(1, argv);
     } else {
-      // Launch PS2 game with rom0:PS2LOGO
-      settings.ps2LogoRegion = (vmode == VideoMode_PAL) ? "P" : "N";
       char *argv[] = {"rom0:PS2LOGO", bootPath};
       LoadELFFromFile(2, argv);
     }

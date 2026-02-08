@@ -23,7 +23,6 @@ int main(int argc, char *argv[]) {
   settings.gsmArgument = NULL;
   settings.titleID = NULL;
   settings.dev9ShutdownType = ShutdownType_All;
-  settings.ps2LogoRegion = NULL;
 
   // Try to guess the device type using argv[0]
   if (!strncmp(argv[0], "mc1", 3))

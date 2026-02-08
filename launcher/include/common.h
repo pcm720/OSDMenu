@@ -45,7 +45,6 @@ typedef struct {
   char *gsmArgument;             // eGSM argument
   char *titleID;                 // Custom title ID
   ShutdownType dev9ShutdownType; // DEV9 Shutdown type override
-  char *ps2LogoRegion;           // PS2LOGO patch region
 } launcherOptions;
 
 extern launcherOptions settings;

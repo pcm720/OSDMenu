@@ -376,7 +376,6 @@ int LoadELFFromFile(int argc, char *argv[]) {
       .argc = argc,
       .argv = argv,
       .dev9ShutdownType = settings.dev9ShutdownType,
-      .ps2LogoRegion = settings.ps2LogoRegion,
   };
   if (settings.gsmArgument)
     opts.eGSM = settings.gsmArgument;
