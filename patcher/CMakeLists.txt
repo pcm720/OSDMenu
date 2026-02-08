@@ -230,7 +230,7 @@ if(NOT PATCHER_HOSD AND DEFINED ENV{KELFSERVER_API_ADDRESS} AND DEFINED ENV{KELF
         COMMAND ${CMAKE_COMMAND} -E env
             KELFSERVER_API_ADDRESS=$ENV{KELFSERVER_API_ADDRESS}
             KELFSERVER_API_KEY=$ENV{KELFSERVER_API_KEY}
-            ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/kelf/sign.py" "${PATCHER_KELF_TYPE}" "${PATCHER_BINARY_DIR}/${patcher_target}.elf" "${PATCHER_BINARY_DIR}/OSDMENU.XLF"
+            ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/scripts/kelfsign.py" "${PATCHER_KELF_TYPE}" "${PATCHER_BINARY_DIR}/${patcher_target}.elf" "${PATCHER_BINARY_DIR}/OSDMENU.XLF"
         COMMENT "Creating KELF file"
     )
     message(STATUS "OSDMenu KELF build enabled")

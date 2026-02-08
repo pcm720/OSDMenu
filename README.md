@@ -13,13 +13,16 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
 ### OSDMenu as the System Update
 
 You can install OSDMenu as the System Update instead of FMCB or PS2BBL to get faster boot times.  
-The release archive contains the following files:
-  - `patcher/kelf/OSDMENU.XLF` — encrypted and signed OSDMenu executable to be installed as `osd???.elf` or `osdmain.elf`
-  - `patcher/kelf/osdmenu.icn` — OSDMenu icon for the PS2 Browser
-  - `patcher/kelf/icon.sys` — icon manifest for the PS2 Browser
+To install OSDMenu as the System Update, you can use [KELFBinder](https://github.com/israpps/KELFBinder).  
 
-To install OSDMenu as the System Update, you can use the [KELFBinder](https://github.com/israpps/KELFBinder).  
-Consult the KELFBinder documentation on how to use the KELFBinder to install your own payloads.
+The release archive contains ready-to-use KELFBinder install script and directory structure:
+  - `patcher/kelfbinder/EXTINST.lua` — custom installation script that installs OSDMenu as the system update and copies wLaunchELF from KELFBinder release into `BOOT/BOOT.ELF`
+  - `patcher/kelfbinder/KELF/SYSTEM.XLF` — encrypted and signed OSDMenu executable to be installed as `osd???.elf` or `osdmain.elf`
+  - `patcher/kelfbinder/ASSETS/osdmenu.icn` and `*.sys` files — OSDMenu icon assets for the PS2 Browser
+  - `patcher/kelfbinder/ASSETS/SYS-CONF/OSDMENU.CNF`, `icon.sys` and `list.icn` — the [example config file](examples/OSDMENU.CNF) and `SYS-CONF` icons
+
+Copy the contents of the `patcher/kelfbinder` directory into KELFBinder's `INSTALL` directory, replacing all existing files.  
+Consult the KELFBinder documentation on how to use KELFBinder to install the system update on your memory card.
 
 ### HOSDMenu — OSDMenu for HDD OSD
 1. Install HDD OSD 1.10U  
@@ -95,5 +98,6 @@ See the launcher [README](launcher/README.md) for more details.
 - Rick Gaiser/Maximus32 for creating [Neutrino](https://github.com/rickgaiser/neutrino), parts of which are used by OSDMenu 
 - Matías Israelson for creating [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader)
 - CosmicScale for [RetroGEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher), [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) and extensive testing  
-- Ripto for creating OSDMenu Browser icons and Yornn for collecting all files required for the PSU package  
-- Alex Parrado for creating [SoftDev2 installer](https://github.com/parrado/SoftDev2)  
+- Ripto for creating OSDMenu Browser icons and Yornn for collecting all files required for the PSU package    
+- Alex Parrado for creating [SoftDev2 installer](https://github.com/parrado/SoftDev2)
+- [R3Z3N/Saildot4K](https://github.com/saildot4k) for testing OSDMenu with various modchips, Crystal Chip PBT script and suggestions on documentation and release packaging improvements

@@ -86,7 +86,7 @@ if(RELEASE)
     add_custom_target(release ALL
         # Create release directory structure
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/patcher/kelf"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/patcher/kelfbinder"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/osdmbr/payloads"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/launcher"
 
@@ -95,15 +95,16 @@ if(RELEASE)
 
         # Copy osdmenu.elf and generate PSU
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/osdmenu/osdmenu.elf" "${CMAKE_BINARY_DIR}/release/osdmenu.elf"
-        COMMAND ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/psu/makepsu.py" "${CMAKE_BINARY_DIR}/release/SYS_OSDMENU.psu" "SYS_OSDMENU" "${CMAKE_SOURCE_DIR}/utils/psu/res" "${CMAKE_BINARY_DIR}/release/osdmenu.elf"
+        COMMAND ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/scripts/makepsu.py" "${CMAKE_BINARY_DIR}/release/SYS_OSDMENU.psu" "SYS_OSDMENU" "${CMAKE_SOURCE_DIR}/utils/res/psu" "${CMAKE_BINARY_DIR}/release/osdmenu.elf"
 
         # Copy hosdmenu.elf
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/hosdmenu/hosdmenu.elf" "${CMAKE_BINARY_DIR}/release/hosdmenu.elf"
 
         # Copy osdmenu KELF and related files
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/osdmenu/OSDMENU.XLF" "${CMAKE_BINARY_DIR}/release/patcher/kelf/OSDMENU.XLF"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/utils/icn" "${CMAKE_BINARY_DIR}/release/patcher/kelf"
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/patcher/README.md" "${CMAKE_BINARY_DIR}/release/patcher/README.md"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/utils/res/kelfbinder" "${CMAKE_BINARY_DIR}/release/patcher/kelfbinder"
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/osdmenu/OSDMENU.XLF" "${CMAKE_BINARY_DIR}/release/patcher/kelfbinder/KELF/SYSTEM.XLF"
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/examples/OSDMENU.CNF" "${CMAKE_BINARY_DIR}/release/patcher/kelfbinder/ASSETS/SYS-CONF/OSDMENU.CNF"
 
         # Copy README.md
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/README.md" "${CMAKE_BINARY_DIR}/release/README.md"

@@ -141,7 +141,7 @@ function(create_kelf target_name packed_elf kelf_type)
         COMMAND ${CMAKE_COMMAND} -E env
             KELFSERVER_API_ADDRESS=$ENV{KELFSERVER_API_ADDRESS}
             KELFSERVER_API_KEY=$ENV{KELFSERVER_API_KEY}
-            ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/kelf/sign.py" "${kelf_type}" "${packed_elf}" "${kelf_file}"
+            ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/scripts/kelfsign.py" "${kelf_type}" "${packed_elf}" "${kelf_file}"
         COMMENT "Creating KELF ${kelf_file} from ${packed_elf}"
         VERBATIM
     )
