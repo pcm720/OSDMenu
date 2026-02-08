@@ -12,6 +12,11 @@ typedef enum {
   ExecType_PS2,
 } ExecType;
 
+typedef enum {
+  VideoMode_NTSC,
+  VideoMode_PAL,
+} VideoMode;
+
 // A simple linked list for paths and arguments
 typedef struct linkedStr {
   char *str;
@@ -29,6 +34,7 @@ typedef struct {
   int argCount;
   char **args;
   ShutdownType dev9ShutdownType;
+  VideoMode videoMode;
 } SystemCNFOptions;
 
 // Frees all paths and arguments in SystemCNFOptions.
