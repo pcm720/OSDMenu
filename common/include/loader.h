@@ -19,7 +19,6 @@ typedef struct {
   void *ioprpMem;      // Optional: Memory location of the IOPRP binary when loading IOPRP image from memory
   int ioprpSize;       // Optional: Size of the IOPRP binary in memory
   char *eGSM;          // Optional: eGSM argument
-  char *ps2LogoRegion; // Optional: when argv[0] is rom0:PS2LOGO, patch the region to PAL if 'P', to NTSC if 'N'
 
   int skipArgv0;
   int resetIOP;                  // Indicates if IOP reset is needed (1 = yes). If used with IOPRP, it will be ignored

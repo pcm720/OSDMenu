@@ -128,12 +128,6 @@ int loadELF(LoadOptions *options) {
     argc = (argc == 0) ? 2 : argc + 1;
   }
 
-  // PS2LOGO patch
-  if (options->ps2LogoRegion) {
-    loaderArg[argPos++] = 'P';
-    argc = (argc == 0) ? 2 : argc + 1;
-  }
-
   char **argv = options->argv;
   if (argc != 0) {
     argv = malloc((argc + options->argc) * sizeof(char *));
@@ -141,7 +135,7 @@ int loadELF(LoadOptions *options) {
     for (int i = 0; i < options->argc; i++)
       argv[i] = options->argv[i];
 
-    // Add loader arguments (ELF, IOPRP, GSM and PS2LOGO argument order is important)
+    // Add loader arguments (ELF, IOPRP, GSM argument order is important)
     int argvOffset = argc;
     argc += options->argc;
 
@@ -158,10 +152,6 @@ int loadELF(LoadOptions *options) {
     // GSM argument
     if (options->eGSM)
       argv[argc - (argvOffset--)] = options->eGSM;
-
-    // PS2LOGO argument
-    if (options->ps2LogoRegion)
-      argv[argc - (argvOffset--)] = options->ps2LogoRegion;
 
     // Loader arguments
     argv[argc - argvOffset] = loaderArg;
