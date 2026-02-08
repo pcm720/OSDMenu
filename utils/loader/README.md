@@ -16,7 +16,6 @@ This argument should begin with `-la=`, followed by one or more letters that mod
 - `E` — the `argv[argc-2]` argument contains ELF memory location to use instead of `argv[0]`
 - `A` — do not pass `argv[0]` to the target ELF and start with `argv[1]`
 - `G` — force video mode via eGSM. The `argv[argc-2]` argument contains eGSM arguments  
-- `P` — patch PS2LOGO to selected region if argv[0] is `rom0:PS2LOGO`. The `argv[argc-2]` argument should be `P` for PAL, `N` for NTSC  
 
 Note:
   - `D` and `N` are mutually exclusive; if both are specified, only the last one will take effect.
@@ -26,6 +25,10 @@ Note:
     - With `EI`, `argv[argc-2]` is treated as the ELF memory location, and `argv[argc-3]` as the IOPRP path.
 
 The syntax for specifying a memory location is `mem:<8-char address in HEX>:<8-char file size in HEX>`
+
+### PS2LOGO patching
+
+When argv[0] is `rom0:PS2LOGO`, the loader gets the target video mode from the disc's `SYSTEM.CNF` and patches `PS2LOGO` to always use the disc region instead of the console region, removing logo checksum check
 
 ### eGSM
 

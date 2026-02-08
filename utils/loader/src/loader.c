@@ -79,8 +79,6 @@ static ShutdownType dev9ShutdownType = ShutdownType_All;
 static char *ioprpPath = NULL;
 // Target ELF path
 static char *elfPath = NULL;
-// Whether PS2LOGO should be patched
-static int8_t isPS2LOGOPAL = -1;
 // eGSM flags
 static uint32_t eGSMFlags = 0;
 // Whether app argv should start with argv[1]
@@ -108,9 +106,6 @@ int loadELFFromFile(int argc, char *argv[]);
 // Parses the loader eGSM argument into eGSM flags
 uint32_t parseGSMFlags(char *gsmArg);
 
-// Returns 1 if PS2LOGO should be patched to PAL, 0 otherwise
-uint32_t parsePS2LOGO(char *ps2logoArg);
-
 // Loads an ELF file from the path specified in argv[0].
 // The loader's behavior can be altered by an optional last command-line argument (argv[argc-1]).
 // This argument should begin with "-la=", followed by one or more letters that modify the loader's behavior:
@@ -120,7 +115,6 @@ uint32_t parsePS2LOGO(char *ps2logoArg);
 //   - 'I': The argv[argc-2] argument contains IOPRP image path (for HDD, the path must be a pfs: path on the same partition as the ELF file)
 //   - 'E': The argv[argc-2] argument contains ELF memory location to use instead of argv[0]
 //   - 'A': Do not pass argv[0] to the target ELF and start with argv[1]
-//   - 'P': The argv[argc-2] argument contains target PS2LOGO region
 //   - 'G': Force video mode via eGSM. The argv[argc-2] argument contains eGSM arguments:
 //          The argument format is inherited from Neutrino GSM and defined as `x:y:z`, where
 //          x — Interlaced field mode, when a full height buffer is used by the game for displaying. Force video output to:
@@ -183,11 +177,6 @@ int main(int argc, char *argv[]) {
         break;
       case 'A':
         skipArgv0 = 1;
-        break;
-      case 'P':
-        // Patch PS2LOGO
-        isPS2LOGOPAL = parsePS2LOGO(argv[argc - 2]);
-        argc--;
         break;
       default:
       }
@@ -320,8 +309,8 @@ int loadELFFromFile(int argc, char *argv[]) {
   static t_ExecData elfdata;
   elfdata.epc = 0;
 
-  // Init libcdvd if argv[0] points to cdrom
-  if (!strncmp(argv[0], "cdrom", 5))
+  // Init libcdvd if argv[0] points to cdrom or PS2LOGO
+  if (!strncmp(argv[0], "cdrom", 5) || !strcmp(argv[0], "rom0:PS2LOGO"))
     sceCdInit(SCECdINIT);
 
   SifLoadFileInit();
@@ -336,15 +325,12 @@ int loadELFFromFile(int argc, char *argv[]) {
   // Shutdown DEV9
   shutdownDEV9(dev9ShutdownType);
 
-  // Deinit libcdvd if argv[0] points to cdrom
-  if (!strncmp(argv[0], "cdrom", 5))
-    sceCdInit(SCECdEXIT);
-
   if (!strcmp(argv[0], "rom0:PS2LOGO")) {
-    doIOPReset = 1; // Always reset IOP for PS2LOGO
-    if (isPS2LOGOPAL >= 0)
-      patchPS2LOGO(elfdata.epc, isPS2LOGOPAL);
-  }
+    // Apply PS2LOGO patch, keep libcdvd initialized for PS2LOGO
+    patchPS2LOGO(elfdata.epc);
+  } else if (!strncmp(argv[0], "cdrom", 5))
+    // Deinit libcdvd if argv[0] points to cdrom
+    sceCdInit(SCECdEXIT);
 
   if (ioprpPath) {
     // Load IOPRP file
@@ -550,12 +536,4 @@ uint32_t parseGSMFlags(char *gsmArg) {
   }
 
   return flags;
-}
-
-// Returns 1 if PS2LOGO should be patched to PAL, 0 otherwise
-uint32_t parsePS2LOGO(char *ps2logoArg) {
-  if (!ps2logoArg)
-    return 0;
-
-  return (ps2logoArg[0] == 'P') ? 1 : 0;
 }

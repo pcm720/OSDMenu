@@ -1,5 +1,10 @@
 #include <kernel.h>
 #include <stdint.h>
+#include <string.h>
+
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h>
+#include <fileio.h>
 
 uint8_t isPAL = 0;
 
@@ -55,8 +60,26 @@ void patchedExecPS2(void *entry, void *gp, int argc, char *argv[]) {
   ExecPS2(entry, gp, argc, argv);
 }
 
-void patchPS2LOGO(uint32_t epc, int isPS2LOGOPAL) {
-  isPAL = isPS2LOGOPAL;
+// Patches PS2LOGO to always use the disc region instead of the console region and removes logo checksum check
+void patchPS2LOGO(uint32_t epc) {
+  static char syscnf[100] = {0};
+  // Get video mode from SYSTEM.CNF
+  int fd = fileXioOpen("cdrom0:\\SYSTEM.CNF;1", FIO_O_RDONLY);
+  if (fd < 0)
+    return;
+  fileXioRead(fd, &syscnf, sizeof(syscnf));
+  close(fd);
+
+  // Find VMODE string
+  char *vmode = strstr(syscnf, "VMODE");
+  if (!vmode)
+    return;
+  // If "PAL" is present in the leftover string, use PAL mode
+  vmode = strstr(vmode, "PAL");
+  if (vmode)
+    isPAL = 1;
+  else
+    isPAL = 0;
 
   if (epc > 0x1000000) { // Packed PS2LOGO
     if ((_lw(0x1000200) & 0xff000000) == 0x08000000) {
