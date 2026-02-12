@@ -76,6 +76,20 @@ if(LAUNCHER_MMCE)
     list(APPEND IRX_FILES mmceman.irx)
     add_compile_definitions(MMCE)
     set(SIO2MAN ON)
+
+    # Build mmceman from submodule
+    set(MMCEMAN_IRX "${CMAKE_CURRENT_BINARY_DIR}/mmceman.irx")
+    file(GLOB MMCEMAN_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/iop/mmceman/mmceman/src/*" "${CMAKE_CURRENT_SOURCE_DIR}/iop/mmceman/mmceman/Makefile")
+    add_custom_command(
+        OUTPUT ${MMCEMAN_IRX}
+        COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_CURRENT_SOURCE_DIR}/iop/mmceman/mmceman" ${CMAKE_MAKE_PROGRAM}
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_SOURCE_DIR}/iop/mmceman/mmceman/irx/mmceman.irx"
+            ${MMCEMAN_IRX}
+        DEPENDS ${MMCEMAN_SOURCES}
+        COMMENT "Building mmceman"
+        VERBATIM
+    )
 endif()
 
 # USB support
@@ -173,14 +187,15 @@ foreach(irx ${IRX_FILES})
         # smap_udptty is not a part of PS2SDK
         irx_to_source("${CMAKE_CURRENT_SOURCE_DIR}/iop/smap_udptty/smap_udptty.irx" irx_source "smap_udptty_irx" "")
     elseif(irx_name STREQUAL "mmceman")
-        # mmceman is not a part of PS2SDK
-        irx_to_source("${CMAKE_CURRENT_SOURCE_DIR}/iop/mmceman/mmceman.irx" irx_source "mmceman_irx" "")
+        # mmceman is built from submodule
+        irx_to_source("${MMCEMAN_IRX}" irx_source "mmceman_irx" "")
     else()
         irx_to_source("$ENV{PS2SDK}/iop/irx/${irx}" irx_source "${irx_name_clean}_irx" "")
     endif()
 
     list(APPEND IRX_SOURCES ${irx_source})
 endforeach()
+
 
 # Convert ELF files to sources
 elf_to_source(loader loader_source "loader_elf" "")
