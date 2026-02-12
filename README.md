@@ -75,6 +75,8 @@ See the launcher [README](launcher/README.md) for more details.
 
 ## Configuration
 
+Comment out lines in config files by prefixing them with `#`.
+
 ### OSDMenu Configurator
 
 You can edit OSDMenu config files directly on your PS2 with the [OSDMenu Configurator](https://github.com/pcm720/OSDMenu-Configurator).  
