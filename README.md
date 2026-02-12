@@ -75,6 +75,11 @@ See the launcher [README](launcher/README.md) for more details.
 
 ## Configuration
 
+### OSDMenu Configurator
+
+You can edit OSDMenu config files directly on your PS2 with the [OSDMenu Configurator](https://github.com/pcm720/OSDMenu-Configurator).  
+OSDMenu release archive already includes a copy of the latest configurator.
+
 ### OSDMenu and HOSDMenu
 
 See the patcher [README](patcher/README.md) for more details.
