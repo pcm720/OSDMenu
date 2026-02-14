@@ -34,7 +34,7 @@ Consult the KELFBinder documentation on how to use KELFBinder to install the sys
    When using the unmodified binary on non-NTSC-U consoles, you will have to decrypt and re-encrypt the original binary with [`kelftool`](https://github.com/ps2homebrew/kelftool)
    to change the MagicGate region to 0xff (region free).
 2. Copy `hosdmenu.elf` to `hdd0:__system/osdmenu/`  
-   Copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` _(optional)_ 
+   Copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` _(optional, set the DKWDRV flag in config)_ 
 3. Edit `hdd0:__sysconf/osdmenu/OSDMENU.CNF` [as you see fit](patcher/README.md#osdmenucnf)
 4. Configure your bootloader to launch `hdd0:__system/osdmenu/hosdmenu.elf` or launch it manually from anywhere  
 
@@ -45,6 +45,8 @@ The release archive contains the following files:
   - `osdmbr/OSDMBR.XLF` — encrypted and signed OSDMenu MBR executable to be installed as `__mbr`
   - `osdmbr/osdmbr-installer.elf` — installer that will automatically install the MBR, enable the MBR boot and copy the example configuration file
   - `osdmbr/payloads/` — encrypted binaries for advanced users
+
+For DKWDRV support, copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` and set the DKWDRV flag in config _(optional)_.
 
 See the MBR [README](mbr/README.md) for more details. 
 
@@ -80,7 +82,10 @@ Comment out lines in config files by prefixing them with `#`.
 ### OSDMenu Configurator
 
 You can edit OSDMenu config files directly on your PS2 with the [OSDMenu Configurator](https://github.com/pcm720/OSDMenu-Configurator).  
-OSDMenu release archive already includes a copy of the latest configurator.
+OSDMenu release archive already includes a copy of the latest configurator. 
+
+You can reuse an existing Free McBoot or Free HD Boot config file by renaming it to `OSDMENU.CNF` and placing it in the respective paths: `FREEMCB.CNF` → `mc?:/SYS-CONF/` for OSDMenu, `FREEHDB.CNF` → `hdd0:__sysconf/osdmenu/` for HOSDMenu.  
+The configurator will import your custom menu entries, paths and compatible options and re-format the config for OSDMenu.
 
 ### OSDMenu and HOSDMenu
 
