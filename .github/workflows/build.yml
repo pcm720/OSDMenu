@@ -31,6 +31,16 @@ jobs:
         cmake -B build -DRELEASE=ON
         cmake --build build
 
+    - name: Fetch OSDMenu Configurator
+      run: |
+        apk add --no-cache curl jq unzip
+        RELEASE_JSON=$(curl -sL "https://api.github.com/repos/pcm720/OSDMenu-Configurator/releases/latest")
+        ASSET_URL=$(echo "$RELEASE_JSON" | jq -r '.assets[] | select(.name | test("^osdmenu-configurator-.*\\.zip$")) | .browser_download_url' | head -1)
+        curl -sL -o build/configurator.zip "$ASSET_URL"
+        mkdir -p build/release/configurator
+        unzip -q -o build/configurator.zip -d build/release/configurator
+        rm build/configurator.zip
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       if: steps.make.outcome == 'success'
