@@ -58,9 +58,9 @@ int initModules(void) {
 
   // Wait for IOP to initialize device drivers
   for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {
-    ret = open("hdd0:", O_DIRECTORY | O_RDONLY);
+    ret = fileXioDopen("hdd0:");
     if (ret >= 0) {
-      close(ret);
+      fileXioDclose(ret);
       return 0;
     }
 
