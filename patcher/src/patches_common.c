@@ -190,7 +190,9 @@ void launchOSDSYS(int argc, char *argv[]) {
     *(uint32_t *)&ptr[4] = 0;
   }
 
+#ifndef EMBED_CNF
   resetModules();
+#endif
 
   // Execute the OSD unpacker. If the above patching was successful it will
   // call the patchExecuteOSDSYS() function after unpacking.
@@ -336,7 +338,9 @@ void launchProtokernelOSDSYS() {
     args[n++] = "BootClock"; // Pass BootClock to skip OSDSYS intro
 
   // Execute OSDSYS
+#ifndef EMBED_CNF
   resetModules();
+#endif
 
   FlushCache(0);
   FlushCache(2);
