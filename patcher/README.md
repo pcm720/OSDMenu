@@ -55,7 +55,7 @@ The embedded Neutrino GSM (eGSM) can be configured using the `OSDGSM.CNF` file, 
 
 ## OSDGSM.CNF
 
-OSDMenu supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/egsm/).
+OSDMenu supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/loader/README.md#egsm).
 
 **OSDMenu** loads the per-title options from `mc?:/SYS-CONF/OSDGSM.CNF`.  
 **HOSDMenu** loads the per-title options from `hdd0:__sysconf/osdmenu/OSDGSM.CNF`, with fallback to `mc?:/SYS-CONF/OSDGSM.CNF` if the file on the HDD doesn't exist.
