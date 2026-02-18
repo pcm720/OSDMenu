@@ -117,7 +117,7 @@ static uint32_t patternDrawButtonPanel_3[] = {
 static uint32_t patternDrawButtonPanel_3_mask[] = {0xffffffff, 0xffffffff, 0xffffff00, 0xff00ffff, 0xffff0000, //
                                                    0xfc000000, 0xffffffff};
 
-// Patterns for patching the ExecuteDisc function to override the disc launch handlers
+// Pattern for patching the ExecuteDisc function to override the disc launch handlers
 static uint32_t patternExecuteDisc[] = {
   // ExecuteDisc function
   0x27bdfff0, //    addiu	sp, sp, $fff0
@@ -135,6 +135,16 @@ static uint32_t patternExecuteDisc[] = {
 };
 static uint32_t patternExecuteDisc_mask[] = {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xfffffff0, 0xfffffff0, //
                                            0xffffff00, 0x00000000, 0xffffffff, 0xfffffff0, 0xffffff00, 0xffff0000};
+
+// Pattern for patching DVD key check to always return 0 on ROM 1.60+
+// Used only for fixing master disc detecton on MechaPwn-patched consoles
+static uint32_t patternCheckDVDKey[] = {
+  0xae020000, // sw v0, 0x00??, s0
+  0x0c000000, // jal checkDVDKey <- patch target, replace with storing 0 into v0
+  0x00000000, // nop
+  0xae000000, // sw zero, 0x00??, s0
+};
+static uint32_t patternCheckDVDKey_mask[] = {0xffffff00, 0xff000000, 0xffffffff, 0xffffff00};
 
 #ifndef HOSD
 // OSDMenu patterns for patching the disc detection to bypass automatic disc launch

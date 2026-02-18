@@ -59,7 +59,7 @@ The release archive contains the following files:
 
 See the launcher [README](launcher/README.md) for more details. 
 
-## Key differences from FMCB 1.8:
+## Key differences from FMCB 1.8
 - All OSD initialization code is removed
 - USB support is dropped from the patcher, so only memory cards are checked for `OSDMENU.CNF`
 - No ESR support
@@ -67,6 +67,9 @@ See the launcher [README](launcher/README.md) for more details.
 - ELF paths are not checked by the patcher, so every named entry from FMCB config file is displayed in hacked OSDSYS menu
 - Support for launching applications from MMCE, MX4SIO and APA- and exFAT-formatted HDDs
 - CD/DVD support was extended to support skipping PS2LOGO, mounting VMCs on MMCE devices, showing visual GameID for PixelFX devices and booting DKWDRV for PS1 discs
+- Enhanced support for MechaPwn-patched systems:
+  - PS2LOGO is patched to always use the disc region
+  - OSDSYS disc key check is patched out to fix DVD master discs being detected as "invalid"
 - Integrated Neutrino GSM for disc games and applications
 - "Unlimited" number of paths for each entry
 - Support for 1080i and 480p (as line-doubled 240p) video modes
@@ -102,6 +105,11 @@ See the MBR [README](mbr/README.md) for more details.
 OSDMenu comes with the fully-featured launcher that supports running applications from all devices supported by homebrew drivers.  
 See the launcher [README](launcher/README.md) for more details.
 
+## Known issues that will not be fixed
+
+- For master discs, `PS2LOGO` may appear "inverted".  
+  This issue does not occur when using pressed retail copies.
+  
 ## Credits
 
 - Everyone involved in developing the original Free MC Boot and OSDSYS patches, especially Neme and jimmikaelkael
