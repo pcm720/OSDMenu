@@ -326,9 +326,12 @@ int loadELFFromFile(int argc, char *argv[]) {
   shutdownDEV9(dev9ShutdownType);
 
   if (!strcmp(argv[0], "rom0:PS2LOGO")) {
-    // Apply PS2LOGO patch, keep libcdvd initialized for PS2LOGO
+    // Apply PS2LOGO patch and force IOP reset
     patchPS2LOGO(elfdata.epc);
-  } else if (!strncmp(argv[0], "cdrom", 5))
+    sceCdInit(SCECdEXIT);
+    doIOPReset = 1;
+  }
+  if (!strncmp(argv[0], "cdrom", 5))
     // Deinit libcdvd if argv[0] points to cdrom
     sceCdInit(SCECdEXIT);
 
