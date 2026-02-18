@@ -543,6 +543,12 @@ void patchDiscLaunch(uint8_t *osd) {
 #ifdef HOSD
   discLaunchHandlers[7] = (uint32_t)launchHDDApplication; // Overwrite HDD application function pointer
 #endif
+
+  // Patch DVD key check on ROM 1.60+
+  ptr = findPatternWithMask(osd, 0x100000, (uint8_t *)patternCheckDVDKey, (uint8_t *)patternCheckDVDKey_mask, sizeof(patternCheckDVDKey));
+  if (!ptr)
+    return;
+  _sw(0x24020000, (uint32_t)ptr + 4); // patch the function call to return 0 instead
 }
 
 // Patches automatic disc launch for OSDMenu
