@@ -104,11 +104,6 @@ See the MBR [README](mbr/README.md) for more details.
 
 OSDMenu comes with the fully-featured launcher that supports running applications from all devices supported by homebrew drivers.  
 See the launcher [README](launcher/README.md) for more details.
-
-## Known issues that will not be fixed
-
-- For master discs, `PS2LOGO` may appear "inverted".  
-  This issue does not occur when using pressed retail copies.
   
 ## Credits
 
@@ -121,3 +116,4 @@ See the launcher [README](launcher/README.md) for more details.
 - Ripto for creating OSDMenu Browser icons and Yornn for collecting all files required for the PSU package    
 - Alex Parrado for creating [SoftDev2 installer](https://github.com/parrado/SoftDev2)
 - [R3Z3N/Saildot4K](https://github.com/saildot4k) for testing OSDMenu with various modchips, Crystal Chip PBT script and suggestions on documentation and release packaging improvements
+- l_oliveira for advices on fixing PS2LOGO for master discs
