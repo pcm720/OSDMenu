@@ -44,6 +44,5 @@ set_target_properties(loader PROPERTIES
     RUNTIME_OUTPUT_NAME "loader.elf"
 )
 
-add_dependencies(loader)
 target_sources(loader PRIVATE ${egsm_source})
 target_compile_definitions(loader PRIVATE EGSM_BIN_SIZE)

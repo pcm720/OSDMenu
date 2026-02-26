@@ -9,7 +9,7 @@
 #
 # Source: https://github.com/pcm720/OSDMenu
 SET "TITLE" "[SYS] OSDMenu"
-SET "VERSION" "1.1.0"
+SET "VERSION" "1.2.0"
 SET "AUTHOR" "pcm720"
 SET "DESC" "Hacked OSDSYS based off FMCB 1.8 however with many enhancements such as more device support, GameID etc."
 SET "ELF" "osdmenu.elf"

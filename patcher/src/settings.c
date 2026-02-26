@@ -229,6 +229,18 @@ int loadConfig(void) {
 
       continue;
     }
+    if (!strcmp(name, "OSDSYS_region")) {
+      if (!strcmp(value, "AUTO"))
+        settings.region = OSD_REGION_DEFAULT;
+      else if (!strcmp(value, "jap"))
+        settings.region = OSD_REGION_JAP;
+      else if (!strcmp(value, "usa"))
+        settings.region = OSD_REGION_USA;
+      else if (!strcmp(value, "eur"))
+        settings.region = OSD_REGION_EUR;
+
+      continue;
+    }
     if (!strcmp(name, "OSDSYS_custom_menu")) {
       if (atoi(value))
         settings.patcherFlags |= FLAG_CUSTOM_MENU;
@@ -333,6 +345,7 @@ void initVariables() {
 void initConfig(void) {
   settings.patcherFlags = FLAG_CUSTOM_MENU | FLAG_SCROLL_MENU | FLAG_SKIP_SCE_LOGO | FLAG_SKIP_DISC;
   settings.videoMode = 0;
+  settings.region = OSD_REGION_DEFAULT;
   settings.menuX = 320;
   settings.menuY = 110;
   settings.enterX = 30;

@@ -31,6 +31,13 @@ typedef enum {
   FLAG_CUSTOM_MENU = (1 << 11),   // Apply menu patches
 } PatcherFlags;
 
+typedef enum {
+  OSD_REGION_DEFAULT,
+  OSD_REGION_JAP,
+  OSD_REGION_USA,
+  OSD_REGION_EUR,
+} OSDRegion;
+
 // Patcher settings struct, contains all configurable patch settings and menu items
 typedef struct {
   uint32_t colorSelected[4];                 // The menu items color when selected
@@ -53,6 +60,7 @@ typedef struct {
   char menuDelimiterBottom[NAME_LEN];        // The bottom menu delimiter text, only for scroll menu
   char menuItemName[CUSTOM_ITEMS][NAME_LEN]; // Menu items text
   GSVideoMode videoMode;                     // OSDSYS Video mode (0 for auto)
+  OSDRegion region;                          // OSD Region
   char romver[15];                           // ROMVER string, initialized before patching
 #ifndef HOSD
   char dkwdrvPath[50]; // Path to DKWDRV
