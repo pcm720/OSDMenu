@@ -80,7 +80,7 @@ DKWDRV and custom payload paths are limited to 49 characters.
 2. `OSDSYS_Skip_Disc` — enables/disables automatic CD/DVD launch
 3. `OSDSYS_Skip_Logo` — enables/disables SCE logo (also needs `OSDSYS_Skip_Disc` to be disabled to actually show the logo)
 4. `OSDSYS_Inner_Browser` — enables/disables going to the Browser after launching OSDSYS
-5. `OSDSYS_region` — forces OSDSYS region if set. Valid values are `jap`, `usa`, `eur`.  
+5. `OSDSYS_region` — forces OSDSYS region if set. Valid values are `AUTO`, `jap`, `usa`, `eur`.  
    This changes the video mode, button prompts and available languages (on some consoles)
 
 #### OSDSYS custom menu options

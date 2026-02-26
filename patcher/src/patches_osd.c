@@ -5,7 +5,6 @@
 
 // OSD region patch
 void patchOSDRegion(uint8_t *osd) {
-  settings.region = OSD_REGION_EUR;
   if (settings.region == OSD_REGION_DEFAULT)
     return;
 

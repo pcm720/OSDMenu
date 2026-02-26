@@ -230,7 +230,9 @@ int loadConfig(void) {
       continue;
     }
     if (!strcmp(name, "OSDSYS_region")) {
-      if (!strcmp(value, "jap"))
+      if (!strcmp(value, "AUTO"))
+        settings.region = OSD_REGION_DEFAULT;
+      else if (!strcmp(value, "jap"))
         settings.region = OSD_REGION_JAP;
       else if (!strcmp(value, "usa"))
         settings.region = OSD_REGION_USA;
