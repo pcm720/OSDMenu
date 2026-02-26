@@ -66,6 +66,9 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   // Apply version menu patch
   patchVersionInfo((uint8_t *)epc);
 
+  // Apply OSD region patch
+  patchOSDRegion((uint8_t *)epc);
+
   if ((settings.patcherFlags & FLAG_PS1DRV_FAST) || (settings.patcherFlags & FLAG_PS1DRV_SMOOTH))
     // Patch PS1DRV config
     patchPS1DRVConfig((uint8_t *)epc);

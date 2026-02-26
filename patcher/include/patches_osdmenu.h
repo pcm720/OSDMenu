@@ -21,6 +21,9 @@ void patchBrowserApplicationLaunch(uint8_t *osd, int isProtokernel);
 // Sets kernel PS1DRV configuration to values set in OSDMENU.CNF if not initialized
 void patchPS1DRVConfig(uint8_t *osd);
 
+// Patches OSD region
+void patchOSDRegion(uint8_t *osd);
+
 #ifndef HOSD
 // Protokernel patches
 

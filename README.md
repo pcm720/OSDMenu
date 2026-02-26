@@ -77,6 +77,7 @@ See the launcher [README](launcher/README.md) for more details.
 - Support for launching applications from the memory card browser
 - Support for setting PS1 driver options on every boot
 - Support for HDD OSD 1.10U
+- Ability to force OSD region
 
 ## Configuration
 

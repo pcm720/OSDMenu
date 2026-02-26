@@ -51,6 +51,7 @@ set(EE_SOURCES
     ${PATCHER_SOURCE_DIR}/src/patches_gs.c
     ${PATCHER_SOURCE_DIR}/src/patches_version.c
     ${PATCHER_SOURCE_DIR}/src/patches_ps1drv.c
+    ${PATCHER_SOURCE_DIR}/src/patches_osd.c
 )
 
 # HOSDMenu build
