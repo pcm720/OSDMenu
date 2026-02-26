@@ -25,12 +25,16 @@ int unscrambleLogo(char *whatever, void *logoBuffer, int bufSize) {
 // Does the actual patching
 // getRegionLoc — region getter function, with ROMVER check call at +8 bytes. Required to display the logo properly
 // cdDecLoc — first sceCdDecSet call in logo handling function
-int doPatchWithOffsets(uint32_t getRegionLoc, uint32_t cdDecLoc) {
+// checksumLoc — logo checksum check
+int doPatchWithOffsets(uint32_t getRegionLoc, uint32_t cdDecLoc, uint32_t checksumLoc) {
   if ((_lw(getRegionLoc) != 0x27bdfff0) || ((_lw(getRegionLoc + 8) & 0xff000000) != 0x0c000000))
     // Make sure get region location target actually points to the expected code
     return -1;
   if (((_lw(cdDecLoc) & 0xff000000) != 0x0c000000) || (_lw(cdDecLoc) != _lw(cdDecLoc + 0x90)))
-    // Make sure sceCdDecSet location actually point to the expected code
+    // Make sure sceCdDecSet location actually points to the expected code
+    return -1;
+  if ((_lw(checksumLoc) & 0xffff0000) != 0x8f820000)
+    // Make sure checksum comparison location points to the expected code
     return -1;
 
   _sw((0x24020000 | ((isPAL) ? 2 : 0)),
@@ -40,6 +44,9 @@ int doPatchWithOffsets(uint32_t getRegionLoc, uint32_t cdDecLoc) {
   _sw(0x00000000, cdDecLoc);
   // Patch the sceCdDecSet(0,0,0) call after the logo has been read (+0x90 from the first call) to call our own unscrambling function
   _sw(0x0c000000 | ((uint32_t)unscrambleLogo >> 2), cdDecLoc + 0x90);
+
+  // Replace load from memory with just writing zero to v0 to bypass logo checksum check
+  _sw(0x24020000, checksumLoc);
 
   FlushCache(0);
   FlushCache(2);
@@ -52,17 +59,26 @@ void doPatch() {
   // ROM 1.10
   // 0x100178 — region getter function, with ROMVER check call at +8 bytes. Required to display the logo properly
   // 0x1069e8 — first sceCdDecSet call in logo handling function
-  if (!doPatchWithOffsets(0x100178, 0x1069e8))
+  // 0x100278 — logo checksum check
+  if (!doPatchWithOffsets(0x100178, 0x1069e8, 0x100278))
     return;
   // ROM 1.20-1.70
   // 0x102078 — region getter function, with ROMVER check call at +8 bytes. Required to display the logo properly
   // 0x1015b0 — first sceCdDecSet call in logo handling function
-  if (!doPatchWithOffsets(0x102078, 0x1015b0))
+  // 0x102178 — logo checksum check
+  if (!doPatchWithOffsets(0x102078, 0x1015b0, 0x102178))
     return;
-  // ROM 1.80+
+  // ROM 1.80-2.10
   // 0x102018 — region getter function, with ROMVER check call at +8 bytes. Required to display the logo properly
   // 0x101578 — first sceCdDecSet call in logo handling function
-  if (!doPatchWithOffsets(0x102018, 0x101578))
+  // 0x102118 — logo checksum check
+  if (!doPatchWithOffsets(0x102018, 0x101578, 0x102118))
+    return;
+  // ROM 2.20+
+  // 0x102018 — region getter function, with ROMVER check call at +8 bytes. Required to display the logo properly
+  // 0x101578 — first sceCdDecSet call in logo handling function
+  // 0x102264 — logo checksum check
+  if (!doPatchWithOffsets(0x102018, 0x101578, 0x102264))
     return;
 }
 
