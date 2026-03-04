@@ -18,9 +18,6 @@ void patchMenuInfiniteScrolling(uint8_t *osd, int isProtokernel);
 // Patches the disc launch handlers to load discs with the launcher
 void patchDiscLaunch(uint8_t *osd);
 
-// Patches automatic disc launch
-void patchSkipDisc(uint8_t *osd);
-
 // Forces the video mode
 void patchVideoMode(uint8_t *osd, GSVideoMode mode);
 
