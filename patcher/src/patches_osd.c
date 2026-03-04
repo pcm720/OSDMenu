@@ -35,3 +35,43 @@ void patchOSDRegion(uint8_t *osd) {
   }
   _sw(val, (uint32_t)ptr);
 }
+
+// Patches OSD disc launch handling in intro and clock handlers to not enter
+// Browser or launch disc when the disc is inserted
+void patchOSDAutoDiscHandling(uint8_t *osd) {
+  // Find the intro disc handling
+  uint8_t *ptr = findPatternWithMask(osd, 0x100000, (uint8_t *)patternOSDIntroLaunchDisc, (uint8_t *)patternOSDIntroLaunchDisc_mask,
+                                     sizeof(patternOSDIntroLaunchDisc));
+  if (!ptr)
+    return;
+
+#ifdef HOSD
+  // NOP out the disc handling in HDD-OSD main()
+  for (uint32_t i = 0; i < (sizeof(patternOSDIntroLaunchDisc) / sizeof(uint32_t)); i++)
+    _sw(0x0000000, (uint32_t)ptr + i * 4);
+#else
+  _sw(0x24020064, (uint32_t)ptr); // Store 0x64 (default value for no disc) into v1
+
+  // Patch the second occurence
+  ptr = findPatternWithMask(ptr, 0x200, (uint8_t *)patternOSDIntroLaunchDisc, (uint8_t *)patternOSDIntroLaunchDisc_mask,
+                            sizeof(patternOSDIntroLaunchDisc));
+  if (ptr)
+    _sw(0x24020064, (uint32_t)ptr); // Store 0x64 (default value for no disc) into v1
+#endif
+
+  // Find the clock disc handling
+  ptr = findPatternWithMask(osd, 0x100000, (uint8_t *)patternOSDClockLaunchDisc, (uint8_t *)patternOSDClockLaunchDisc_mask,
+                            sizeof(patternOSDClockLaunchDisc));
+  if (!ptr)
+    return;
+
+  _sw(0x0000000, (uint32_t)ptr + 0x4); // replace with nop
+
+  // This might appear twice in some ROMs, so make sure we patch both
+  ptr = findPatternWithMask(ptr, 0x100, (uint8_t *)patternOSDClockLaunchDisc, (uint8_t *)patternOSDClockLaunchDisc_mask,
+                            sizeof(patternOSDClockLaunchDisc));
+  if (!ptr)
+    return;
+
+  _sw(0x0000000, (uint32_t)ptr + 0x4); // replace with nop
+}

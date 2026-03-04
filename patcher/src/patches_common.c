@@ -86,7 +86,7 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
 
   // Apply skip disc patch
   if (settings.patcherFlags & FLAG_SKIP_DISC)
-    patchSkipDisc((uint8_t *)epc);
+    patchOSDAutoDiscHandling((uint8_t *)epc);
 
   // Apply disc launch patch to forward disc launch to the launcher
   patchDiscLaunch((uint8_t *)epc);
@@ -112,7 +112,7 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
 
   if (settings.patcherFlags & FLAG_BOOT_BROWSER)
     args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
-  else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))
+  else if (settings.patcherFlags & FLAG_SKIP_SCE_LOGO)
     args[n++] = "BootClock"; // Pass BootClock to skip OSDSYS intro
 
   if (findString("SkipMc", (char *)epc, 0x100000)) // Pass SkipMc argument
@@ -138,7 +138,7 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
 
   if (settings.patcherFlags & FLAG_BOOT_BROWSER)
     args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
-  else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))
+  else if (settings.patcherFlags & FLAG_SKIP_SCE_LOGO)
     args[n++] = "BootClock"; // Pass BootClock to skip OSDSYS intro
 
   // Update IOP modules
@@ -176,7 +176,7 @@ void launchOSDSYS(int argc, char *argv[]) {
   if (SifLoadElf("rom0:OSDSYS", &exec) || (exec.epc < 0))
     return;
 #else
-  if (SifLoadElfEncrypted("pfs0:/osd100/hosdsys.elf", &exec) || (exec.epc < 0))
+  if (SifLoadElf("pfs0:/osd100/hosdsys.elf", &exec) || (exec.epc < 0))
     if (SifLoadElfEncrypted("pfs0:/osd100/OSDSYS_A.XLF", &exec) || (exec.epc < 0))
       return;
 

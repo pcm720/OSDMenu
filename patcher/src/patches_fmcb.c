@@ -551,34 +551,6 @@ void patchDiscLaunch(uint8_t *osd) {
   _sw(0x24020000, (uint32_t)ptr + 4); // patch the function call to return 0 instead
 }
 
-// Patches automatic disc launch for OSDMenu
-void patchSkipDisc(uint8_t *osd) {
-  uint8_t *ptr1 = findPatternWithMask(osd, 0x100000, (uint8_t *)patternDetectDisc, (uint8_t *)patternDetectDisc_mask, sizeof(patternDetectDisc));
-  if (!ptr1)
-    return;
-
-  uint8_t *ptr2 = findPatternWithMask(osd, 0x100000, (uint8_t *)patternDetectDisc_Clock, (uint8_t *)patternDetectDisc_Clock_mask,
-                                      sizeof(patternDetectDisc_Clock));
-  if (!ptr2)
-    return;
-
-#ifndef HOSD
-  uint32_t tmp = (uint32_t)ptr1 + 48; // patch start
-  uint32_t dist = (((uint32_t)ptr2 - tmp) >> 2) - 1;
-  if (dist > 0x40)
-    return;
-
-  _sw(0x10000000 + dist, tmp); // branch to ptr2
-  _sw(0, tmp + 4);             // nop
-#else
-  // NOP out the jump tables
-  for (uint32_t i = 0; i < (sizeof(patternDetectDisc) / sizeof(uint32_t)); i++)
-    _sw(0, (uint32_t)ptr1 + i * 4);
-  for (uint32_t i = 0; i < (sizeof(patternDetectDisc_Clock) / sizeof(uint32_t)); i++)
-    _sw(0, (uint32_t)ptr2 + i * 4);
-#endif
-}
-
 static uint32_t menuLoopPatch_1[7] = {0x8e04fff8, 0x8e05fff0, 0x0004102a, 0x0082280b, 0x20a3ffff, 0x1000000c, 0xae03fff8};
 static uint32_t menuLoopPatch_2[9] = {
     0x1040000e, 0x30620020, 0x8e05fff8, 0x8e02fff0, 0x24a30001, 0x0062102a, 0x0002180a, 0x00000000, 0xae03fff8,

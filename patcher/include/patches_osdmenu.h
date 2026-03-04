@@ -24,6 +24,10 @@ void patchPS1DRVConfig(uint8_t *osd);
 // Patches OSD region
 void patchOSDRegion(uint8_t *osd);
 
+// Patches OSD disc launch handling in intro and clock handlers to not enter
+// Browser or launch disc when the disc is inserted
+void patchOSDAutoDiscHandling(uint8_t *osd);
+
 #ifndef HOSD
 // Protokernel patches
 
