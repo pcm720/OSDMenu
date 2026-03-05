@@ -25,14 +25,15 @@ Copy the contents of the `patcher/kelfbinder` directory into KELFBinder's `INSTA
 Consult the KELFBinder documentation on how to use KELFBinder to install the system update on your memory card.
 
 ### HOSDMenu — OSDMenu for HDD OSD
-1. Install HDD OSD 1.10U  
+1. Install HDD OSD **1.10U**  
    Make sure HDD OSD binaries are installed into `hdd0:__system/osd100/` and `hosdsys.elf`/`OSDSYS_A.XLF` is present.  
    SHA-256 hashes of `hosdsys.elf`/`OSDSYS_A.XLF` known to work:
    - `acc905233f79678b9d7c1de99b0aee2409136197d13e7d78bf8978cd85b736ae` — original binary from the official HDD Utility Disc Version 1.10
    - `65360a6c210b36def924770f23d5565382b5fa4519ef0bb8ddf5c556531eec14` — cracked HDD OSD with 48-bit LBA support from the Sony Utility Disc Compilation 4 disc
 
    When using the unmodified binary on non-NTSC-U consoles, you will have to decrypt and re-encrypt the original binary with [`kelftool`](https://github.com/ps2homebrew/kelftool)
-   to change the MagicGate region to 0xff (region free).
+   to change the MagicGate region to 0xff (region free).  
+   Decrypted binaries are also supported.
 2. Copy `hosdmenu.elf` to `hdd0:__system/osdmenu/`  
    Copy DKWDRV to `hdd0:__system/osdmenu/DKWDRV.ELF` _(optional, set the DKWDRV flag in config)_ 
 3. Edit `hdd0:__sysconf/osdmenu/OSDMENU.CNF` [as you see fit](patcher/README.md#osdmenucnf)
