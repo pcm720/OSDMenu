@@ -176,9 +176,11 @@ void launchOSDSYS(int argc, char *argv[]) {
   if (SifLoadElf("rom0:OSDSYS", &exec) || (exec.epc < 0))
     return;
 #else
-  if (SifLoadElf("pfs0:/osd100/hosdsys.elf", &exec) || (exec.epc < 0))
+  if (SifLoadElfEncrypted("pfs0:/osd100/hosdsys.elf", &exec) || (exec.epc < 0))
     if (SifLoadElfEncrypted("pfs0:/osd100/OSDSYS_A.XLF", &exec) || (exec.epc < 0))
-      return;
+      if (SifLoadElf("pfs0:/osd100/hosdsys.elf", &exec) || (exec.epc < 0))
+        if (SifLoadElf("pfs0:/osd100/OSDSYS_A.XLF", &exec) || (exec.epc < 0))
+          return;
 
   fileXioUmount("pfs0:");
 #endif
