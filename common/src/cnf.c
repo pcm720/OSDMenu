@@ -298,10 +298,6 @@ char *generateTitleID(char *path) {
 
 fallback:
   DPRINTF("Extracting title ID from ELF name: %s\n", titleID);
-  // Try to extract the ELF name
-  char *ext = strstr(path, ".ELF");
-  if (!ext)
-    ext = strstr(path, ".elf");
 
   // Find the start of the ELF name
   char *elfName = strrchr(path, '/');
@@ -310,15 +306,12 @@ fallback:
 
   // Advance to point to the actual name
   elfName++;
-  // Temporarily terminate the string at extension,
-  // copy the first 11 characters and restore the '.'
+
+  // Copy the first 11 characters and trim the extension if it exists
+  strncpy(titleID, elfName, 11);
+  char *ext = strrchr(titleID, '.');
   if (ext)
     *ext = '\0';
-
-  strncpy(titleID, elfName, 11);
-
-  if (ext)
-    *ext = '.';
 
 whitespace:
   // Remove whitespace at the end
