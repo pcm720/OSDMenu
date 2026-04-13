@@ -98,29 +98,29 @@ int main(int argc, char *argv[]) {
     DPRINTF("Found an entry for trigger %d: argc is %d\n", lpath->trigger, lpath->argCount);
 
     // Assemble argv
-    char **args = malloc(lpath->argCount + 2); // Reserve two more for argv[0] and possible HOSDMenu -mbrboot flag
+    char **args = malloc(sizeof(char**)*(lpath->argCount + 2)); // Reserve two more for argv[0] and possible HOSDMenu -mbrboot flag
+    args[0] = strdup(lstr->str);
+    argIdx = 1; // Reused as argc
     if (lpath->argCount > 0) {
       linkedStr *arg = lpath->args;
-      argIdx = 1;
       while (arg != NULL) {
-        DPRINTF("argv[%d]: %s\n", argIdx, arg->str);
-        args[argIdx++] = arg->str;
+        args[argIdx++] = strdup(arg->str);
         arg = arg->next;
       }
     }
 
     // Try all defined paths
     while (lstr != NULL) {
-      DPRINTF("Trying path %s\n", lstr->str);
-      args[0] = lstr->str;
-
-      argIdx = handleConfigPath(lpath->argCount + 1, args);
-      DPRINTF("Failed to start: %d\n", argIdx);
-
+      DPRINTF("Trying path %s\n", args[0]);
+      res = handleConfigPath(argIdx, args);
+      DPRINTF("Failed to start: %d\n", res);
       lstr = lstr->next;
     }
 
+    for (int i =0; i < argIdx; i++)
+      free(args[i]);
     free(args);
+
     lpath = lpath->next;
   }
 
