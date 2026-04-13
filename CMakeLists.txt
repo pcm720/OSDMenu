@@ -17,11 +17,12 @@ string(STRIP "${CLEANED_LINKER_FLAGS}" CLEANED_LINKER_FLAGS)
 set(CMAKE_EXE_LINKER_FLAGS_INIT "${CLEANED_LINKER_FLAGS}")
 
 project(OSDMenu C ASM)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Find Python 3 for KELF signing
 find_program(PYTHON3 NAMES python3)
 if(NOT PYTHON3)
-    message(WARNING "Python 3 not found. KELF signing will not work. Install Python 3 or set PYTHON3 manually.")
+  message(WARNING "Python 3 not found. KELF signing will not work. Install Python 3 or set PYTHON3 manually.")
 endif()
 
 option(ENABLE_PRINTF "Enable printf debugging output (requires UDPTTY)" OFF)
@@ -30,8 +31,8 @@ set(UDPTTY_IP "192.168.1.6" CACHE STRING "UDPTTY IP address (used when ENABLE_PR
 
 # Build smap_udptty if printf is enabled (used by both launcher and mbr)
 if(ENABLE_PRINTF)
-    set(SMAP_UDPTTY_IRX_FILE "${CMAKE_SOURCE_DIR}/launcher/iop/smap_udptty/smap_udptty.irx")
-    add_custom_target(smap_udptty
+  set(SMAP_UDPTTY_IRX_FILE "${CMAKE_SOURCE_DIR}/launcher/iop/smap_udptty/smap_udptty.irx")
+  add_custom_target(smap_udptty
         COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_SOURCE_DIR}/launcher/iop/smap_udptty" ${CMAKE_MAKE_PROGRAM}
         BYPRODUCTS "${SMAP_UDPTTY_IRX_FILE}"
         COMMENT "Building smap_udptty IOP module using Makefile"
@@ -52,30 +53,30 @@ include(${CMAKE_SOURCE_DIR}/patcher/CMakeLists.txt)
 
 # Build release package
 if(RELEASE)
-    # Build installer only for release
-    add_subdirectory(utils/installer)
+  # Build installer only for release
+  add_subdirectory(utils/installer)
 
-    # Get binary directories for file paths
-    get_target_property(mbr_binary_dir osdmbr BINARY_DIR)
-    get_target_property(launcher_binary_dir launcher BINARY_DIR)
-    get_target_property(installer_binary_dir osdmbr-installer BINARY_DIR)
+  # Get binary directories for file paths
+  get_target_property(mbr_binary_dir osdmbr BINARY_DIR)
+  get_target_property(launcher_binary_dir launcher BINARY_DIR)
+  get_target_property(installer_binary_dir osdmbr-installer BINARY_DIR)
 
-    # Custom launcher, MBR and MBR installer paths
-    add_custom_command(
+  # Custom launcher, MBR and MBR installer paths
+  add_custom_command(
         OUTPUT "${CMAKE_BINARY_DIR}/release/osdmbr/payloads/osdmbr.elf"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/osdmbr/payloads"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:osdmbr>" "${CMAKE_BINARY_DIR}/release/osdmbr/payloads/osdmbr.elf"
         DEPENDS osdmbr
         COMMENT "Copying osdmbr.elf to release package"
     )
-    add_custom_command(
+  add_custom_command(
         OUTPUT "${CMAKE_BINARY_DIR}/release/launcher/launcher.elf"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/launcher"
         COMMAND ${CMAKE_COMMAND} -E copy "${launcher_binary_dir}/launcher.elf" "${CMAKE_BINARY_DIR}/release/launcher/launcher.elf"
         DEPENDS launcher
         COMMENT "Copying launcher.elf to release package"
     )
-    add_custom_command(
+  add_custom_command(
         OUTPUT "${CMAKE_BINARY_DIR}/release/osdmbr/osdmbr-installer.elf"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/osdmbr"
         COMMAND ${CMAKE_COMMAND} -E copy "${installer_binary_dir}/osdmbr-installer.elf" "${CMAKE_BINARY_DIR}/release/osdmbr/osdmbr-installer.elf"
@@ -83,7 +84,7 @@ if(RELEASE)
         COMMENT "Copying osdmbr-installer.elf to release package"
     )
 
-    add_custom_target(release ALL
+  add_custom_target(release ALL
         # Create release directory structure
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/release/patcher/kelfbinder"
