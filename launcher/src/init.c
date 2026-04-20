@@ -89,7 +89,7 @@ IRX_DEFINE(bdmfs_fatfs);
 IRX_DEFINE(poweroff);
 #endif
 
-#ifdef ENABLE_PRINTF
+#if defined(ENABLE_PRINTF) && !defined(USE_EESIO)
 #ifndef UDPBD
 IRX_DEFINE(smap_udptty);
 #endif
@@ -136,7 +136,7 @@ static ModuleListEntry moduleList[] = {
 #endif
 #ifdef UDPBD
     INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD | Device_Debug),
-#elif defined(ENABLE_PRINTF)
+#elif defined(ENABLE_PRINTF) && !defined(USE_EESIO)
     INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
 #endif
 #if defined(ATA) || defined(APA)
@@ -243,7 +243,7 @@ int initModules(DeviceType device) {
 }
 
 // Reboots the IOP and executes a path from ROM via LoadExecPS2
-void execROMPath(int argc, char *argv[]) {
+int execROMPath(int argc, char *argv[]) {
   sceSifInitRpc(0);
   while (!SifIopReset("", 0)) {
   };
@@ -251,6 +251,19 @@ void execROMPath(int argc, char *argv[]) {
   };
   sceSifExitRpc();
   SifLoadFileInit();
+
+  if (argv) {
+    int ret = 0;
+    if (argv[0][3] == '1') { // rom1:
+      ret = SifLoadModule("rom0:ADDDRV", 0, NULL);
+    } else if (argv[0][3] == '2') // rom2:
+      ret = SifLoadModule("rom0:ADDROM2", 0, NULL);
+
+    if (ret < 0) {
+      msg("ERROR: Failed to initialize module for %s: %d\n", argv[0], ret);
+      return ret;
+    }
+  }
 
   argc--;
   LoadExecPS2(argv[0], argc, &argv[1]);
@@ -275,7 +288,7 @@ void applyXPARAM(char *gameID) { SifExecModuleBuffer(xparam_irx, size_xparam_irx
 
 // Argument functions
 
-#ifdef ENABLE_PRINTF
+#if defined(ENABLE_PRINTF) && !defined(USE_EESIO)
 char *initSMAPArguments(uint32_t *argLength) {
   *argLength = sizeof(udpbd_ip);
   return strdup(udpbd_ip);

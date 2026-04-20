@@ -4,7 +4,7 @@
 #include "common.h"
 
 // Reboots the IOP and executes a path from ROM via LoadExecPS2
-void execROMPath(int argc, char *argv[]);
+int execROMPath(int argc, char *argv[]);
 
 // Shuts down the console. Needs initModules(Device_Basic) to be called first.
 void shutdownPS2();

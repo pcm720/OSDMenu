@@ -46,7 +46,7 @@ int handleBDM(DeviceType device, int argc, char *argv[]) {
         // Else, try next device
         break;
       }
-      // If the mountpoitnt is unavailable, delay and decrement the number of wait attempts
+      // If the mountpoint is unavailable, delay and decrement the number of wait attempts
       sleep(1);
       delayAttempts--;
     }

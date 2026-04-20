@@ -122,7 +122,7 @@ int launchPath(int argc, char *argv[]) {
     break;
 #endif
   case Device_ROM:
-    execROMPath(argc, argv);
+    ret = execROMPath(argc, argv);
     break;
   default:
     return -ENODEV;
