@@ -26,11 +26,13 @@ if(NOT PYTHON3)
 endif()
 
 option(ENABLE_PRINTF "Enable printf debugging output (requires UDPTTY)" OFF)
+# Print debug output to EE SIO
+option(USE_EESIO "Use EE SIO for debugging" ON)
 option(DEBUG "Disable stripping ELFs (keeps debug symbols)" OFF)
 set(UDPTTY_IP "192.168.1.6" CACHE STRING "UDPTTY IP address (used when ENABLE_PRINTF is ON)")
 
 # Build smap_udptty if printf is enabled (used by both launcher and mbr)
-if(ENABLE_PRINTF)
+if(ENABLE_PRINTF AND NOT USE_EESIO)
   set(SMAP_UDPTTY_IRX_FILE "${CMAKE_SOURCE_DIR}/launcher/iop/smap_udptty/smap_udptty.irx")
   add_custom_target(smap_udptty
         COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_SOURCE_DIR}/launcher/iop/smap_udptty" ${CMAKE_MAKE_PROGRAM}
