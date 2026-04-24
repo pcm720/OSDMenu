@@ -1,3 +1,4 @@
+#include "common.h"
 #include "cnf.h"
 #include "dprintf.h"
 #include "game_id.h"
@@ -108,6 +109,11 @@ int launchPath(int argc, char *argv[]) {
     ret = handleBDM(Device_UDPBD, argc, argv);
     break;
 #endif
+#ifdef UDPFS
+  case Device_UDPFS:
+    ret = handleUDPFS(argc, argv);
+    break;
+#endif
 #ifdef APA
   case Device_APA:
     if (strstr(argv[0], ":PATINFO"))
@@ -159,6 +165,10 @@ DeviceType guessDeviceType(char *path) {
   } else if (!strncmp("udpbd", path, 5)) {
     return Device_UDPBD;
 #endif
+#ifdef UDPFS
+  } else if (!strncmp("udpfs", path, 5)) {
+    return Device_UDPFS;
+#endif
 #ifdef APA
   } else if (!strncmp("hdd", path, 3)) {
     return Device_APA;
@@ -195,15 +205,18 @@ char *normalizePath(char *path, DeviceType type) {
   case Device_MemoryCard:
   case Device_MMCE:
   case Device_CDROM:
-    strncat(pathbuffer, path, PATH_MAX - 6);
-    break;
-  // BDM
-  case Device_USB:
+  case Device_UDPFS:
   case Device_ATA:
   case Device_MX4SIO:
   case Device_iLink:
   case Device_UDPBD:
-    char devNumber = path[4];
+    strncat(pathbuffer, path, PATH_MAX - 6);
+    break;
+  // BDM USB
+  case Device_USB:
+    char devNumber = path[3]; // usb
+    if (devNumber == 's')     // mass
+      devNumber = path[4];
     // Get relative ELF path from argv[0]
     path = strchr(path, ':');
     if (!path)
@@ -211,13 +224,13 @@ char *normalizePath(char *path, DeviceType type) {
 
     path++;
 
-    strcpy(pathbuffer, BDM_MOUNTPOINT);
-    if ((devNumber > '0') && (devNumber <= '9'))
+    strcpy(pathbuffer, USB_MOUNTPOINT);
+    if (((devNumber > '0') && (devNumber <= '9')) || (devNumber == '?'))
       pathbuffer[4] = devNumber;
 
     if (path[0] != '/')
       strcat(pathbuffer, "/");
-    strncat(pathbuffer, path, PATH_MAX - sizeof(BDM_MOUNTPOINT) - 1);
+    strncat(pathbuffer, path, PATH_MAX - sizeof(USB_MOUNTPOINT) - 1);
     break;
   default:
     return NULL;

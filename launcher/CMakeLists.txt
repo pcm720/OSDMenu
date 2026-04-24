@@ -10,6 +10,7 @@ option(LAUNCHER_APA "Support for loading ELFs from APA-formatted HDD" ON)
 option(LAUNCHER_CDROM "Support for loading PS1 and PS2 CDs/DVDs" ON)
 option(LAUNCHER_ILINK "Support for loading ELFs from iLink" OFF)
 option(LAUNCHER_UDPBD "Support for loading ELFs from UDPBD" OFF)
+option(LAUNCHER_UDPFS "Support for loading ELFs from UDPFS" OFF)
 
 # Base sources
 set(EE_SOURCES
@@ -141,13 +142,25 @@ if(LAUNCHER_UDPBD)
   list(APPEND EE_SOURCES src/handler_bdm.c)
   add_compile_definitions(UDPBD)
   set(BDM ON)
-  set(DEV9 ON)
+  set(SMAP ON)
 
-  # Build smap_udpbd
-  list(APPEND IRX_FILES smap_udpbd.irx)
-  add_custom_target(smap_udpbd
-        COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_CURRENT_SOURCE_DIR}/iop/smap_udpbd" ${CMAKE_MAKE_PROGRAM}
-        COMMENT "Building smap_udpbd"
+  list(APPEND IRX_FILES udpbd.irx)
+  add_custom_target(udpbd
+        COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_CURRENT_SOURCE_DIR}/iop/udpfs/udpbd" ${CMAKE_MAKE_PROGRAM}
+        COMMENT "Building udpbd"
+    )
+endif()
+
+# UDPFS support
+if(LAUNCHER_UDPFS)
+  list(APPEND EE_SOURCES src/handler_udpfs.c)
+  add_compile_definitions(UDPFS)
+  set(SMAP ON)
+
+  list(APPEND IRX_FILES udpfs_ioman.irx)
+  add_custom_target(udpfs_ioman
+        COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_CURRENT_SOURCE_DIR}/iop/udpfs/udpfs" ${CMAKE_MAKE_PROGRAM} UDPFS_IOMAN=1
+        COMMENT "Building udpfs_ioman"
     )
 endif()
 
@@ -157,6 +170,20 @@ if(LAUNCHER_CDROM)
   list(APPEND IRX_FILES xparam.irx)
   list(APPEND ELF_FILES ps1vn.elf)
   add_compile_definitions(CDROM)
+endif()
+
+if (SMAP)
+  set(DEV9 ON)
+  list(APPEND IRX_FILES smap.irx ministack.irx)
+
+  add_custom_target(smap
+        COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_CURRENT_SOURCE_DIR}/iop/udpfs/smap" ${CMAKE_MAKE_PROGRAM}
+        COMMENT "Building smap"
+    )
+  add_custom_target(ministack
+        COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_CURRENT_SOURCE_DIR}/iop/udpfs/ministack" ${CMAKE_MAKE_PROGRAM}
+        COMMENT "Building ministack"
+    )
 endif()
 
 # Driver dependencies
@@ -170,13 +197,9 @@ if(BDM)
 endif()
 
 if(ENABLE_PRINTF)
+  add_compile_definitions(ENABLE_PRINTF)
   if (USE_EESIO)
-    add_compile_definitions(ENABLE_PRINTF USE_EESIO)
-  else()
-    add_compile_definitions(ENABLE_PRINTF UDPTTYIP="${UDPTTY_IP}")
-    if (NOT LAUNCHER_UDPBD)
-      list(APPEND IRX_FILES smap_udptty.irx)
-    endif()
+    add_compile_definitions(USE_EESIO)
   endif()
 endif()
 
@@ -185,12 +208,18 @@ foreach(irx ${IRX_FILES})
   get_filename_component(irx_name ${irx} NAME_WE)
   string(REPLACE "-" "_" irx_name_clean ${irx_name})
 
-  if(irx_name STREQUAL "smap_udpbd")
-    # smap_udpbd is not a part of PS2SDK
-    irx_to_source("${CMAKE_CURRENT_SOURCE_DIR}/iop/smap_udpbd/smap_udpbd.irx" irx_source "smap_udpbd_irx" "")
-  elseif(irx_name STREQUAL "smap_udptty")
-    # smap_udptty is not a part of PS2SDK
-    irx_to_source("${CMAKE_CURRENT_SOURCE_DIR}/iop/smap_udptty/smap_udptty.irx" irx_source "smap_udptty_irx" "")
+  if(irx_name STREQUAL "udpbd")
+    # udpbd is not a part of PS2SDK
+    irx_to_source("${CMAKE_CURRENT_SOURCE_DIR}/iop/udpfs/udpbd/irx/udpbd.irx" irx_source "udpbd_irx" "")
+  elseif(irx_name STREQUAL "smap")
+    # smap is not a part of PS2SDK
+    irx_to_source("${CMAKE_CURRENT_SOURCE_DIR}/iop/udpfs/smap/irx/smap.irx" irx_source "smap_irx" "")
+  elseif(irx_name STREQUAL "ministack")
+    # ministack is not a part of PS2SDK
+    irx_to_source("${CMAKE_CURRENT_SOURCE_DIR}/iop/udpfs/ministack/irx/ministack.irx" irx_source "ministack_irx" "")
+  elseif(irx_name STREQUAL "udpfs_ioman")
+    # udpfs_ioman is not a part of PS2SDK
+    irx_to_source("${CMAKE_CURRENT_SOURCE_DIR}/iop/udpfs/udpfs/irx/udpfs_ioman.irx" irx_source "udpfs_ioman_irx" "")
   elseif(irx_name STREQUAL "mmceman")
     # mmceman is built from submodule
     irx_to_source("${MMCEMAN_IRX}" irx_source "mmceman_irx" "")
@@ -229,10 +258,15 @@ add_executable(launcher_unc ${EE_SOURCES} ${IRX_SOURCES} ${ELF_SOURCES} ${RES_SO
 
 # Add dependencies on IOP modules built via Makefiles
 if(LAUNCHER_UDPBD)
-  add_dependencies(launcher_unc smap_udpbd)
+  add_dependencies(launcher_unc udpbd)
 endif()
-if(ENABLE_PRINTF AND NOT USE_EESIO)
-  add_dependencies(launcher_unc smap_udptty)
+
+if(LAUNCHER_UDPFS)
+  add_dependencies(launcher_unc udpfs_ioman)
+endif()
+
+if(SMAP)
+  add_dependencies(launcher_unc smap ministack)
 endif()
 
 # Add dependencies on ELF targets

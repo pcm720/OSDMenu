@@ -60,9 +60,20 @@ IRX_DEFINE(IEEE1394_bd_mini);
 #endif
 
 #ifdef UDPBD
-#define DEV9
+#define SMAP
 #define BDM
-IRX_DEFINE(smap_udpbd);
+IRX_DEFINE(udpbd);
+#endif
+
+#ifdef UDPFS
+#define SMAP
+IRX_DEFINE(udpfs_ioman);
+#endif
+
+#ifdef SMAP
+#define DEV9
+IRX_DEFINE(smap);
+IRX_DEFINE(ministack);
 #endif
 
 #ifdef APA
@@ -87,13 +98,6 @@ IRX_DEFINE(bdmfs_fatfs);
 
 #ifdef OSDM
 IRX_DEFINE(poweroff);
-#endif
-
-#if defined(ENABLE_PRINTF) && !defined(USE_EESIO)
-#ifndef UDPBD
-IRX_DEFINE(smap_udptty);
-#endif
-const char udpbd_ip[] = "ip=" UDPTTYIP;
 #endif
 
 // Function used to initialize module arguments.
@@ -128,16 +132,21 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(mmceman, NULL, Device_MMCE),
 #endif
 #ifdef DEV9
-    INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_APA | Device_Debug),
+    INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_APA | Device_UDPFS),
+#endif
+#ifdef SMAP
+    INT_MODULE(smap, NULL, Device_UDPBD | Device_UDPFS),
+    INT_MODULE(ministack, &initSMAPArguments, Device_UDPBD | Device_UDPFS),
+#endif
+#ifdef UDPFS
+    INT_MODULE(udpfs_ioman, NULL, Device_UDPFS),
 #endif
 #ifdef BDM
     INT_MODULE(bdm, NULL, Device_BDM | Device_APA),
     INT_MODULE(bdmfs_fatfs, NULL, Device_BDM | Device_APA),
 #endif
 #ifdef UDPBD
-    INT_MODULE(smap_udpbd, &initSMAPArguments, Device_UDPBD | Device_Debug),
-#elif defined(ENABLE_PRINTF) && !defined(USE_EESIO)
-    INT_MODULE(smap_udptty, &initSMAPArguments, Device_Debug),
+    INT_MODULE(udpbd, NULL, Device_UDPBD),
 #endif
 #if defined(ATA) || defined(APA)
     INT_MODULE(ata_bd, NULL, Device_ATA | Device_APA),
@@ -187,17 +196,14 @@ int initModules(DeviceType device) {
   // Apply patches required to load modules from EE RAM
   sbv_patch_enable_lmb();
   sbv_patch_disable_prefix_check();
-  sbv_patch_fileio();
+  if (currentDevice == Device_None)
+    sbv_patch_fileio(); // Patch fileio only once
 
   // Load modules
   for (int i = 0; i < MODULE_COUNT; i++) {
     ret = 0;
     iopret = 0;
-#ifdef ENABLE_PRINTF
-    if (!(device & moduleList[i].type) && !(moduleList[i].type & (Device_Basic | Device_Debug)))
-#else
     if (!(device & moduleList[i].type) && (moduleList[i].type != Device_Basic))
-#endif
       continue;
 
     // If module has an arugment function, execute it
@@ -213,11 +219,6 @@ int initModules(DeviceType device) {
       ret = SifLoadModule(moduleList[i].path, moduleList[i].argLength, moduleList[i].argStr);
     else
       ret = SifExecModuleBuffer(moduleList[i].irx, *moduleList[i].size, moduleList[i].argLength, moduleList[i].argStr, &iopret);
-
-#ifdef ENABLE_PRINTF
-    if (!strcmp(moduleList[i].name, "smap_udptty"))
-      sleep(10);
-#endif
 
     // Delay to prevent ps2hdd module from hanging
     if ((device & Device_APA) && !strcmp(moduleList[i].name, "ata_bd"))
@@ -287,13 +288,7 @@ void applyXPARAM(char *gameID) { SifExecModuleBuffer(xparam_irx, size_xparam_irx
 #endif
 
 // Argument functions
-
-#if defined(ENABLE_PRINTF) && !defined(USE_EESIO)
-char *initSMAPArguments(uint32_t *argLength) {
-  *argLength = sizeof(udpbd_ip);
-  return strdup(udpbd_ip);
-}
-#elif defined(UDPBD)
+#if defined(UDPBD) || defined(UDPFS)
 // Builds IP address argument for SMAP module
 // using mc?:SYS-CONF/IPCONFIG.DAT from memory card
 char *initSMAPArguments(uint32_t *argLength) {

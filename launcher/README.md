@@ -6,13 +6,14 @@ Supports passing arbitrary arguments to an ELF and can also be used standalone a
 Supported paths are:
 - `mmce?:` — MMCE devices. Can be `mmce0`, `mmce1` or `mmce?`
 - `mc?:` — Memory Cards. Can be `mc0`, `mc1` or `mc?`
-- `mass:` and `usb:` — USB devices (supported via BDM)
-- `ata:` — internal exFAT-formatted HDD (supported via BDM)
+- `mass?:` and `usb?:` — USB devices (supported via BDM)
+- `ata?:` — internal exFAT-formatted HDD (supported via BDM)
 - `mx4sio:` — MX4SIO (supported via BDM)
 - `ilink:` — i.Link mass storage (supported via BDM, disabled in OSDMenu/HOSDMenu)
 - `udpbd:` — UDPBD (supported via BDM, disabled in OSDMenu/HOSDMenu)
-- `hdd0:` — internal APA-formatted HDD. Both `:pfs:` and `:PATINFO` paths are supported
-- `rom?:` — ROM binaries
+- `udpfs:` — UDPFS (disabled in OSDMenu/HOSDMenu)
+- `hdd?:` — internal APA-formatted HDD. Both `:pfs:` and `:PATINFO` paths are supported
+- `rom?:` — ROM binaries (`rom1:` and `rom2:` require ADDDRV and ADDROM2 modules in `rom0:`)
 - `cdrom` — CD/DVD discs
 - `osdm` — special path for OSDMenu patcher
 
@@ -23,7 +24,7 @@ Supports [OSDMenu-specific SYSTEM.CNF extensions](../mbr/README.md#systemcnf-ext
 
 The launcher supports the following global arguments:
 
-- `-gsm=<>` — runs the target ELF via the [embedded Neutrino GSM](../utils/egsm/).  
+- `-gsm=<options>` — runs the target ELF via the [embedded Neutrino GSM](../utils/egsm/).  
   See [this README](../utils/loader/README.md#egsm) for more information on the argument format.   
   Must always be the last argument. Does not apply to `rom?:` paths.
 - `-appid` — enables visual Game ID for applications. The ID is generated from the ELF name (up to 11 characters).
@@ -35,7 +36,7 @@ The launcher supports the following global arguments:
 
 ## Handlers
 
-### `udpbd` handler
+### `udpbd` and `udpfs` handlers
 
 Reads PS2 IP address from `mc?:/SYS-CONF/IPCONFIG.DAT`
 
@@ -92,4 +93,4 @@ arg=-testarg2
 
 `boot` — path relative to the config file  
 `path` — absolute paths  
-`arg` — global launcher arguments or arguments that will be passed to the ELF file 
+`arg` — global launcher arguments or arguments that will be passed to the ELF file

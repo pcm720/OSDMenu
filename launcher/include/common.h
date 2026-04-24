@@ -5,7 +5,7 @@
 #include <debug.h>
 #include <stdint.h>
 
-#define BDM_MOUNTPOINT "mass0:"
+#define USB_MOUNTPOINT "mass0:"
 #define PFS_MOUNTPOINT "pfs0:"
 #define DELAY_ATTEMPTS 20
 
@@ -27,7 +27,7 @@ typedef enum {
   Device_CDROM = (1 << 9),
   Device_ROM = (1 << 10),
   //
-  Device_Debug = (1 << 11),
+  Device_UDPFS = (1 << 11),
 } DeviceType;
 
 typedef enum {

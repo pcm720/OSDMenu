@@ -47,4 +47,9 @@ int handlePATINFO(int argc, char *argv[]);
 // Loads ELF from the .CNF file in CWD
 int handleQuickboot(char *cnfPath);
 
+// handler_udpfs.c
+//
+// Loads ELF from UDPFS device
+int handleUDPFS(int argc, char *argv[]);
+
 #endif
