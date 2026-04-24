@@ -21,6 +21,44 @@
 #include <string.h>
 #include <unistd.h>
 
+// Parses the path argv for global flags.
+// Returns the new argc
+int parseGlobalFlags(int argc, char *argv[], LoadOptions *opts) {
+  if (argc < 2)
+    return argc;
+
+  char *valuePtr = NULL;
+  for (int i = argc - 1; i > 0; i--) {
+    // Find the start of the value
+    valuePtr = strchr(argv[i], '=');
+    if (valuePtr) {
+      // Trim whitespace and terminate the value
+      do {
+        valuePtr++;
+      } while (isspace((int)*valuePtr));
+      valuePtr[strcspn(valuePtr, "\r\n")] = '\0';
+    }
+
+    if (valuePtr && !strncmp(argv[i], "-gsm=", 5)) {
+      // eGSM argument
+      opts->eGSM = strdup(valuePtr);
+      DPRINTF("Applying eGSM options: %s\n", opts->eGSM);
+      argc--;
+    } else if (valuePtr && !strncmp(argv[i], "-dev9", 5)) {
+      if (!strcmp(valuePtr, "NICHDD"))
+        opts->dev9ShutdownType = ShutdownType_None;
+      else if (!strcmp(valuePtr, "NIC"))
+        opts->dev9ShutdownType = ShutdownType_HDD;
+      DPRINTF("DEV9 Shutdown Type: %d\n", opts->dev9ShutdownType);
+      argc--;
+    } else
+      break; // Exit to preserve application arguments
+  }
+
+  return argc;
+}
+
+
 // Handles the PSBBN Opt00000000 argument.
 // It seems this argument is only used to pass the mode option to the sceCdAutoAdjustCtrl call.
 void handleOpt(char *arg) {
@@ -211,7 +249,7 @@ start:
   }
 
   LoadOptions opts = {0};
-  opts.argc = argc;
+  opts.argc = parseGlobalFlags(argc, argv, &opts);
   opts.argv = argv;
   return loadELF(&opts);
 }

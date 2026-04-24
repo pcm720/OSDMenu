@@ -33,6 +33,8 @@ set(IRX_FILES
     ps2hdd-osd.irx
     ps2fs.irx
     secrsif.irx
+    extflash.irx
+    xfromman.irx
 )
 
 # Resource files
@@ -54,14 +56,10 @@ set(EE_LIBS
     mc
 )
 
-# If set, define UDPTTY IP and add smap_udptty
 if(ENABLE_PRINTF)
+  add_compile_definitions(ENABLE_PRINTF)
   if (USE_EESIO)
-    add_compile_definitions(ENABLE_PRINTF USE_EESIO)
-  else()
-    add_compile_definitions(ENABLE_PRINTF UDPTTYIP="${UDPTTY_IP}")
-    # smap_udptty target is built by the launcher
-    list(APPEND IRX_FILES smap_udptty.irx)
+    add_compile_definitions(USE_EESIO)
   endif()
 endif()
 
@@ -71,12 +69,7 @@ foreach(irx ${IRX_FILES})
   get_filename_component(irx_name ${irx} NAME_WE)
   string(REPLACE "-" "_" irx_name_clean ${irx_name})
 
-  if(irx_name STREQUAL "smap_udptty")
-    # smap_udptty is not a part of PS2SDK
-    irx_to_source("${CMAKE_SOURCE_DIR}/launcher/iop/smap_udptty/smap_udptty.irx" irx_source "smap_udptty_irx" "")
-  else()
-    irx_to_source("$ENV{PS2SDK}/iop/irx/${irx}" irx_source "${irx_name_clean}_irx" "")
-  endif()
+  irx_to_source("$ENV{PS2SDK}/iop/irx/${irx}" irx_source "${irx_name_clean}_irx" "")
 
   list(APPEND IRX_SOURCES ${irx_source})
 endforeach()
@@ -98,11 +91,6 @@ endforeach()
 
 # Create executable
 add_executable(osdmbr ${EE_SOURCES} ${IRX_SOURCES} ${ELF_SOURCES} ${RES_SOURCES})
-
-# Build smap_udptty dependency
-if(ENABLE_PRINTF AND NOT USE_EESIO)
-  add_dependencies(osdmbr smap_udptty)
-endif()
 
 target_include_directories(osdmbr PRIVATE
     ../common/include

@@ -23,7 +23,7 @@ void fatalMsg(char *str);
 int startHOSDSYS(int argc, char *argv[]);
 
 // Attempts to launch PSBBN, HOSDMenu or HOSDSYS. Falls back to OSDSYS
-int execOSD(int argc, char *argv[]);
+void execOSD(int argc, char *argv[]);
 
 // Shuts down HDD, dev9 and exits to OSD with arguments
 void bootFailWithArgs(char *msg, int argc, char *argv[]);

@@ -70,6 +70,7 @@ To disable configuration flags just for one boot path while keeping them for oth
 - `hdd0:<partition name>:pfs:<path to ELF>` — will boot the ELF from the PFS partition
 - `mc?:<PATH>` — executes the ELF from the memory card. Use `?` to make the MBR try both memory cards
 - `ata:<PATH>`/`mass0:<PATH>` — executes the ELF from the exFAT partition.
+- `xfrom:<PATH>` — XFROM device
 - `cdrom` — boots the PS1/PS2 CD/DVD disc
 - `dvd` — starts the DVD Player.
 
@@ -89,3 +90,15 @@ OSDMenu MBR supports running disc-based PS2 games via the embedded [Neutrino GSM
 
 See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/loader/README.md#egsm) README for more information on the eGSM argument format.
 
+### ELF loader arguments
+
+MBR supports the following ELF loader arguments for every defined path except special paths (`$HOSDSYS`, `$PSBBN`):
+
+- `-gsm=<options>` — runs the target ELF via the [embedded Neutrino GSM](../utils/egsm/).  
+  See [this README](../utils/loader/README.md#egsm) for more information on the argument format.   
+  Must always be the last argument.
+- `-dev9=` — will pass DEV9 shutdown flags to the loader. Supported values are:
+  - `NICHDD` — will keep both the network adapter and HDD on
+  - `NIC` — will keep only the network adapter on
+
+These arguments must always come after any application-specific arguments.
