@@ -18,6 +18,7 @@ int loadConfig(void);
 void initConfig(void);
 
 char configPath[] = "pfs0:" HOSDMBR_CONF_PATH;
+char xfromConfigPath[] = "xfrom:" HOSDMBR_CONF_PATH;
 
 int loadConfig() {
   // Init default values
@@ -26,15 +27,21 @@ int loadConfig() {
   settings.osdLanguage = -1;
   settings.osdScreenType = -1;
 
-  // Mount the config partition
-  if (mountPFS(HOSD_CONF_PARTITION))
-    return -ENODEV;
-
   // Open the config file
-  FILE *file = fopen(configPath, "rb");
+  DPRINTF("Loading config from XFROM\n");
+  FILE *file = fopen(xfromConfigPath, "rb");
   if (!file) {
-    umountPFS();
-    return -ENOENT;
+    DPRINTF("Loading config from HDD\n");
+    // Mount the config partition
+    if (mountPFS(HOSD_CONF_PARTITION))
+      return -ENODEV;
+
+    // Open the config file
+    file = fopen(configPath, "rb");
+    if (!file) {
+      umountPFS();
+      return -ENOENT;
+    }
   }
 
   launchPath *currentPath = NULL;

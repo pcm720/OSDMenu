@@ -1,7 +1,7 @@
 # OSDMenu MBR
 
 A custom `__mbr` payload designed for HOSDMenu, HDD-OSD and PSBBN.  
-Supports running arbitrary paths from the HDD and memory cards.  
+Supports running arbitrary paths from the HDD, memory cards and XFROM (only on PSX).  
 
 ## Installation
 
@@ -10,7 +10,7 @@ Supports running arbitrary paths from the HDD and memory cards.
 
 ## Configuration
 
-The OSDMenu MBR can be configured with the `OSDMBR.CNF` file located at `hdd0:__sysconf/osdmenu/OSDMBR.CNF`.  
+The OSDMenu MBR can be configured with the `OSDMBR.CNF` file located at `hdd0:__sysconf/osdmenu/OSDMBR.CNF` or `xfrom:/osdmenu/OSDMBR.CNF`.  
 See the [OSDMBR.CNF](../examples/OSDMBR.CNF) example configuration file for hints on how to configure the MBR.
 
 ### Configuration options
@@ -70,7 +70,7 @@ To disable configuration flags just for one boot path while keeping them for oth
 - `hdd0:<partition name>:pfs:<path to ELF>` — will boot the ELF from the PFS partition
 - `mc?:<PATH>` — executes the ELF from the memory card. Use `?` to make the MBR try both memory cards
 - `ata:<PATH>`/`mass0:<PATH>` — executes the ELF from the exFAT partition.
-- `xfrom:<PATH>` — XFROM device
+- `xfrom:<PATH>` — executes the ELF from the XFROM device
 - `cdrom` — boots the PS1/PS2 CD/DVD disc
 - `dvd` — starts the DVD Player.
 
