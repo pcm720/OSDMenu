@@ -5,12 +5,12 @@ Supports running arbitrary paths from the HDD, memory cards and XFROM (only on P
 
 ## Installation
 
-1. Edit the [OSDMBR.CNF](../examples/OSDMBR.CNF) as you see fit and copy it to `hdd0:__sysconf/osdmenu/OSDMBR.CNF`
+1. Edit the [OSDMBR.CNF](../examples/OSDMBR.CNF) as you see fit and copy it to `hdd0:__sysconf:pfs:osdmenu/OSDMBR.CNF`
 2. Install the payload into the `__mbr` of your HDD using the [OSDMenu MBR Installer](../utils/installer/README.md) or any other way.
 
 ## Configuration
 
-The OSDMenu MBR can be configured with the `OSDMBR.CNF` file located at `hdd0:__sysconf/osdmenu/OSDMBR.CNF` or `xfrom:/osdmenu/OSDMBR.CNF`.  
+The OSDMenu MBR can be configured with the `OSDMBR.CNF` file located at `hdd0:__sysconf:pfs:osdmenu/OSDMBR.CNF` or `xfrom:/osdmenu/OSDMBR.CNF`.  
 See the [OSDMBR.CNF](../examples/OSDMBR.CNF) example configuration file for hints on how to configure the MBR.
 
 ### Configuration options
@@ -62,10 +62,10 @@ To disable configuration flags just for one boot path while keeping them for oth
 ### Supported paths
 
 - `$HOSDSYS` — executes HOSDMenu or HDD-OSD from the following locations:
-   - `hdd0:__system/osdmenu/hosdmenu.elf` — HOSDMenu
-   - `hdd0:__system/osd100/hosdsys.elf` — HDD-OSD
-   - `hdd0:__system/osd100/OSDSYS_A.XLF` — HDD-OSD (alternative path)
-- `$PSBBN` — executes PlayStation Broadband Navigator from `hdd0:__system/p2lboot/osdboot.elf`
+   - `hdd0:__system:pfs:osdmenu/hosdmenu.elf` — HOSDMenu
+   - `hdd0:__system:pfs:osd100/hosdsys.elf` — HDD-OSD
+   - `hdd0:__system:pfs:osd100/OSDSYS_A.XLF` — HDD-OSD (alternative path)
+- `$PSBBN` — executes PlayStation Broadband Navigator from `hdd0:__system:pfs:p2lboot/osdboot.elf`
 - `hdd0:<partition name>:PATINFO` — will boot using SYSTEM.CNF from the HDD partition attribute area
 - `hdd0:<partition name>:pfs:<path to ELF>` — will boot the ELF from the PFS partition
 - `mc?:<PATH>` — executes the ELF from the memory card. Use `?` to make the MBR try both memory cards
@@ -86,7 +86,7 @@ OSDMenu MBR supports additional SYSTEM.CNF arguments for `:PATINFO` paths.
 
 ### Embedded Neutrino GSM (eGSM)
 
-OSDMenu MBR supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/egsm/) by automatically loading and applying the per-title options from `hdd0:__sysconf/osdmenu/OSDGSM.CNF`.  
+OSDMenu MBR supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/egsm/) by automatically loading and applying the per-title options from `hdd0:__sysconf:pfs:osdmenu/OSDGSM.CNF`.  
 
 See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/loader/README.md#egsm) README for more information on the eGSM argument format.
 

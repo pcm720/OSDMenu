@@ -45,7 +45,7 @@ Patches not supported/limited on protokernel systems:
 - PAL video mode
 
 **OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` (if the config file is not embedded) and patches the `rom0:OSDSYS` binary.  
-**HOSDMenu** version reads settings from `hdd0:__sysconf/osdmenu/OSDMENU.CNF` and patches `hdd0:__system/osd100/OSDSYS_A.XLF` or `hdd0:__system/osd100/hosdsys.elf`
+**HOSDMenu** version reads settings from `hdd0:__sysconf:pfs:/osdmenu/OSDMENU.CNF` and patches `hdd0:__system:pfs:/osd100/OSDSYS_A.XLF` or `hdd0:__system:pfs:/osd100/hosdsys.elf`
 
 ### Configuration
 
@@ -59,7 +59,7 @@ The embedded Neutrino GSM (eGSM) can be configured using the `OSDGSM.CNF` file, 
 OSDMenu supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/loader/README.md#egsm).
 
 **OSDMenu** loads the per-title options from `mc?:/SYS-CONF/OSDGSM.CNF`.  
-**HOSDMenu** loads the per-title options from `hdd0:__sysconf/osdmenu/OSDGSM.CNF`, with fallback to `mc?:/SYS-CONF/OSDGSM.CNF` if the file on the HDD doesn't exist.
+**HOSDMenu** loads the per-title options from `hdd0:__sysconf:pfs:/osdmenu/OSDGSM.CNF`, with fallback to `mc?:/SYS-CONF/OSDGSM.CNF` if the file on the HDD doesn't exist.
 
 See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/loader/README.md#egsm) README for more information on the argument format.
 
