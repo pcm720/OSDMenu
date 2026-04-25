@@ -11,6 +11,7 @@ option(LAUNCHER_CDROM "Support for loading PS1 and PS2 CDs/DVDs" ON)
 option(LAUNCHER_ILINK "Support for loading ELFs from iLink" OFF)
 option(LAUNCHER_UDPBD "Support for loading ELFs from UDPBD" OFF)
 option(LAUNCHER_UDPFS "Support for loading ELFs from UDPFS" OFF)
+option(LAUNCHER_XFROM "Support for loading ELFs from XFROM" ON)
 
 # Base sources
 set(EE_SOURCES
@@ -170,6 +171,13 @@ if(LAUNCHER_CDROM)
   list(APPEND IRX_FILES xparam.irx)
   list(APPEND ELF_FILES ps1vn.elf)
   add_compile_definitions(CDROM)
+endif()
+
+# XFROM support
+if(LAUNCHER_XFROM)
+  set(DEV9 ON)
+  list(APPEND IRX_FILES extflash.irx xfromman.irx)
+  add_compile_definitions(XFROM)
 endif()
 
 if (SMAP)

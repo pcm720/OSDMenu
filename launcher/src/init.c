@@ -70,6 +70,12 @@ IRX_DEFINE(udpbd);
 IRX_DEFINE(udpfs_ioman);
 #endif
 
+#ifdef XFROM
+#define DEV9
+IRX_DEFINE(extflash);
+IRX_DEFINE(xfromman);
+#endif
+
 #ifdef SMAP
 #define DEV9
 IRX_DEFINE(smap);
@@ -133,6 +139,10 @@ static ModuleListEntry moduleList[] = {
 #endif
 #ifdef DEV9
     INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_APA | Device_UDPFS),
+#endif
+#ifdef XFROM
+    INT_MODULE(extflash, NULL, Device_XFROM),
+    INT_MODULE(xfromman, NULL, Device_XFROM),
 #endif
 #ifdef SMAP
     INT_MODULE(smap, NULL, Device_UDPBD | Device_UDPFS),

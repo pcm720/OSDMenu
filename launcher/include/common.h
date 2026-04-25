@@ -28,6 +28,8 @@ typedef enum {
   Device_ROM = (1 << 10),
   //
   Device_UDPFS = (1 << 11),
+  //
+  Device_XFROM = (1 << 12),
 } DeviceType;
 
 typedef enum {

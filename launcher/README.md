@@ -14,6 +14,7 @@ Supported paths are:
 - `udpfs:` — UDPFS (disabled in OSDMenu/HOSDMenu)
 - `hdd?:` — internal APA-formatted HDD. Both `:pfs:` and `:PATINFO` paths are supported
 - `rom?:` — ROM binaries (`rom1:` and `rom2:` require ADDDRV and ADDROM2 modules in `rom0:`)
+- `xfrom:` — XFROM (PSX)
 - `cdrom` — CD/DVD discs
 - `osdm` — special path for OSDMenu patcher
 

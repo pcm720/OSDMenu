@@ -72,6 +72,24 @@ int tryFile(char *filepath) {
   return 0;
 }
 
+// Launches ELF from any generic device without path normalization and delays
+int handleGenericPath(DeviceType device, int argc, char *argv[]) {
+  if ((argv[0] == 0) || (strlen(argv[0]) < 5)) {
+    msg("Generic: invalid argument\n");
+    return -EINVAL;
+  }
+
+  // Initialize device modules
+  int res = initModules(device);
+  if (res)
+    return res;
+
+  if (tryFile(argv[0]))
+    return -ENOENT;
+
+  return LoadELFFromFile(argc, argv);
+}
+
 // Attempts to launch ELF from device and path in path
 int launchPath(int argc, char *argv[]) {
   int ret = 0;
@@ -127,6 +145,11 @@ int launchPath(int argc, char *argv[]) {
     ret = handleCDROM(argc, argv);
     break;
 #endif
+#ifdef XFROM
+  case Device_XFROM:
+    ret = handleGenericPath(Device_XFROM, argc, argv);
+    break;
+#endif
   case Device_ROM:
     ret = execROMPath(argc, argv);
     break;
@@ -176,6 +199,10 @@ DeviceType guessDeviceType(char *path) {
 #ifdef CDROM
   } else if (!strncmp("cdrom", path, 5)) {
     return Device_CDROM;
+#endif
+#ifdef XFROM
+  } else if (!strncmp("xfrom", path, 5)) {
+    return Device_XFROM;
 #endif
   } else if (!strncmp("rom", path, 3))
     return Device_ROM;
