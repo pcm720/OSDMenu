@@ -44,6 +44,7 @@ Consult the KELFBinder documentation on how to use KELFBinder to install the sys
 You can install OSDMenu MBR into the `__mbr` partition of your HDD for faster HOSDMenu boot times and improved PSBBN support.  
 The release archive contains the following files:
   - `osdmbr/OSDMBR.XLF` — encrypted and signed OSDMenu MBR executable to be installed as `__mbr`
+  - `osdmbr/XOSDMBR.XLF` — encrypted and signed OSDMenu MBR executable to be installed as `xfrom:/BIEXEC-SYSTEM/xosdmain.elf` (PSX DESR-only)
   - `osdmbr/osdmbr-installer.elf` — installer that will automatically install the MBR, enable the MBR boot and copy the example configuration file
   - `osdmbr/payloads/` — encrypted binaries for advanced users
 

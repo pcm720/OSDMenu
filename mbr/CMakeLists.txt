@@ -154,5 +154,13 @@ if(DEFINED ENV{KELFSERVER_API_ADDRESS} AND DEFINED ENV{KELFSERVER_API_KEY})
             ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/scripts/kelfsign.py" mbr "${CMAKE_CURRENT_BINARY_DIR}/osdmbr.bin" "${CMAKE_CURRENT_BINARY_DIR}/OSDMBR.XLF"
         COMMENT "Creating KELF file"
     )
+  add_custom_command(
+          TARGET osdmbr POST_BUILD
+          COMMAND ${CMAKE_COMMAND} -E env
+              KELFSERVER_API_ADDRESS=$ENV{KELFSERVER_API_ADDRESS}
+              KELFSERVER_API_KEY=$ENV{KELFSERVER_API_KEY}
+              ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/scripts/kelfsign.py" xfrom "${CMAKE_CURRENT_BINARY_DIR}/osdmbr.bin" "${CMAKE_CURRENT_BINARY_DIR}/XOSDMBR.XLF"
+          COMMENT "Creating PSX KELF file"
+      )
   message(STATUS "MBR KELF build enabled")
 endif()

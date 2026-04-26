@@ -104,6 +104,7 @@ if(RELEASE)
 
         # Copy osdmbr files
         COMMAND ${CMAKE_COMMAND} -E copy "${mbr_binary_dir}/OSDMBR.XLF" "${CMAKE_BINARY_DIR}/release/osdmbr/OSDMBR.XLF"
+        COMMAND ${CMAKE_COMMAND} -E copy "${mbr_binary_dir}/XOSDMBR.XLF" "${CMAKE_BINARY_DIR}/release/osdmbr/XOSDMBR.XLF"
         COMMAND ${CMAKE_COMMAND} -E copy "${mbr_binary_dir}/osdmbr.bin" "${CMAKE_BINARY_DIR}/release/osdmbr/payloads/osdmbr.bin"
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/mbr/README.md" "${CMAKE_BINARY_DIR}/release/osdmbr/README.md"
 
