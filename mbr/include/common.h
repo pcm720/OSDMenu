@@ -22,7 +22,12 @@ void fatalMsg(char *str);
 // Will unmount the partition.
 int startHOSDSYS(int argc, char *argv[]);
 
-// Attempts to launch PSBBN, HOSDMenu or HOSDSYS. Falls back to OSDSYS
+// Starts PSX XOSD.
+// Assumes the system partition is already mounted.
+// Will unmount the partition on success.
+int startXOSD(int argc, char *argv[]);
+
+// Attempts to launch PSBBN, XOSD, HOSDMenu or HOSDSYS. Falls back to OSDSYS
 void execOSD(int argc, char *argv[]);
 
 // Shuts down HDD, dev9 and exits to OSD with arguments

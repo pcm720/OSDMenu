@@ -155,6 +155,7 @@ void handleDNAS(int argc, char *argv[]) {
 // Supports the following paths:
 // $HOSDSYS — will run HOSDMenu or HDD-OSD. Make sure argv has space for the additional -mbrboot argument.
 // $PSBBN — will run PSBBN without encrypting the arguments
+// $XOSD — will run xosdmain.elf
 // hdd0:<partition path>:PATINFO — will boot from HDD partition attribute area
 // hdd0:<partition path>:pfs:<PFS path> — ELF from the HDD
 // mc?: — ELF from the memory card
@@ -182,6 +183,14 @@ int handleConfigPath(int argc, char *argv[]) {
       return -ENODEV;
 
     return startHOSDSYS(argc, argv);
+  }
+
+  if (!strcmp(argv[0], "$XOSD")) {
+    // Start XOSD
+    if (mountPFS(SYSTEM_PARTITION))
+      return -ENODEV;
+
+    return startXOSD(argc, argv);
   }
 
   char *titleID = NULL;

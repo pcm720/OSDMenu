@@ -66,6 +66,9 @@
 #define HOSDSYS_PFS_PATH_1 "/osd100/hosdsys.elf"
 #define HOSDSYS_PFS_PATH_2 "/osd100/OSDSYS_A.XLF"
 
+// XOSD
+#define XOSD_PFS_PATH "/BIEXEC-SYSTEM/xosdmain.elf"
+
 // PSBBN launcher path
 #define OSDBOOT_PFS_PATH "/p2lboot/osdboot.elf"
 

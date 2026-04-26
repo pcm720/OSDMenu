@@ -33,8 +33,6 @@ set(IRX_FILES
     ps2hdd-osd.irx
     ps2fs.irx
     secrsif.irx
-    extflash.irx
-    xfromman.irx
 )
 
 # Resource files

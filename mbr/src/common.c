@@ -2,16 +2,19 @@
 #include "crypto.h"
 #include "defaults.h"
 #include "dprintf.h"
+#include "errno.h"
 #include "game_id.h"
 #include "hdd.h"
-#include "history.h"
+#include "libsecr.h"
 #include "loader.h"
 #include <debug.h>
 #include <fcntl.h>
 #include <kernel.h>
 #include <ps2sdkapi.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static int isScreenInited = 0;
 
@@ -161,7 +164,58 @@ int startHOSDSYS(int argc, char *argv[]) {
   return -ENOENT;
 }
 
-// Attempts to launch PSBBN, HOSDMenu or HOSDSYS. Falls back to OSDSYS
+// Starts XOSD.
+// Assumes the system partition is already mounted.
+// Will unmount the partition on success.
+#define XOSDMAIN_ELF_MEM_ADDR 0x1000000
+int startXOSD(int argc, char *argv[]) {
+  int fd = open("pfs0:" XOSD_PFS_PATH, O_RDONLY);
+  if (fd < 0)
+    return -ENOENT;
+
+  int size = lseek(fd, 0, SEEK_END);
+  if (size < 0) {
+    close(fd);
+    return -ENOENT;
+  }
+  lseek(fd, 0, SEEK_SET);
+
+  char *dst = (void*)XOSDMAIN_ELF_MEM_ADDR;
+  DPRINTF("XOSD: reading ELF into memory buffer of size %x @ 0x%x\n", size, dst);
+  int res = read(fd, dst, size);
+  close(fd);
+  if (res != size) {
+    DPRINTF("XOSD: unexpected size: read %d bytes out of %d\n", res, size);
+    return -ENOENT;
+  }
+
+  if (!(res = SecrInit())) {
+    DPRINTF("XOSD: failed to init libsecr: %d\n", res);
+    return res;
+  }
+  char *newdst = NULL;
+  if (!(newdst = SecrDiskBootFile(dst))) {
+    DPRINTF("XOSD: failed to decrypt\n");
+    return -EINVAL;
+  }
+  size = (size - (newdst - dst));
+  DPRINTF("XOSD: decrypted successfully @ 0x%x with size %x\n", newdst, size);
+  SecrDeinit();
+
+  umountPFS();
+
+  argv[0] = "rom0:HDDBOOT";
+  LoadOptions opts = {
+      .elfMem = newdst,
+      .elfSize = size,
+      .argc = argc,
+      .argv = argv,
+  };
+  loadELF(&opts);
+  return -ENOENT;
+}
+
+// Attempts to launch PSBBN, XOSD, HOSDMenu or HOSDSYS. Falls back to OSDSYS
 void execOSD(int argc, char *argv[]) {
   if (mountPFS(SYSTEM_PARTITION)) {
     ExecOSD(argc, argv);
@@ -195,6 +249,7 @@ void execOSD(int argc, char *argv[]) {
     return;
   }
 
+  startXOSD(nargc, nargv); // Will fail on non-PSX
   startHOSDSYS(nargc, nargv);
 
   // Else, exec OSDSYS

@@ -20,13 +20,13 @@
   extern unsigned char mod##_irx[] __attribute__((aligned(16)));                                                                                     \
   extern uint32_t size_##mod##_irx
 
-#define IRX_LOAD(mod, argLen, argStr, canFail)                                                                                                                \
+#define IRX_LOAD(mod, argLen, argStr, canFail)                                                                                                       \
   ret = SifExecModuleBuffer(mod##_irx, size_##mod##_irx, argLen, argStr, &iopret);                                                                   \
   if (!canFail) {                                                                                                                                    \
-  if (ret < 0)                                                                                                                                       \
-    return -1;                                                                                                                                       \
-  if (iopret == 1)                                                                                                                                   \
-    return -1;                                                                                                                                       \
+    if (ret < 0)                                                                                                                                     \
+      return -1;                                                                                                                                     \
+    if (iopret == 1)                                                                                                                                 \
+      return -1;                                                                                                                                     \
   }
 
 IRX_DEFINE(iomanX);
@@ -38,8 +38,6 @@ IRX_DEFINE(bdmfs_fatfs);
 IRX_DEFINE(ata_bd);
 IRX_DEFINE(ps2hdd_osd);
 IRX_DEFINE(ps2fs);
-IRX_DEFINE(extflash);
-IRX_DEFINE(xfromman);
 
 // ps2hdd module arguments. Up to 4 descriptors, 20 buffers
 static char ps2hddArguments[] = "-o"
@@ -83,14 +81,17 @@ int initModules(void) {
   IRX_LOAD(fileXio, 0, NULL, 0)
   IRX_LOAD(secrsif, 0, NULL, 0)
   IRX_LOAD(ps2dev9, 0, NULL, 0)
-  IRX_LOAD(extflash, 0, NULL, 1)
-  IRX_LOAD(xfromman, 0, NULL, 1)
+  // Load XFROM modules
+  SifLoadModule("rom0:PFLASH", 0, NULL);
+  SifLoadModule("rom0:PXFROMMAN", 0, NULL);
+  // BDM + APA modules
   IRX_LOAD(bdm, 0, NULL, 0)
   IRX_LOAD(bdmfs_fatfs, 0, NULL, 0)
   IRX_LOAD(ata_bd, 0, NULL, 0)
   sleep(1); // Delay to prevent ps2hdd module from hanging
   IRX_LOAD(ps2hdd_osd, sizeof(ps2hddArguments), ps2hddArguments, 0)
   IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments, 0)
+  // SIO2 device modules
   if ((ret = SifLoadModule("rom0:SIO2MAN", 0, NULL)) < 0)
     return ret;
   if ((ret = SifLoadModule("rom0:MCMAN", 0, NULL)) < 0)
@@ -99,6 +100,7 @@ int initModules(void) {
     return ret;
   if ((ret = SifLoadModule("rom0:PADMAN", 0, NULL)) < 0)
     return ret;
+  // rom1 module
   SifLoadModule("rom0:ADDDRV", 0, NULL); // Can fail on earlier systems
 
   // Wait for IOP to initialize device drivers
