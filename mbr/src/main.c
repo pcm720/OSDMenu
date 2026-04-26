@@ -10,7 +10,6 @@
 #include <libpad.h>
 #include <ps2sdkapi.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -98,7 +97,7 @@ int main(int argc, char *argv[]) {
     DPRINTF("Found an entry for trigger %d: argc is %d\n", lpath->trigger, lpath->argCount);
 
     // Assemble argv
-    char **args = malloc(sizeof(char**)*(lpath->argCount + 2)); // Reserve two more for argv[0] and possible HOSDMenu -mbrboot flag
+    char **args = malloc(sizeof(char **) * (lpath->argCount + 2)); // Reserve two more for argv[0] and possible HOSDMenu -mbrboot flag
     args[0] = strdup(lstr->str);
     argIdx = 1; // Reused as argc
     if (lpath->argCount > 0) {
@@ -117,7 +116,7 @@ int main(int argc, char *argv[]) {
       lstr = lstr->next;
     }
 
-    for (int i =0; i < argIdx; i++)
+    for (int i = 0; i < argIdx; i++)
       free(args[i]);
     free(args);
 
@@ -132,7 +131,8 @@ int main(int argc, char *argv[]) {
 
 // Initiailizes the pad library and returns the button pressed
 TriggerType readPad() {
-  static char padBuf[256] __attribute__((aligned(64)));
+  static char pad1Buf[256] __attribute__((aligned(64)));
+  static char pad2Buf[256] __attribute__((aligned(64)));
   TriggerType t = TRIGGER_TYPE_AUTO;
   struct padButtonStatus buttons;
   uint32_t paddata = 0;
@@ -143,8 +143,10 @@ TriggerType readPad() {
   }
 
   int retries = 10;
+  int res = 0;
   while (retries--) {
-    if (padPortOpen(0, 0, padBuf) != 0)
+    res = padPortOpen(0, 0, pad1Buf) | padPortOpen(1, 0, pad2Buf);
+    if (res != 0)
       goto next;
   }
   DPRINTF("Failed to open the pad port\n");
@@ -153,20 +155,19 @@ TriggerType readPad() {
 
 next:
   int padState = 0;
-  while ((padState = padGetState(0, 0))) {
+  while ((padState = padGetState(0, 0) | padGetState(1, 0))) {
     if ((padState == PAD_STATE_STABLE) || (padState == PAD_STATE_FINDCTP1))
       break;
     if (padState == PAD_STATE_DISCONN) {
       DPRINTF("Pad is disconnected\n");
-      padPortClose(0, 0);
-      padEnd();
+      goto exit;
       return t;
     }
   }
 
   retries = 10;
   while (retries--) {
-    if (padRead(0, 0, &buttons) != 0) {
+    if ((padRead(0, 0, &buttons) | padRead(1, 0, &buttons)) != 0) {
       paddata = (0xffff ^ buttons.btns) & ~paddata;
       if (paddata & PAD_START) {
         t = TRIGGER_TYPE_START;
@@ -190,7 +191,10 @@ next:
       }
     }
   }
+
+exit:
   padPortClose(0, 0);
+  padPortClose(1, 0);
   padEnd();
   return t;
 }
