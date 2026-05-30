@@ -33,6 +33,7 @@ list(APPEND EE_SOURCES
 
 # IRX files
 set(IRX_FILES
+    ppctty.irx
     iomanX.irx
     fileXio.irx
     sio2man.irx

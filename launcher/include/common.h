@@ -30,6 +30,7 @@ typedef enum {
   Device_UDPFS = (1 << 11),
   //
   Device_XFROM = (1 << 12),
+  Device_Optional = (1 << 13), // Marks that the module is not required for the launcher to work properly
 } DeviceType;
 
 typedef enum {

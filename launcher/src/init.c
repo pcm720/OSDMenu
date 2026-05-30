@@ -106,6 +106,10 @@ IRX_DEFINE(bdmfs_fatfs);
 IRX_DEFINE(poweroff);
 #endif
 
+#ifdef ENABLE_PRINTF
+IRX_DEFINE(ppctty);
+#endif
+
 // Function used to initialize module arguments.
 // Must set argLength and return non-null pointer to a argument string if successful.
 // Returned pointer must point to dynamically allocated memory
@@ -129,6 +133,9 @@ char *initPS2FSArguments(uint32_t *argLength);
 
 // List of modules to load
 static ModuleListEntry moduleList[] = {
+#ifdef ENABLE_PRINTF
+    INT_MODULE(ppctty, NULL, Device_Basic | Device_Optional),
+#endif
     INT_MODULE(iomanX, NULL, Device_Basic),
     INT_MODULE(fileXio, NULL, Device_Basic),
     INT_MODULE(sio2man, NULL, Device_Basic),
@@ -213,7 +220,7 @@ int initModules(DeviceType device) {
   for (int i = 0; i < MODULE_COUNT; i++) {
     ret = 0;
     iopret = 0;
-    if (!(device & moduleList[i].type) && (moduleList[i].type != Device_Basic))
+    if (!(device & moduleList[i].type) && !(moduleList[i].type & Device_Basic))
       continue;
 
     // If module has an arugment function, execute it
@@ -238,6 +245,8 @@ int initModules(DeviceType device) {
       ret = 0;
     if (iopret == 1)
       ret = iopret;
+    if (moduleList[i].type & Device_Optional)
+      ret = 0;
 
     // Clean up arguments
     if (moduleList[i].argStr != NULL)
