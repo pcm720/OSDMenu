@@ -63,8 +63,8 @@ typedef struct {
   OSDRegion region;                          // OSD Region
   char romver[15];                           // ROMVER string, initialized before patching
 #ifndef HOSD
-  char dkwdrvPath[50]; // Path to DKWDRV
-  uint8_t mcSlot;      // Memory card slot contaning currently loaded OSDMENU.CNF
+  char dkwdrvPath[50];         // Path to DKWDRV
+  uint8_t mcSlot;              // Memory card slot contaning currently loaded OSDMENU.CNF
 #endif
 } PatcherSettings;
 

@@ -29,4 +29,7 @@ uint8_t *findPatternWithMask(uint8_t *buf, uint32_t bufsize, uint8_t *bytes, uin
 // Searches for string in memory
 char *findString(const char *string, char *buf, uint32_t bufsize);
 
+// Patches and executes decompressed OSDSYS
+void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]);
+
 #endif

@@ -2,56 +2,69 @@
 #include "gs.h"
 #include "init.h"
 #include "launcher.h"
+#include "osdr.h"
 #include "patches_common.h"
 #include "patches_osdmenu.h"
+#include "psx.h"
 #include "settings.h"
 #include "splash.h"
 #include <kernel.h>
+#include <libcdvd-common.h>
 #include <osd_config.h>
 #include <ps2sdkapi.h>
+#include <sifrpc-common.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tamtypes.h>
 #define NEWLIB_PORT_AWARE
+#include "fileio.h"
 
 // Reduce binary size by disabling the unneeded functionality
 void _libcglue_init() {}
 void _libcglue_deinit() {}
 void _libcglue_args_parse(int argc, char **argv) {}
 DISABLE_PATCHED_FUNCTIONS();
-DISABLE_EXTRA_TIMERS_FUNCTIONS();
 PS2_DISABLE_AUTOSTART_PTHREAD();
 
 #ifndef HOSD
 // OSDMenu
-
-#include <fileio.h>
-
 int main(int argc, char *argv[]) {
   // Clear memory while avoiding the embedded data in the OSD memory region
   memset((void *)EXTRA_SECTION_END, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
-  // Relocate the embedded launcher to the memory unused by the OSD unpacker
-  memcpy((void *)EXTRA_RELOC_ADDR, (void *)launcher_elf, size_launcher_elf);
-  launcher_elf_addr = (void *)EXTRA_RELOC_ADDR;
 #ifdef EMBED_CNF
   // Relocate the CNF file to the memory unused by the OSD code
   memcpy((void *)(EXTRA_RELOC_ADDR + size_launcher_elf), (void *)embedded_cnf, size_embedded_cnf);
   embedded_cnf_addr = (void *)(EXTRA_RELOC_ADDR + size_launcher_elf);
-#else
-  // Load needed modules
-  initModules();
 #endif
 
-  // Set FMCB & OSDSYS default settings for configurable items
+  // Load needed modules
+  initModules();
+  // Set OSDMenu & OSDSYS default settings for configurable items
   initConfig();
 
-  // Determine from which mc slot FMCB was booted
+  // Guess MC slot from argv[0]
   if (!strncmp(argv[0], "mc0", 3))
     settings.mcSlot = 0;
   else if (!strncmp(argv[0], "mc1", 3))
     settings.mcSlot = 1;
 
-  // Read config file
-  loadConfig();
+  // Check for PSX
+  int isPSX = initPSX();
+  if (!isPSX) {
+    // If not, read config file
+    loadConfig();
+    // Try to load OSDR
+    if (loadOSDR()) {
+      Exit(-1);
+    }
+  }
+
+  // Unpack OSDSYS resource bundle
+  int unpackRes = unpackOSDR();
+  if (isPSX && unpackRes)
+    // Critical error for PSX
+    Exit(-1);
 
   GSVideoMode vmode = GS_MODE_NTSC; // Use NTSC by default
 
@@ -70,13 +83,25 @@ int main(int argc, char *argv[]) {
   gsClearScreen();
 #endif
 
+  if (!unpackRes) {
+    // Use OSDSYS from OSDR
+    patchExecuteOSDSYS((void *)0x200000, NULL, argc, argv);
+    Exit(-1);
+  }
+
+  // Execute OSDSYS from ROM
   int fd = fioOpen("rom0:MBROWS", FIO_O_RDONLY);
   if (fd >= 0) {
     // MBROWS exists only on protokernel systems
     fioClose(fd);
     launchProtokernelOSDSYS();
-  } else
+  } else {
+    // Relocate the embedded launcher to the memory unused by the OSD unpacker
+    memcpy((void *)EXTRA_RELOC_ADDR, (void *)launcher_elf, size_launcher_elf);
+    launcher_elf_addr = (void *)EXTRA_RELOC_ADDR;
+
     launchOSDSYS(argc, argv);
+  }
 
   Exit(-1);
 }
@@ -105,6 +130,7 @@ int main(int argc, char *argv[]) {
     argc--;
   } else {
     // Else, do the full init
+    initPSX();
     if (initModules())
       // Launch recovery payload on fail
       launchPayload(RECOVERY_PAYLOAD_PATH);
