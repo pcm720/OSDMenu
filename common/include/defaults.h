@@ -31,7 +31,7 @@
 #define HOSD_SYS_PARTITION "hdd0:__system"
 
 // Path relative to HOSD_SYS_PARTITION root
-#ifndef HOSDMBR_CONF_PATH
+#ifndef HOSD_PFS_PATH
 #define HOSD_PFS_PATH "/osdmenu/hosdmenu.elf"
 #endif
 
@@ -71,5 +71,16 @@
 
 // PSBBN launcher path
 #define OSDBOOT_PFS_PATH "/p2lboot/osdboot.elf"
+
+//
+// Self-contained OSDMenu paths
+//
+#ifndef OSDR_PATH
+#define OSDR_PATH "mc0:/SYS-CONF/osdsys.bin"
+#endif
+#ifndef XFROM_OSDR_PATH
+#define XFROM_OSDR_PATH "xfrom:/osdmenu/osdsys.bin"
+#endif
+
 
 #endif
