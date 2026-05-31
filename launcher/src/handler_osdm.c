@@ -63,10 +63,15 @@ int handleOSDM(int argc, char *argv[]) {
       // Build path to OSDMENU.CNF
       strcat(cnfPath, PFS_MOUNTPOINT);
       strcat(cnfPath, HOSD_CONF_PATH);
+    } else if (target == 2) {
+      // Handle OSDMenu XFROM config
+      if ((res = initModules(Device_Basic | Device_CDROM | Device_XFROM)))
+        return res;
+
+      strcpy(cnfPath, "xfrom:" HOSD_CONF_PATH);
     } else if (target < 2) {
-      // Handle OSDMenu launch
-      int res = initModules(Device_Basic | Device_CDROM);
-      if (res)
+      // Handle OSDMenu memory card config
+      if ((res = initModules(Device_Basic | Device_CDROM)))
         return res;
 
       // Build path to OSDMENU.CNF

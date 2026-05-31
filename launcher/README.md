@@ -63,7 +63,7 @@ For PS2 CDs/DVDs, the `cdrom` handler will look for the embedded Neutrino GSM se
 See [this](#osdgsmcnf) for more details.
 
 ### `osdm` handler
-When the launcher receives `osdm:d0:<idx>`, `osdm:d1:<idx>` or `osdm:d9:<idx>`  path as `argv[0]`, it reads `OSDMENU.CNF` from the respective memory card or the hard drive (`osdm:d9`),
+When the launcher receives `osdm:d0:<idx>`, `osdm:d1:<idx>`, `osdm:d2:<idx>`, or `osdm:d9:<idx>`  path as `argv[0]`, it reads `OSDMENU.CNF` from the respective memory card, XFROM (`osdm:d2`) or the hard drive (`osdm:d9`),
 searches for `path?_OSDSYS_ITEM_<idx>` and `arg_OSDSYS_ITEM_<idx>` entries and attempts to launch the ELF.
 
 Additionally, the launcher supports parsing the configuration from an arbitrary address when receiving `osdm:a<address>:<CNF file size>:<idx>` as `argv[0]`.
