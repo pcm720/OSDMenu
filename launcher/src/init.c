@@ -145,7 +145,7 @@ static ModuleListEntry moduleList[] = {
     INT_MODULE(mmceman, NULL, Device_MMCE),
 #endif
 #ifdef DEV9
-    INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_APA | Device_UDPFS),
+    INT_MODULE(ps2dev9, NULL, Device_ATA | Device_UDPBD | Device_APA | Device_UDPFS | Device_XFROM),
 #endif
 #ifdef XFROM
     INT_MODULE(extflash, NULL, Device_XFROM),
