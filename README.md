@@ -62,8 +62,9 @@ Other 2.20 ROMs might also work.
 2. Copy `osdsys.bin` to either `xfrom:/osdmenu/osdsys.bin` or `mc?:/SYS-CONF/osdsys.bin`
 3. Copy `OSDMENU.CNF` to either `xfrom:/osdmenu/OSDMENU.CNF` or `mc?:/SYS-CONF/osdsys.bin`
 
-Additionally, for PSX users (optional):
-4. Copy `osdmenu.elf` to `xfrom:/osdmenu/osdmenu.elf`
+Additionally, for PSX users (optional):  
+
+4. Copy `osdmenu.elf` to `xfrom:/osdmenu/osdmenu.elf`  
 5. Configure PSXBBL or OSDMenu MBR to boot `xfrom:/osdmenu/osdmenu.elf`
 
 Note: with the 2.20JD OSDSYS, booting OSDMenu while holding the L1 + L2 + R1 + R2 buttons will open up the console region change menu if `OSDSYS_Skip_Logo` and `OSDSYS_Inner_Browser` are disabled.

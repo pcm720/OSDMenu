@@ -57,11 +57,11 @@ The embedded Neutrino GSM (eGSM) can be configured using the `OSDGSM.CNF` file, 
 
 ### Running OSDMenu with external OSDSYS
 
-OSDMenu supports loading ROM 2.20 OSDSYS from external file.
+OSDMenu supports loading ROM 2.20 OSDSYS from external file.  
 Use the [`rom_to_osdr.py`](../utils/scripts/rom_to_osdr.py) Python script to repack OSDSYS resources into the OSDMenu OSD resource file (`osdsys.bin`)
 and place it into `xfrom:/osdmenu/osdsys.bin` or `mc?:/SYS-CONF/osdsys.bin`.
 
-See the main [README](../README.md) for more details.
+See the main [README](../README.md#osdmenu-on-psx-desr--osdmenu-with-external-osdsys) for more details.
 
 ## OSDGSM.CNF
 
