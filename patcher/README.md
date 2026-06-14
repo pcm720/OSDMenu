@@ -121,7 +121,7 @@ DKWDRV and custom payload paths are limited to 49 characters.
 29. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
 30. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
 32. `app_gameid` — if enabled, visual Game ID will be displayed for ELF applications launched from OSDMenu. The ID is generated from the ELF name (up to 11 characters).
-32. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF (exclsuive to OSDMenu). The path MUST be on the memory card, the default value is `mc?:/BOOT/DKWDRV.ELF`
+32. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF (exclsuive to OSDMenu). The path **must** be on the memory card or XFROM, the default value is `mc?:/BOOT/DKWDRV.ELF` or `xfrom:/osdmenu/DKWDRV.ELF` when running from XFROM
 
 To add a custom separator to the menu, add a `name_OSDSYS_ITEM_???` entry that starts with `$!`.  
 This will make the entry inactive, but still show it in the OSD without the `$!` prefix.
