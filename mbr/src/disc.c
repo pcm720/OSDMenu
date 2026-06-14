@@ -130,17 +130,25 @@ int startGameDisc() {
 void handlePS1Disc(char *titleID, char *titleVersion) {
   char **argv = malloc(2 * sizeof(char *));
   if (settings.flags & FLAG_USE_DKWDRV) {
-    // Mount the partition and make sure DKWDRV ELF exists
-    mountPFS(HOSD_DKWDRV_PATH);
-    char *elfPath = (strstr(HOSD_DKWDRV_PATH, ":pfs")) + 1;
-    int res = checkFile(elfPath);
-    umountPFS();
+    // Check XFROM for DKWDRV
+    int res = checkFile(XFROM_DKWDRV_PATH);
+    if (res >= 0) {
+      argv[0] = XFROM_DKWDRV_PATH;
+    } else {
+      // Check HDD for DKWDRV
+      // Mount the partition and make sure DKWDRV ELF exists
+      mountPFS(HOSD_FULL_DKWDRV_PATH);
+      char *elfPath = (strstr(HOSD_FULL_DKWDRV_PATH, ":pfs")) + 1;
+      res = checkFile(elfPath);
+      umountPFS();
+      if (res >= 0)
+        argv[0] = HOSD_FULL_DKWDRV_PATH;
+    }
     // If the ELF exists, boot the disc via DKWDRV
     if (res >= 0) {
       DPRINTF("Starting DKWDRV\n");
       free(titleID);
       free(titleVersion);
-      argv[0] = HOSD_DKWDRV_PATH;
       LoadOptions opts = {
           .argc = 1,
           .argv = argv,
