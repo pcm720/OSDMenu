@@ -16,7 +16,7 @@ int handleBDM(DeviceType device, int argc, char *argv[]);
 #define CDROM_PS1_VN 0xFF00
 
 int handleCDROM(int argc, char *argv[]);
-int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath, int skipInit);
+int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, int useDKWDRV, int skipInit);
 
 // handler_osdm.c
 //

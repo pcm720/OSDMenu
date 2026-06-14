@@ -108,11 +108,6 @@ int handleOSDM(int argc, char *argv[]) {
   int skipPS2LOGO = 0;
   int useDKWDRV = 0;
   int ps1drvFlags = 0;
-  char *dkwdrvPath = NULL;
-
-  if (target == 9)
-    // Set DKWDRV path for HOSDMenu
-    dkwdrvPath = HOSD_DKWDRV_PATH;
 
   // Temporary path and argument lists
   linkedStr *targetPaths = NULL;
@@ -178,7 +173,7 @@ int handleOSDM(int argc, char *argv[]) {
       continue;
     }
     if (!(target == 9) && !strncmp(lineBuffer, "path_DKWDRV_ELF", 15)) {
-      dkwdrvPath = strdup(valuePtr);
+      settings.dkwdrvPath = strdup(valuePtr);
       continue;
     }
     if (!strncmp(lineBuffer, "ps1drv_enable_fast", 18)) {
@@ -211,8 +206,8 @@ int handleOSDM(int argc, char *argv[]) {
     msg("OSDM: No paths found for entry %d\n", targetIdx);
     freeLinkedStr(targetPaths);
     freeLinkedStr(targetArgs);
-    if (dkwdrvPath)
-      free(dkwdrvPath);
+    if (settings.dkwdrvPath)
+      free(settings.dkwdrvPath);
     return -EINVAL;
   }
 
@@ -220,8 +215,8 @@ int handleOSDM(int argc, char *argv[]) {
   if (!strcmp(targetPaths->str, "OSDSYS")) {
     freeLinkedStr(targetPaths);
     freeLinkedStr(targetArgs);
-    if (dkwdrvPath)
-      free(dkwdrvPath);
+    if (settings.dkwdrvPath)
+      free(settings.dkwdrvPath);
 
     ExecOSD(0, NULL);
   }
@@ -230,8 +225,8 @@ int handleOSDM(int argc, char *argv[]) {
   if (!strcmp(targetPaths->str, "POWEROFF")) {
     freeLinkedStr(targetPaths);
     freeLinkedStr(targetArgs);
-    if (dkwdrvPath)
-      free(dkwdrvPath);
+    if (settings.dkwdrvPath)
+      free(settings.dkwdrvPath);
     shutdownPS2();
   }
 
@@ -267,9 +262,9 @@ int handleOSDM(int argc, char *argv[]) {
   // Handle 'cdrom' entry
   if (!strcmp(targetPaths->str, "cdrom")) {
     freeLinkedStr(targetPaths);
-    if (!useDKWDRV && dkwdrvPath) {
-      free(dkwdrvPath);
-      dkwdrvPath = NULL;
+    if (!useDKWDRV && settings.dkwdrvPath) {
+      free(settings.dkwdrvPath);
+      settings.dkwdrvPath = NULL;
     }
 
     if (targetArgc > 1)
@@ -277,11 +272,11 @@ int handleOSDM(int argc, char *argv[]) {
       return handleCDROM(targetArgc, targetArgv);
 
     // Else, respect options set in the config file
-    return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath, 1);
+    return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, 1, 1);
   }
 
-  if (dkwdrvPath)
-    free(dkwdrvPath);
+  if (settings.dkwdrvPath)
+    free(settings.dkwdrvPath);
 
   // Try every path
   tlstr = targetPaths;

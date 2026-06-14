@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 // PS1 Video Mode Negator variables
 extern uint8_t ps1vn_elf[];
@@ -65,13 +66,10 @@ int handleCDROM(int argc, char *argv[]) {
     }
   }
 
-  if (useDKWDRV && !dkwdrvPath)
-    dkwdrvPath = strdup(DKWDRV_PATH);
-
-  return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, dkwdrvPath, 0);
+  return startCDROM(displayGameID, skipPS2LOGO, ps1drvFlags, useDKWDRV, 0);
 }
 
-int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath, int skipInit) {
+int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, int useDKWDRV, int skipInit) {
   // Always reset IOP to a known state
   if (!skipInit) {
     int res = -1;
@@ -81,7 +79,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
 #endif
 #ifdef APA
     if (res && (settings.deviceHint == Device_APA))
-      res = initPFS(HOSD_CONF_PARTITION, Device_CDROM);
+      res = initModules(Device_APA | Device_CDROM);
 #endif
     if (res)
       res = initModules(Device_CDROM);
@@ -91,12 +89,53 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
     }
   }
 
+  if (!settings.dkwdrvPath) {
+    // If DKWDRV path is not set, check all supported paths.
+    // Check HDD first
+    int fd = -1;
+    if (settings.deviceHint == Device_APA) {
+      // Mount __system
+      deinitPFS();
+      mountPFS(HOSD_SYS_PARTITION);
+      fd = open(PFS_MOUNTPOINT HOSD_DKWDRV_PATH, O_RDONLY);
+      if (fd >= 0)
+        settings.dkwdrvPath = strdup(HOSD_FULL_DKWDRV_PATH);
+    }
+
+    if (fd < 0) {
+      // Check XFROM
+      fd = open(XFROM_DKWDRV_PATH, O_RDONLY);
+      if (fd >= 0)
+        settings.dkwdrvPath = strdup(XFROM_DKWDRV_PATH);
+      else {
+        // Check both memory card slots
+        settings.dkwdrvPath = strdup(DKWDRV_PATH);
+        settings.dkwdrvPath[2] = settings.mcHint + '0';
+        if ((fd = open(settings.dkwdrvPath, O_RDONLY) < 0)) {
+          settings.dkwdrvPath[2] = (settings.mcHint == 1) ? '0' : '1';
+          fd = open(settings.dkwdrvPath, O_RDONLY);
+        }
+      }
+    }
+    if (fd >= 0) {
+      DPRINTF("CDROM: found DKWDRV at %s\n", settings.dkwdrvPath);
+      close(fd);
+    } else
+      useDKWDRV = 0;
+  }
+
+  if (settings.deviceHint == Device_APA) {
+    // Unmount __system and mount __sysconf for eGSM
+    deinitPFS();
+    mountPFS(HOSD_CONF_PARTITION);
+  }
+
   if (!sceCdInit(SCECdINIT)) {
     msg("CDROM ERROR: Failed to initialize libcdvd\n");
     return -ENODEV;
   }
 
-  if (dkwdrvPath)
+  if (useDKWDRV)
     DPRINTF("CDROM: Using DKWDRV for PS1 discs\n");
   if (!displayGameID)
     DPRINTF("CDROM: Disabling visual game ID\n");
@@ -185,12 +224,12 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
 
   switch (discType) {
   case ExecType_PS1:
-    if (dkwdrvPath) {
+    if (useDKWDRV) {
       DPRINTF("Starting DKWDRV\n");
       free(bootPath);
       free(titleID);
       free(titleVersion);
-      char *argv[] = {dkwdrvPath};
+      char *argv[] = {settings.dkwdrvPath};
       launchPath(1, argv);
     } else {
       char *argv[] = {titleID, titleVersion};
