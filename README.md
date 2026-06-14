@@ -13,7 +13,7 @@ Patches for OSDSYS and HDD OSD (Browser 2.0) based on Free McBoot 1.8.
 ### OSDMenu as the System Update
 
 You can install OSDMenu as the System Update instead of FMCB or PS2BBL to get faster boot times.  
-To install OSDMenu as the System Update, you can use [KELFBinder](https://github.com/israpps/KELFBinder).  
+To install OSDMenu as the System Update, you can use the **latest development build** of [KELFBinder](https://github.com/israpps/KELFBinder).  
 
 The release archive contains ready-to-use KELFBinder install script and directory structure:
   - `patcher/kelfbinder/EXTINST.lua` — custom installation script that installs OSDMenu as the system update and copies wLaunchELF from KELFBinder release into `BOOT/BOOT.ELF`
@@ -38,6 +38,35 @@ Consult the KELFBinder documentation on how to use KELFBinder to install the sys
    Copy DKWDRV to `hdd0:__system:pfs:/osdmenu/DKWDRV.ELF` _(optional, set the DKWDRV flag in config)_ 
 3. Edit `hdd0:__sysconf:pfs:/osdmenu/OSDMENU.CNF` [as you see fit](patcher/README.md#osdmenucnf)
 4. Configure your bootloader to launch `hdd0:__system:pfs:/osdmenu/hosdmenu.elf` or launch it manually from anywhere  
+
+### OSDMenu on PSX DESR / OSDMenu with external OSDSYS
+
+You can configure OSDMenu to boot OSDSYS from 2.20 ROM stored on a memory card or XFROM.  
+When using PSXBBL or OSDMenu MBR on PSX installed as `xfrom:/BIEXEC-SYSTEM/xosdmain.elf`, this method allows OSDMenu to boot directly from the XFROM device, bypassing the need for a memory card entirely.
+
+#### Requirements
+- Python 3 installed on your machine
+- One of the following PS2 2.20 ROMs:
+  - `ps2-0220a-20060905.bin` (SHA-256: `e76d9c8f4019041fb17f41fff25d57d608c1a3f205c99bda9eb47402c43e8c93`)
+  - `ps2-0220jd-20060905.bin` (SHA-256: `79614b495dcae4e6867f6aff40466a331c6408e966ffac1f2af0bf4dee94b027`)
+
+Other 2.20 ROMs might also work.
+
+#### Setup process
+
+1. Run the `rom_to_osdr.py` Python script in `utils/scripts`:
+   ```bash
+   python3 rom_to_osdr.py ps2-0220jd-20060905.bin osdsys.bin
+   ```
+   Replace `ps2-0220jd-20060905.bin` with your ROM file name.
+2. Copy `osdsys.bin` to either `xfrom:/osdmenu/osdsys.bin` or `mc?:/SYS-CONF/osdsys.bin`
+3. Copy `OSDMENU.CNF` to either `xfrom:/osdmenu/OSDMENU.CNF` or `mc?:/SYS-CONF/osdsys.bin`
+
+Additionally, for PSX users (optional):
+4. Copy `osdmenu.elf` to `xfrom:/osdmenu/osdmenu.elf`
+5. Configure PSXBBL or OSDMenu MBR to boot `xfrom:/osdmenu/osdmenu.elf`
+
+Note: with the 2.20JD OSDSYS, booting OSDMenu while holding the L1 + L2 + R1 + R2 buttons will open up the console region change menu if `OSDSYS_Skip_Logo` and `OSDSYS_Inner_Browser` are disabled.
 
 ### OSDMenu MBR
 
@@ -111,7 +140,7 @@ See the launcher [README](launcher/README.md) for more details.
 ## Credits
 
 - Everyone involved in developing the original Free MC Boot and OSDSYS patches, especially Neme and jimmikaelkael
-- Julian Uy for mapping out significant parts of HDD OSD for [osdsys_re](https://github.com/ps2re/osdsys_re) project
+- Julian Uy for mapping out significant parts of HDD OSD for [osdsys_re](https://github.com/ps2re/osdsys_re) project and the [self-contained OSDSYS implementation](https://github.com/ps2repack/scosdsys)
 - [TonyHax International](https://github.com/alex-free/tonyhax) developers for PS1 game ID detection for generic executables.
 - Rick Gaiser/Maximus32 for creating [Neutrino](https://github.com/rickgaiser/neutrino), parts of which are used by OSDMenu 
 - Matías Israelson for creating [PS2BBL](https://github.com/israpps/PlayStation2-Basic-BootLoader)
@@ -120,3 +149,4 @@ See the launcher [README](launcher/README.md) for more details.
 - Alex Parrado for creating [SoftDev2 installer](https://github.com/parrado/SoftDev2)
 - [R3Z3N/Saildot4K](https://github.com/saildot4k) for testing OSDMenu with various modchips, Crystal Chip PBT script and suggestions on documentation and release packaging improvements
 - l_oliveira for advices on fixing PS2LOGO for master discs
+- GhostTownUS- for testing OSDMenu and OSDMenu MBR on PSX
