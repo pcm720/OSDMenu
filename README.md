@@ -42,7 +42,7 @@ Consult the KELFBinder documentation on how to use KELFBinder to install the sys
 ### OSDMenu on PSX DESR / OSDMenu with external OSDSYS
 
 You can configure OSDMenu to boot OSDSYS from 2.20 ROM stored on a memory card or XFROM.  
-When using PSXBBL or OSDMenu MBR on PSX installed as `xfrom:/BIEXEC-SYSTEM/xosdmain.elf`, this method allows OSDMenu to boot directly from the XFROM device, bypassing the need for a memory card entirely.
+On PSX, this method allows OSDMenu to boot directly from the XFROM device, bypassing the need for a memory card entirely.
 
 #### Requirements
 - Python 3 installed on your machine
@@ -67,7 +67,7 @@ Additionally, for PSX users (optional):
 4. Copy `osdmenu.elf` to `xfrom:/osdmenu/osdmenu.elf`  
 5. Configure PSXBBL or OSDMenu MBR to boot `xfrom:/osdmenu/osdmenu.elf`
 
-Note: with the 2.20JD OSDSYS, booting OSDMenu while holding the L1 + L2 + R1 + R2 buttons will open up the console region change menu if `OSDSYS_Skip_Logo` and `OSDSYS_Inner_Browser` are disabled.
+Note: with the 2.20JD OSDSYS, booting OSDMenu while holding the L1 + L2 + R1 + R2 buttons will open up the console region change menu if `OSDSYS_boot` is set to `opening`.
 
 ### OSDMenu MBR
 

@@ -249,6 +249,14 @@ int loadConfig(void) {
 
       continue;
     }
+    if (!strcmp(name, "OSDSYS_boot")) {
+      if (!strcmp(value, "opening"))
+        settings.boot = OSD_BOOT_OPENING;
+      else if (!strcmp(value, "clock"))
+        settings.boot = OSD_BOOT_CLOCK;
+      else if (!strcmp(value, "browser"))
+        settings.boot = OSD_BOOT_BROWSER;
+    }
     if (!strcmp(name, "OSDSYS_custom_menu")) {
       if (atoi(value))
         settings.patcherFlags |= FLAG_CUSTOM_MENU;
@@ -268,20 +276,6 @@ int loadConfig(void) {
         settings.patcherFlags |= FLAG_SKIP_DISC;
       else
         settings.patcherFlags &= ~(FLAG_SKIP_DISC);
-      continue;
-    }
-    if (!strcmp(name, "OSDSYS_Skip_Logo")) {
-      if (atoi(value))
-        settings.patcherFlags |= FLAG_SKIP_SCE_LOGO;
-      else
-        settings.patcherFlags &= ~(FLAG_SKIP_SCE_LOGO);
-      continue;
-    }
-    if (!strcmp(name, "OSDSYS_Inner_Browser")) {
-      if (atoi(value))
-        settings.patcherFlags |= FLAG_BOOT_BROWSER;
-      else
-        settings.patcherFlags &= ~(FLAG_BOOT_BROWSER);
       continue;
     }
     if (!strcmp(name, "cdrom_skip_ps2logo")) {
@@ -353,9 +347,10 @@ void initVariables() {
 
 // Loads defaults
 void initConfig(void) {
-  settings.patcherFlags = FLAG_CUSTOM_MENU | FLAG_SCROLL_MENU | FLAG_SKIP_SCE_LOGO | FLAG_SKIP_DISC;
+  settings.patcherFlags = FLAG_CUSTOM_MENU | FLAG_SCROLL_MENU | FLAG_SKIP_DISC;
   settings.videoMode = 0;
   settings.region = OSD_REGION_DEFAULT;
+  settings.boot = OSD_BOOT_DEFAULT;
   settings.menuX = 320;
   settings.menuY = 110;
   settings.enterX = 30;

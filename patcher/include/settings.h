@@ -18,17 +18,15 @@ extern uint8_t *embedded_cnf_addr;
 
 typedef enum {
   FLAG_SKIP_DISC = (1 << 0),      // Disable disc autolaunch
-  FLAG_SKIP_SCE_LOGO = (1 << 1),  // Skip SCE logo on boot
-  FLAG_BOOT_BROWSER = (1 << 2),   // Boot directly to MC browser
-  FLAG_SCROLL_MENU = (1 << 3),    // Enable infinite scrolling
-  FLAG_SKIP_PS2_LOGO = (1 << 4),  // Skip PS2LOGO when booting discs
-  FLAG_DISABLE_GAMEID = (1 << 5), // Disable PixelFX game ID
-  FLAG_USE_DKWDRV = (1 << 6),     // Use DKWDRV for PS1 discs
-  FLAG_PS1DRV_FAST = (1 << 7),    // If set, will force PS1DRV fast disc speed
-  FLAG_PS1DRV_SMOOTH = (1 << 8),  // If set, will force PS1DRV texture smoothing
-  FLAG_PS1DRV_USE_VN = (1 << 9),  // If set, run PS1DRV via the PS1DRV Video Mode Negator
-  FLAG_APP_GAMEID = (1 << 10),    // Used to show OSDMenu game ID on the splash screen
-  FLAG_CUSTOM_MENU = (1 << 11),   // Apply menu patches
+  FLAG_SCROLL_MENU = (1 << 1),    // Enable infinite scrolling
+  FLAG_SKIP_PS2_LOGO = (1 << 2),  // Skip PS2LOGO when booting discs
+  FLAG_DISABLE_GAMEID = (1 << 3), // Disable PixelFX game ID
+  FLAG_USE_DKWDRV = (1 << 4),     // Use DKWDRV for PS1 discs
+  FLAG_PS1DRV_FAST = (1 << 5),    // If set, will force PS1DRV fast disc speed
+  FLAG_PS1DRV_SMOOTH = (1 << 6),  // If set, will force PS1DRV texture smoothing
+  FLAG_PS1DRV_USE_VN = (1 << 7),  // If set, run PS1DRV via the PS1DRV Video Mode Negator
+  FLAG_APP_GAMEID = (1 << 8),     // Used to show OSDMenu game ID on the splash screen
+  FLAG_CUSTOM_MENU = (1 << 9),    // Apply menu patches
 } PatcherFlags;
 
 typedef enum {
@@ -37,6 +35,13 @@ typedef enum {
   OSD_REGION_USA,
   OSD_REGION_EUR,
 } OSDRegion;
+
+typedef enum {
+  OSD_BOOT_DEFAULT,
+  OSD_BOOT_OPENING,
+  OSD_BOOT_CLOCK,
+  OSD_BOOT_BROWSER,
+} OSDBoot;
 
 // Patcher settings struct, contains all configurable patch settings and menu items
 typedef struct {
@@ -61,10 +66,11 @@ typedef struct {
   char menuItemName[CUSTOM_ITEMS][NAME_LEN]; // Menu items text
   GSVideoMode videoMode;                     // OSDSYS Video mode (0 for auto)
   OSDRegion region;                          // OSD Region
+  OSDBoot boot;                              // OSD boot flags
   char romver[15];                           // ROMVER string, initialized before patching
 #ifndef HOSD
-  char dkwdrvPath[50];         // Path to DKWDRV
-  uint8_t mcSlot;              // Memory card slot contaning currently loaded OSDMENU.CNF
+  char dkwdrvPath[50]; // Path to DKWDRV
+  uint8_t mcSlot;      // Memory card slot contaning currently loaded OSDMENU.CNF
 #endif
 } PatcherSettings;
 

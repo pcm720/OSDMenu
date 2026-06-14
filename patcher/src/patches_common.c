@@ -97,23 +97,39 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   if (ptr)
     osdsysDeinit = (void *)ptr;
 
-  int n = 0;
+  int n = 1;
   char *args[10];
+
+  int hasBootArg = 0;
+  if (argc > 1)
+    // Passthrough the original arguments
+    for (int i = 1; i < argc; i++) {
+      args[n++] = strdup(argv[i]);
+      if (!strncmp(argv[i], "Boot", 4))
+        hasBootArg = 1;
+    }
+
+  if (!hasBootArg) {
+    // If no Boot* args were passed, apply user settings
+    switch (settings.boot) {
+    case OSD_BOOT_OPENING:
+      args[n++] = "BootOpening";
+      break;
+    case OSD_BOOT_CLOCK:
+      args[n++] = "BootClock";
+      break;
+    case OSD_BOOT_BROWSER:
+      args[n++] = "BootBrowser";
+      break;
+    case OSD_BOOT_DEFAULT:
+      break;
+    }
+  }
 #ifndef HOSD
   // OSDSYS
   // The path is intentionally not rom0:OSDSYS since some modchips seem to hook into ExecPS2
   // and break OSDMenu-patched OSDSYS when the argv[0] is 'rom0:OSDSYS'
-  args[n++] = "rom0:";
-
-  if (argc > 1)
-    // Passthrough the original arguments
-    for (int i = 1; i < argc; i++)
-      args[n++] = strdup(argv[i]);
-
-  if (settings.patcherFlags & FLAG_BOOT_BROWSER)
-    args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
-  else if (settings.patcherFlags & FLAG_SKIP_SCE_LOGO)
-    args[n++] = "BootClock"; // Pass BootClock to skip OSDSYS intro
+  args[0] = "rom0:";
 
   if (findString("SkipMc", (char *)epc, 0x100000)) // Pass SkipMc argument
     args[n++] = "SkipMc";                          // Skip mc?:/BREXEC-SYSTEM/osdxxx.elf update on v5 and above
@@ -126,20 +142,9 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
     args[n++] = "SkipHdd";                          // Skip HDDLOAD on v5 and above
   else
     patchSkipHDD((uint8_t *)epc); // Skip HDD patch for earlier ROMs
-
 #else
   // HDD OSD
-  args[n++] = "hdd0:__system:pfs:/osd100/hosdsys.elf";
-
-  if (argc > 1)
-    // Passthrough the original arguments
-    for (int i = 1; i < argc; i++)
-      args[n++] = strdup(argv[i]);
-
-  if (settings.patcherFlags & FLAG_BOOT_BROWSER)
-    args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
-  else if (settings.patcherFlags & FLAG_SKIP_SCE_LOGO)
-    args[n++] = "BootClock"; // Pass BootClock to skip OSDSYS intro
+  args[0] = "hdd0:__system:pfs:/osd100/hosdsys.elf";
 
   // Update IOP modules
   patchHOSDModules();
@@ -339,10 +344,23 @@ void launchProtokernelOSDSYS() {
   int n = 0;
   char *args[2];
   args[n++] = "rom0:OSDSYS";
-  if (settings.patcherFlags & FLAG_BOOT_BROWSER)
-    args[n++] = "BootBrowser"; // Pass BootBrowser to launch internal mc browser
-  else if ((settings.patcherFlags & FLAG_SKIP_DISC) || (settings.patcherFlags & FLAG_SKIP_SCE_LOGO))
+
+  if ((settings.patcherFlags & FLAG_SKIP_DISC))
     args[n++] = "BootClock"; // Pass BootClock to skip OSDSYS intro
+  else
+    switch (settings.boot) {
+    case OSD_BOOT_OPENING:
+      args[n++] = "BootOpening";
+      break;
+    case OSD_BOOT_CLOCK:
+      args[n++] = "BootClock";
+      break;
+    case OSD_BOOT_BROWSER:
+      args[n++] = "BootBrowser";
+      break;
+    case OSD_BOOT_DEFAULT:
+      break;
+    }
 
   // Execute OSDSYS
 #ifndef EMBED_CNF

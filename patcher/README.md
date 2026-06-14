@@ -87,42 +87,41 @@ DKWDRV and custom payload paths are limited to 49 characters.
 #### OSDSYS behavior modifiers
 1. `OSDSYS_video_mode` — force OSDSYS mode. Valid values are `AUTO`, `PAL`, `NTSC`, `480p` or `1080i`
 2. `OSDSYS_Skip_Disc` — enables/disables automatic CD/DVD launch
-3. `OSDSYS_Skip_Logo` — enables/disables SCE logo
-4. `OSDSYS_Inner_Browser` — enables/disables going to the Browser after launching OSDSYS
-5. `OSDSYS_region` — forces OSDSYS region if set. Valid values are `AUTO`, `jap`, `usa`, `eur`.  
+3. `OSDSYS_boot` — makes OSDSYS boot directly into the opening (save data towers), clock (main menu) or the Browser. Valid values are `opening`, `clock`, `browser`. The default value is unset.
+4. `OSDSYS_region` — forces OSDSYS region if set. Valid values are `AUTO`, `jap`, `usa`, `eur`.  
    This changes the video mode, button prompts and available languages (on some consoles)
 
 #### OSDSYS custom menu options
-6. `OSDSYS_custom_menu` — enables or disables custom menu
-7. `OSDSYS_scroll_menu` — enables or disables infinite scrolling in custom menu
-8. `OSDSYS_menu_x` — menu X center coordinate
-9. `OSDSYS_menu_y` — menu Y center coordinate
-10. `OSDSYS_enter_x` — `Enter` button X coordinate (at main OSDSYS menu)
-11. `OSDSYS_enter_y` — `Enter` button Y coordinate (at main OSDSYS menu)
-12. `OSDSYS_version_x` — `Version` button X coordinate (at main OSDSYS menu)
-13. `OSDSYS_version_y` — `Version` button Y coordinate (at main OSDSYS menu)
-14. `OSDSYS_cursor_max_velocity` — max cursor speed
-15. `OSDSYS_cursor_acceleration` — cursor speed
-16. `OSDSYS_left_cursor` — left cursor text
-17. `OSDSYS_right_cursor` — right cursor text
-18. `OSDSYS_menu_top_delimiter` — top menu delimiter text
-19. `OSDSYS_menu_bottom_delimiter` — bottom menu delimiter text
-20. `OSDSYS_num_displayed_items` — the number of menu items displayed
-21. `OSDSYS_selected_color` — color of selected menu entry
-22. `OSDSYS_unselected_color` — color of unselected menu entry
-23. `name_OSDSYS_ITEM_???` — menu entry name
-24. `path?_OSDSYS_ITEM_???` — path to ELF. Also supports the following special paths: `cdrom`, `OSDSYS`, `POWEROFF`
-25. `arg_OSDSYS_ITEM_???` — custom argument to be passed to the ELF. Each argument needs a separate entry.
+5. `OSDSYS_custom_menu` — enables or disables custom menu
+6. `OSDSYS_scroll_menu` — enables or disables infinite scrolling in custom menu
+7. `OSDSYS_menu_x` — menu X center coordinate
+8. `OSDSYS_menu_y` — menu Y center coordinate
+9. `OSDSYS_enter_x` — `Enter` button X coordinate (at main OSDSYS menu)
+10. `OSDSYS_enter_y` — `Enter` button Y coordinate (at main OSDSYS menu)
+11. `OSDSYS_version_x` — `Version` button X coordinate (at main OSDSYS menu)
+12. `OSDSYS_version_y` — `Version` button Y coordinate (at main OSDSYS menu)
+13. `OSDSYS_cursor_max_velocity` — max cursor speed
+14. `OSDSYS_cursor_acceleration` — cursor speed
+15. `OSDSYS_left_cursor` — left cursor text
+16. `OSDSYS_right_cursor` — right cursor text
+17. `OSDSYS_menu_top_delimiter` — top menu delimiter text
+18. `OSDSYS_menu_bottom_delimiter` — bottom menu delimiter text
+19. `OSDSYS_num_displayed_items` — the number of menu items displayed
+20. `OSDSYS_selected_color` — color of selected menu entry
+21. `OSDSYS_unselected_color` — color of unselected menu entry
+22. `name_OSDSYS_ITEM_???` — menu entry name
+23. `path?_OSDSYS_ITEM_???` — path to ELF. Also supports the following special paths: `cdrom`, `OSDSYS`, `POWEROFF`
+24. `arg_OSDSYS_ITEM_???` — custom argument to be passed to the ELF. Each argument needs a separate entry.
 
 #### Disc/application launch modifiers
-26. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`
-27. `cdrom_disable_gameid` — disables or enables visual Game ID
-28. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
-29. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
-30. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
-31. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
+25. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`
+26. `cdrom_disable_gameid` — disables or enables visual Game ID
+27. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
+28. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
+29. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
+30. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
 32. `app_gameid` — if enabled, visual Game ID will be displayed for ELF applications launched from OSDMenu. The ID is generated from the ELF name (up to 11 characters).
-33. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF (exclsuive to OSDMenu). The path MUST be on the memory card, the default value is `mc?:/BOOT/DKWDRV.ELF`
+32. `path_DKWDRV_ELF` — custom path to DKWDRV.ELF (exclsuive to OSDMenu). The path MUST be on the memory card, the default value is `mc?:/BOOT/DKWDRV.ELF`
 
 To add a custom separator to the menu, add a `name_OSDSYS_ITEM_???` entry that starts with `$!`.  
 This will make the entry inactive, but still show it in the OSD without the `$!` prefix.
