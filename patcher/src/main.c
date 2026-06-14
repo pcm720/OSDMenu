@@ -38,8 +38,17 @@ int main(int argc, char *argv[]) {
   embedded_cnf_addr = (void *)(EXTRA_RELOC_ADDR + size_launcher_elf);
 #endif
 
-  // Load needed modules
-  initModules();
+  int isPSX = 0;
+  if ((argc > 1) && !strcmp(argv[argc - 1], "-mbrboot")) {
+    // Assume MBR boot for PSX.
+    // OSDMenu MBR switches PSX into PS2 mode and pre-loads XFROM modules
+    shortInit();
+    argc--;
+    isPSX = 2;
+  } else
+    // Load needed modules
+    initModules();
+
   // Set OSDMenu & OSDSYS default settings for configurable items
   initConfig();
 
@@ -52,8 +61,9 @@ int main(int argc, char *argv[]) {
     settings.mcSlot = 2;
 
   // Check for PSX
-  int isPSX = initPSX();
-  if (!isPSX) {
+  if (!isPSX)
+    isPSX = initPSX();
+  if (isPSX != 1) {
     // If not, read config file
     loadConfig();
     // Try to load OSDR
@@ -85,7 +95,7 @@ int main(int argc, char *argv[]) {
   gsClearScreen();
 #endif
 
-// MBROWS exists only on protokernel systems
+  // MBROWS exists only on protokernel systems
   int isProtokernel = fioOpen("rom0:MBROWS", FIO_O_RDONLY);
   if (isProtokernel >= 0) {
     // Apply kernel patches for early kernels
