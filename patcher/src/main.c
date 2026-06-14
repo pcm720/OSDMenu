@@ -85,6 +85,16 @@ int main(int argc, char *argv[]) {
   gsClearScreen();
 #endif
 
+// MBROWS exists only on protokernel systems
+  int isProtokernel = fioOpen("rom0:MBROWS", FIO_O_RDONLY);
+  if (isProtokernel >= 0) {
+    // Apply kernel patches for early kernels
+    fioClose(isProtokernel);
+    InitOsd();
+    isProtokernel = 1;
+  } else
+    isProtokernel = 0;
+
   if (!unpackRes) {
     // Use OSDSYS from OSDR
     patchExecuteOSDSYS((void *)0x200000, NULL, argc, argv);
@@ -92,12 +102,9 @@ int main(int argc, char *argv[]) {
   }
 
   // Execute OSDSYS from ROM
-  int fd = fioOpen("rom0:MBROWS", FIO_O_RDONLY);
-  if (fd >= 0) {
-    // MBROWS exists only on protokernel systems
-    fioClose(fd);
+  if (isProtokernel)
     launchProtokernelOSDSYS();
-  } else {
+  else {
     // Relocate the embedded launcher to the memory unused by the OSD unpacker
     memcpy((void *)EXTRA_RELOC_ADDR, (void *)launcher_elf, size_launcher_elf);
     launcher_elf_addr = (void *)EXTRA_RELOC_ADDR;
