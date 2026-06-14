@@ -236,14 +236,18 @@ char *getOSDGSMArgument(const char *titleID) {
   if (!titleID)
     return NULL;
 
-  DPRINTF("Trying to load the eGSM config file\n");
-  if (mountPFS(HOSD_CONF_PARTITION))
-    return NULL;
-
-  FILE *gsmConf = fopen("pfs0:" HOSDGSM_CONF_PATH, "r");
+  DPRINTF("Loading eGSM config file from XFROM\n");
+  FILE *gsmConf = fopen("xfrom:" HOSDGSM_CONF_PATH, "r");
   if (!gsmConf) {
-    umountPFS();
-    return NULL;
+    DPRINTF("Loading eGSM config file from HDD\n");
+    if (mountPFS(HOSD_CONF_PARTITION))
+      return NULL;
+
+    gsmConf = fopen("pfs0:" HOSDGSM_CONF_PATH, "r");
+    if (!gsmConf) {
+      umountPFS();
+      return NULL;
+    }
   }
 
   char *defaultArg = NULL;

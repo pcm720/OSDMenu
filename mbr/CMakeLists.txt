@@ -20,6 +20,7 @@ list(APPEND EE_SOURCES
     ../common/src/loader.c
     ../common/src/patinfo.c
     ../common/src/dprintf.c
+    ../common/src/psxinit.c
 )
 
 # IRX files
@@ -33,6 +34,8 @@ set(IRX_FILES
     ps2hdd-osd.irx
     ps2fs.irx
     secrsif.irx
+    sio2man.irx
+    padman.irx
 )
 
 # Resource files
@@ -47,6 +50,7 @@ set(EE_LIBS
     dma
     libdebug.a
     fileXio
+    cdvd
     secr
     pad
     gskit

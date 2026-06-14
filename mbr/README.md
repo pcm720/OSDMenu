@@ -5,8 +5,15 @@ Supports running arbitrary paths from the HDD, memory cards and XFROM (only on P
 
 ## Installation
 
+### HDD
+
 1. Edit the [OSDMBR.CNF](../examples/OSDMBR.CNF) as you see fit and copy it to `hdd0:__sysconf:pfs:osdmenu/OSDMBR.CNF`
 2. Install the payload into the `__mbr` of your HDD using the [OSDMenu MBR Installer](../utils/installer/README.md) or any other way.
+
+### XFROM (PSX)
+
+1. Edit the [OSDMBR.CNF](../examples/OSDMBR.CNF) as you see fit and copy it to `xfrom:/osdmenu/OSDMBR.CNF`
+2. Replace the original `xfrom:/BIEXEC-SYSTEM/xosdmain.elf` with `XOSDMBR.ELF `
 
 ## Configuration
 
@@ -87,7 +94,7 @@ OSDMenu MBR supports additional SYSTEM.CNF arguments for `:PATINFO` paths.
 
 ### Embedded Neutrino GSM (eGSM)
 
-OSDMenu MBR supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/egsm/) by automatically loading and applying the per-title options from `hdd0:__sysconf:pfs:osdmenu/OSDGSM.CNF`.  
+OSDMenu MBR supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/egsm/) by automatically loading and applying the per-title options from `hdd0:__sysconf:pfs:osdmenu/OSDGSM.CNF` or `xfrom:/osdmenu/OSDGSM.CNF`.  
 
 See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/loader/README.md#egsm) README for more information on the eGSM argument format.
 
