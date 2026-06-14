@@ -48,6 +48,8 @@ int main(int argc, char *argv[]) {
     settings.mcSlot = 0;
   else if (!strncmp(argv[0], "mc1", 3))
     settings.mcSlot = 1;
+  else if (!strncmp(argv[0], "xfrom", 5))
+    settings.mcSlot = 2;
 
   // Check for PSX
   int isPSX = initPSX();

@@ -26,6 +26,7 @@ It patches the OSDSYS/HDD OSD binary and applies the following patches:
   This patch swaps around the "Enter" and "Options" menus and substitutes file properties submenu with the launcher.  
   To launch an app, just press "Enter" after selecting the app icon.  
   To copy or delete the save file, just use the triangle button.  
+- Load ROM 2.20 OSDSYS from memory card or XFROM
 
 **HOSDMenu**:
 - Launch SAS-compatible applications and ELF files from directories in the `hdd0:__common` partition or the memory card browser
@@ -44,7 +45,7 @@ Patches not supported/limited on protokernel systems:
 - Button prompt customization
 - PAL video mode
 
-**OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` (if the config file is not embedded) and patches the `rom0:OSDSYS` binary.  
+**OSDMenu** version of the patcher reads settings from `mc?:/SYS-CONF/OSDMENU.CNF` or `xfrom:/osdmenu/OSDMENU.CNF` (if the config file is not embedded) and patches the `rom0:OSDSYS` binary.  
 **HOSDMenu** version reads settings from `hdd0:__sysconf:pfs:/osdmenu/OSDMENU.CNF` and patches `hdd0:__system:pfs:/osd100/OSDSYS_A.XLF` or `hdd0:__system:pfs:/osd100/hosdsys.elf`
 
 ### Configuration
@@ -54,11 +55,19 @@ OSDMenu will run the embedded launcher and pass the menu index to it for every m
 
 The embedded Neutrino GSM (eGSM) can be configured using the `OSDGSM.CNF` file, see the additional information [here](#osdgsmcnf).  
 
+### Running OSDMenu with external OSDSYS
+
+OSDMenu supports loading ROM 2.20 OSDSYS from external file.
+Use the [`rom_to_osdr.py`](../utils/scripts/rom_to_osdr.py) Python script to repack OSDSYS resources into the OSDMenu OSD resource file (`osdsys.bin`)
+and place it into `xfrom:/osdmenu/osdsys.bin` or `mc?:/SYS-CONF/osdsys.bin`.
+
+See the main [README](../README.md) for more details.
+
 ## OSDGSM.CNF
 
 OSDMenu supports running disc-based PS2 games via the embedded [Neutrino GSM](../utils/loader/README.md#egsm).
 
-**OSDMenu** loads the per-title options from `mc?:/SYS-CONF/OSDGSM.CNF`.  
+**OSDMenu** loads the per-title options from `mc?:/SYS-CONF/OSDGSM.CNF` or `xfrom:/osdmenu/OSDGSM.CNF`.  
 **HOSDMenu** loads the per-title options from `hdd0:__sysconf:pfs:/osdmenu/OSDGSM.CNF`, with fallback to `mc?:/SYS-CONF/OSDGSM.CNF` if the file on the HDD doesn't exist.
 
 See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/loader/README.md#egsm) README for more information on the argument format.

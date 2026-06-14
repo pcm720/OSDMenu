@@ -94,6 +94,9 @@ void launchItem(char *item) {
     }
   }
 #ifndef HOSD
+if (settings.mcSlot == 2)
+  argv[argc++] = "-xosd";
+else
   argv[argc++] = "-osd";
 #else
   argv[argc++] = "-hosd";
