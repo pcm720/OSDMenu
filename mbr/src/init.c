@@ -60,6 +60,9 @@ char ps2fsArguments[] = "-m"
                         "\0"
                         "40";
 
+// Used to prevent patching FileIO twice
+static int reinit = 0;
+
 // Loads IOP modules
 int initModules(void) {
   sceSifInitRpc(0);
@@ -73,7 +76,10 @@ int initModules(void) {
   // Apply patches required to load executables from EE RAM
   sbv_patch_enable_lmb();
   sbv_patch_disable_prefix_check();
-  sbv_patch_fileio();
+  if (!reinit) {
+    sbv_patch_fileio();
+    reinit = 1;
+  }
 
   int ret = 0;
   int iopret = 0;

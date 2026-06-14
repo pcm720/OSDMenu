@@ -156,9 +156,11 @@ void handleDNAS(int argc, char *argv[]) {
 // $HOSDSYS — will run HOSDMenu or HDD-OSD. Make sure argv has space for the additional -mbrboot argument.
 // $PSBBN — will run PSBBN without encrypting the arguments
 // $XOSD — will run xosdmain.elf
-// hdd0:<partition path>:PATINFO — will boot from HDD partition attribute area
-// hdd0:<partition path>:pfs:<PFS path> — ELF from the HDD
+// hdd?:<partition path>:PATINFO — will boot from HDD partition attribute area
+// hdd?:<partition path>:pfs:<PFS path> — ELF from the HDD
+// ata?:<partition path>:pfs:<PFS path> — ELF from the exFAT
 // mc?: — ELF from the memory card
+// xfrom: — ELF from the XFROM
 // cdrom — CD/DVD
 // dvd — DVD Player
 int handleConfigPath(int argc, char *argv[]) {
@@ -222,7 +224,7 @@ int handleConfigPath(int argc, char *argv[]) {
     goto start;
   }
 
-  if (!strncmp(argv[0], "hdd0:", 5)) {
+  if (!strncmp(argv[0], "hdd", 3)) {
     // Run executable from the HDD
     if (strstr(argv[0], "PATINFO"))
       // Handle PATINFO
@@ -233,13 +235,6 @@ int handleConfigPath(int argc, char *argv[]) {
       return -ENOENT;
 
     goto start;
-  }
-
-  if (!strncmp(argv[0], "ata:", 4)) {
-    // Replace ata: with mass0:
-    char *nargv = malloc(strlen(argv[0]) + 7);
-    sprintf(nargv, "mass0%s", &argv[0][3]);
-    argv[0] = nargv;
   }
 
   // Fallback to just checking if file exists and attempting to execute it
@@ -280,13 +275,7 @@ int handleHDDApplication(int argc, char *argv[]) {
   if (strstr(lopts->argv[0], ":pfs:") && checkPFSPath(lopts->argv[0]))
     return -ENOENT;
 
-  if (!strncmp(lopts->argv[0], "ata:", 4)) {
-    // Replace ata: with mass0: and check if target ELF exists
-    char *nargv = malloc(strlen(lopts->argv[0]) + 7);
-    sprintf(nargv, "mass0%s", &lopts->argv[0][3]);
-    free(lopts->argv[0]);
-    lopts->argv[0] = nargv;
-
+  if (!strncmp(lopts->argv[0], "ata", 3)) {
     if (checkFile(lopts->argv[0]) < 0)
       return -ENOENT;
   }

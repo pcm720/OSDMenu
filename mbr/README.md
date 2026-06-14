@@ -80,13 +80,16 @@ To disable configuration flags just for one boot path while keeping them for oth
    - `hdd0:__system:pfs:osd100/OSDSYS_A.XLF` — HDD-OSD (alternative path)
 - `$PSBBN` — executes PlayStation Broadband Navigator from `hdd0:__system:pfs:p2lboot/osdboot.elf`
 - `$XOSD` — executes PSX `xosdmain.elf` from `hdd0:__system:pfs:/BIEXEC-SYSTEM/xosdmain.elf`
-- `hdd0:<partition name>:PATINFO` — will boot using SYSTEM.CNF from the HDD partition attribute area
-- `hdd0:<partition name>:pfs:<path to ELF>` — will boot the ELF from the PFS partition
+- `hdd?:<partition name>:PATINFO` — will boot using SYSTEM.CNF from the HDD partition attribute area on `hdd0` or `hdd1`
+- `hdd?:<partition name>:pfs:<path to ELF>` — will boot the ELF from the PFS partition on `hdd0` or `hdd1`
+- `ata?:<PATH>` — executes the ELF from the exFAT partition on `hdd0` or `hdd1`.
 - `mc?:<PATH>` — executes the ELF from the memory card. Use `?` to make the MBR try both memory cards
-- `ata:<PATH>`/`mass0:<PATH>` — executes the ELF from the exFAT partition.
 - `xfrom:<PATH>` — executes the ELF from the XFROM device
 - `cdrom` — boots the PS1/PS2 CD/DVD disc
 - `dvd` — starts the DVD Player.
+
+Note: Wildcard paths are **not** supported for `hdd` and `ata` paths.  
+Be sure to use either `hdd0`/`ata0` or `hdd1`/`ata1`.
 
 ### SYSTEM.CNF extensions for partition attribute area (`:PATINFO`) paths
 
