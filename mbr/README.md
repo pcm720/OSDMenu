@@ -22,30 +22,36 @@ See the [OSDMBR.CNF](../examples/OSDMBR.CNF) example configuration file for hint
 
 ### Configuration options
 
-Multiple paths and arguments are supported for every `boot_` key.
+Multiple paths and arguments are supported for every `boot_` entry.
 
-1. `boot_auto` — default boot paths
-2. `boot_auto_arg` — arguments for the default boot path
-3. `boot_start` — paths to run when the Start button is being pressed during boot
-4. `boot_start_arg` — arguments for the Start boot path
-5. `boot_triangle` — paths to run when the Triangle button is being pressed during boot
-6. `boot_triangle_arg` — arguments for the Triangle boot path
-7. `boot_circle` — paths to run when the Circle button is being pressed during boot
-8. `boot_circle_arg` — arguments for the Circle boot path
-9. `boot_cross` — paths to run when the Cross button is being pressed during boot
-10. `boot_cross_arg` — arguments for the Cross boot path
-11. `boot_square` — paths to run when the Square button is being pressed during boot
-12. `boot_square_arg` — arguments for the Square boot path
-13. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`
-14. `cdrom_disable_gameid` — disables or enables visual Game ID
-15. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
-16. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
-17. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
-18. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
-19. `prefer_bbn` — makes the MBR to fallback to PSBBN instead of HOSDMenu/HDD-OSD on errors
-20. `app_gameid` — if enabled, the visual Game ID will be displayed for all applications launched by the OSDMenu MBR
-21. `osd_screentype` — if set, will set the screen type by changing the flag in MechaCon NVRAM. Valid values are `4:3`, `16:9`, `full`
-22. `osd_language` — if set, will set the OSDSYS/HDD-OSD launguage by changing the language flag in MechaCon NVRAM.  
+1. `boot_<key>` — boot paths for the given gamepad key
+2. `boot_<key>_arg` — arguments for the given gamepad key  
+  Supported keys:
+    - `auto` — used when no key is pressed
+    - `start`
+    - `select`
+    - `triangle`
+    - `circle`
+    - `cross`
+    - `square`
+    - `up`
+    - `down`
+    - `left`
+    - `right`
+    - `l1`
+    - `l2`
+    - `r1`
+    - `r2`
+3. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`
+4. `cdrom_disable_gameid` — disables or enables visual Game ID
+5. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
+6. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
+7. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
+8. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator
+9. `prefer_bbn` — makes the MBR to fallback to PSBBN instead of HOSDMenu/HDD-OSD on errors
+10. `app_gameid` — if enabled, the visual Game ID will be displayed for all applications launched by the OSDMenu MBR
+11. `osd_screentype` — if set, will set the screen type by changing the flag in MechaCon NVRAM. Valid values are `4:3`, `16:9`, `full`
+12. `osd_language` — if set, will set the OSDSYS/HDD-OSD launguage by changing the language flag in MechaCon NVRAM.  
   Valid values:
     - `jap` — Japanese
     - `eng` — English
