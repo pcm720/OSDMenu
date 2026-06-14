@@ -79,14 +79,17 @@ To disable configuration flags just for one boot path while keeping them for oth
    - `hdd0:__system:pfs:osd100/hosdsys.elf` — HDD-OSD
    - `hdd0:__system:pfs:osd100/OSDSYS_A.XLF` — HDD-OSD (alternative path)
 - `$PSBBN` — executes PlayStation Broadband Navigator from `hdd0:__system:pfs:p2lboot/osdboot.elf`
-- `$XOSD` — executes PSX `xosdmain.elf` from `hdd0:__system:pfs:/BIEXEC-SYSTEM/xosdmain.elf`
 - `hdd?:<partition name>:PATINFO` — will boot using SYSTEM.CNF from the HDD partition attribute area on `hdd0` or `hdd1`
 - `hdd?:<partition name>:pfs:<path to ELF>` — will boot the ELF from the PFS partition on `hdd0` or `hdd1`
 - `ata?:<PATH>` — executes the ELF from the exFAT partition on `hdd0` or `hdd1`.
 - `mc?:<PATH>` — executes the ELF from the memory card. Use `?` to make the MBR try both memory cards
 - `xfrom:<PATH>` — executes the ELF from the XFROM device
 - `cdrom` — boots the PS1/PS2 CD/DVD disc
-- `dvd` — starts the DVD Player.
+- `dvd` — starts the DVD Player. 
+ 
+PSX-only paths:
+- `$XOSD` — executes PSX `xosdmain.elf` from `hdd0:__system:pfs:/BIEXEC-SYSTEM/xosdmain.elf`
+- `$OSDMENU` — executes OSDMenu from `xfrom:/osdmenu/osdmenu.elf`
 
 Note: Wildcard paths are **not** supported for `hdd` and `ata` paths.  
 Be sure to use either `hdd0`/`ata0` or `hdd1`/`ata1`.
@@ -109,11 +112,12 @@ See the sample configuraton [here](../examples/OSDGSM.CNF) and [this](../utils/l
 
 ### ELF loader arguments
 
-MBR supports the following ELF loader arguments for every defined path except special paths (`$HOSDSYS`, `$PSBBN`):
+MBR supports the following ELF loader arguments for every defined path except special paths (`$HOSDSYS`, `$PSBBN`, `$XOSD`, `cdrom`, `dvd`):
 
 - `-gsm=<options>` — runs the target ELF via the [embedded Neutrino GSM](../utils/egsm/).  
   See [this README](../utils/loader/README.md#egsm) for more information on the argument format.   
   Must always be the last argument.
+- `-psxmode` — will **not** switch PSX into PS2 mode before running the target ELF
 - `-dev9=` — will pass DEV9 shutdown flags to the loader. Supported values are:
   - `NICHDD` — will keep both the network adapter and HDD on
   - `NIC` — will keep only the network adapter on

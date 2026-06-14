@@ -6,6 +6,7 @@
 #include "handlers.h"
 #include "hdd.h"
 #include "init.h"
+#include <fcntl.h>
 #include <kernel.h>
 #include <libpad.h>
 #include <ps2sdkapi.h>
@@ -37,7 +38,7 @@ TriggerType readPad();
 int main(int argc, char *argv[]) {
   // Initialize IOP modules
   int res = 0;
-  if ((res = initModules())) {
+  if ((res = initModules(Target_Default))) {
     fatalMsg("Failed to initialize IOP modules");
     char *args[] = {"BootError"};
     ExecOSD(1, args);
@@ -187,6 +188,10 @@ ready:
           t = TRIGGER_TYPE_START;
           goto exit;
         }
+        if (paddata & PAD_SELECT) {
+          t = TRIGGER_TYPE_SELECT;
+          goto exit;
+        }
         if (paddata & PAD_TRIANGLE) {
           t = TRIGGER_TYPE_TRIANGLE;
           goto exit;
@@ -201,6 +206,38 @@ ready:
         }
         if (paddata & PAD_SQUARE) {
           t = TRIGGER_TYPE_SQUARE;
+          goto exit;
+        }
+        if (paddata & PAD_UP) {
+          t = TRIGGER_TYPE_UP;
+          goto exit;
+        }
+        if (paddata & PAD_DOWN) {
+          t = TRIGGER_TYPE_DOWN;
+          goto exit;
+        }
+        if (paddata & PAD_LEFT) {
+          t = TRIGGER_TYPE_LEFT;
+          goto exit;
+        }
+        if (paddata & PAD_RIGHT) {
+          t = TRIGGER_TYPE_RIGHT;
+          goto exit;
+        }
+        if (paddata & PAD_L1) {
+          t = TRIGGER_TYPE_L1;
+          goto exit;
+        }
+        if (paddata & PAD_L2) {
+          t = TRIGGER_TYPE_L2;
+          goto exit;
+        }
+        if (paddata & PAD_R1) {
+          t = TRIGGER_TYPE_R1;
+          goto exit;
+        }
+        if (paddata & PAD_R2) {
+          t = TRIGGER_TYPE_R2;
           goto exit;
         }
       }

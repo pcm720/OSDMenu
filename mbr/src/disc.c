@@ -6,7 +6,9 @@
 #include "game_id.h"
 #include "hdd.h"
 #include "history.h"
+#include "init.h"
 #include "loader.h"
+#include "psxinit.h"
 #include <ctype.h>
 #include <fcntl.h>
 #include <kernel.h>
@@ -33,6 +35,11 @@ void handlePS2Disc(char *bootPath, char *eGSMArgument);
 
 // Boots PS1/PS2 game CD/DVD
 int startGameDisc() {
+  if (settings.isPSX) {
+    switchPSX();
+    initModules(Target_Default);
+  }
+
   if (!sceCdInit(SCECdINIT)) {
     bootFail("CDROM ERROR: Failed to initialize libcdvd\n");
     return -ENODEV;
@@ -249,6 +256,11 @@ static inline int setDVDPlayerDir(void) {
 
 // Starts the DVD Player from a memory card or ROM
 int startDVDVideo() {
+  if (settings.isPSX) {
+    switchPSX();
+    initModules(Target_Default);
+  }
+
   char *argv[4];
 
   // Check memory cards for DVD Player update first

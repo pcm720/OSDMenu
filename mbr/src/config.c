@@ -24,8 +24,16 @@ int loadConfig() {
   // Init default values
   settings.flags = FLAG_ENABLE_GAMEID;
   settings.paths = NULL;
+  settings.isPSX = 0;
   settings.osdLanguage = -1;
   settings.osdScreenType = -1;
+
+  int fd = open("rom0:PSXVER", O_RDONLY);
+  if (fd >= 0) {
+    DPRINTF("Running on PSX\n");
+    close(fd);
+    settings.isPSX = 1;
+  }
 
   // Open the config file
   DPRINTF("Loading config from XFROM\n");

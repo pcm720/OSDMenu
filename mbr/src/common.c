@@ -1,3 +1,4 @@
+#include "common.h"
 #include "config.h"
 #include "crypto.h"
 #include "defaults.h"
@@ -5,8 +6,10 @@
 #include "errno.h"
 #include "game_id.h"
 #include "hdd.h"
+#include "init.h"
 #include "libsecr.h"
 #include "loader.h"
+#include "psxinit.h"
 #include <debug.h>
 #include <fcntl.h>
 #include <kernel.h>
@@ -59,9 +62,9 @@ int checkPFSPath(char *path) {
   if (pfsPath) {
     pfsPath = pfsPath + 5;
   } else {
-    char *pfsPath = strchr(path, '/');
-    if (pfsPath)
-      pfsPath = pfsPath;
+    char *pathSep = strchr(path, '/');
+    if (pathSep)
+      pfsPath = pathSep;
   }
   if (!pfsPath) {
     umountPFS();
@@ -116,6 +119,18 @@ void fatalMsg(char *msg) {
     asm("nop\nnop\nnop\nnop");
 }
 
+int executeELF(LoadOptions *opts) {
+  if (settings.isPSX) {
+    // Switch PSX into PS2 mode
+    switchPSX();
+    if (!strncmp(opts->argv[0], "xfrom", 4))
+      initModules(Target_XFROM);
+    else
+      initModules(Target_HDD);
+  }
+  return loadELF(opts);
+}
+
 // Starts HOSDMenu or HDD-OSD.
 // Assumes the system partition is already mounted and argv has space for the additional -mbrboot argument.
 // Will unmount the partition.
@@ -147,7 +162,7 @@ int startHOSDSYS(int argc, char *argv[]) {
           .argc = argc + 1,
           .argv = argv,
       };
-      loadELF(&opts);
+      executeELF(&opts);
       return -ENOENT;
     }
   }
@@ -160,7 +175,7 @@ int startHOSDSYS(int argc, char *argv[]) {
       .argc = argc,
       .argv = argv,
   };
-  loadELF(&opts);
+  executeELF(&opts);
   return -ENOENT;
 }
 
@@ -180,7 +195,7 @@ int startXOSD(int argc, char *argv[]) {
   }
   lseek(fd, 0, SEEK_SET);
 
-  char *dst = (void*)XOSDMAIN_ELF_MEM_ADDR;
+  char *dst = (void *)XOSDMAIN_ELF_MEM_ADDR;
   DPRINTF("XOSD: reading ELF into memory buffer of size %x @ 0x%x\n", size, dst);
   int res = read(fd, dst, size);
   close(fd);
@@ -215,6 +230,18 @@ int startXOSD(int argc, char *argv[]) {
   return -ENOENT;
 }
 
+// Starts OSDMenu from XFROM.
+// Assumes argv has space for the additional -mbrboot argument.
+int startOSDMenu(int argc, char *argv[]) {
+  argv[0] = "xfrom:/osdmenu/osdmenu.elf";
+  argv[argc] = strdup("-mbrboot");
+  LoadOptions opts = {
+      .argc = argc + 1,
+      .argv = argv,
+  };
+  return executeELF(&opts);
+}
+
 // Attempts to launch PSBBN, XOSD, HOSDMenu or HOSDSYS. Falls back to OSDSYS
 void execOSD(int argc, char *argv[]) {
   if (mountPFS(SYSTEM_PARTITION)) {
@@ -245,11 +272,13 @@ void execOSD(int argc, char *argv[]) {
         .argc = nargc,
         .argv = nargv,
     };
-    loadELF(&opts);
+    executeELF(&opts);
     return;
   }
 
-  startXOSD(nargc, nargv); // Will fail on non-PSX
+  if (settings.isPSX)
+    startXOSD(nargc, nargv); // Will fail on non-PSX
+
   startHOSDSYS(nargc, nargv);
 
   // Else, exec OSDSYS

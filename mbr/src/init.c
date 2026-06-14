@@ -1,3 +1,4 @@
+#include "init.h"
 #include <fcntl.h>
 #include <iopcontrol.h>
 #include <iopheap.h>
@@ -64,7 +65,7 @@ char ps2fsArguments[] = "-m"
 static int reinit = 0;
 
 // Loads IOP modules
-int initModules(void) {
+int initModules(TargetDevice device) {
   sceSifInitRpc(0);
   while (!SifIopReset("", 0)) {
   };
@@ -87,16 +88,20 @@ int initModules(void) {
   IRX_LOAD(fileXio, 0, NULL, 0)
   IRX_LOAD(secrsif, 0, NULL, 0)
   IRX_LOAD(ps2dev9, 0, NULL, 0)
-  // Load XFROM modules
-  SifLoadModule("rom0:PFLASH", 0, NULL);
-  SifLoadModule("rom0:PXFROMMAN", 0, NULL);
-  // BDM + APA modules
-  IRX_LOAD(bdm, 0, NULL, 0)
-  IRX_LOAD(bdmfs_fatfs, 0, NULL, 0)
-  IRX_LOAD(ata_bd, 0, NULL, 0)
-  sleep(1); // Delay to prevent ps2hdd module from hanging
-  IRX_LOAD(ps2hdd_osd, sizeof(ps2hddArguments), ps2hddArguments, 0)
-  IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments, 0)
+  if ((device == Target_Default) || (device == Target_XFROM)) {
+    // Load XFROM modules
+    SifLoadModule("rom0:PFLASH", 0, NULL);
+    SifLoadModule("rom0:PXFROMMAN", 0, NULL);
+  }
+  if ((device == Target_Default) || (device == Target_HDD)) {
+    // BDM + APA modules
+    IRX_LOAD(bdm, 0, NULL, 0)
+    IRX_LOAD(bdmfs_fatfs, 0, NULL, 0)
+    IRX_LOAD(ata_bd, 0, NULL, 0)
+    sleep(1); // Delay to prevent ps2hdd module from hanging
+    IRX_LOAD(ps2hdd_osd, sizeof(ps2hddArguments), ps2hddArguments, 0)
+    IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments, 0)
+  }
   // SIO2 device modules
   if ((ret = SifLoadModule("rom0:SIO2MAN", 0, NULL)) < 0)
     return ret;
@@ -109,17 +114,19 @@ int initModules(void) {
   // rom1 module
   SifLoadModule("rom0:ADDDRV", 0, NULL); // Can fail on earlier systems
 
-  // Wait for IOP to initialize device drivers
-  for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {
-    ret = open("hdd0:", O_RDONLY | O_DIRECTORY);
-    if (ret >= 0) {
-      close(ret);
-      return 0;
-    }
+  if ((device == Target_Default) || (device == Target_HDD)) {
+    // Wait for IOP to initialize device drivers
+    for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {
+      ret = open("hdd0:", O_RDONLY | O_DIRECTORY);
+      if (ret >= 0) {
+        close(ret);
+        return 0;
+      }
 
-    ret = 0x01000000;
-    while (ret--)
-      asm("nop\nnop\nnop\nnop");
+      ret = 0x01000000;
+      while (ret--)
+        asm("nop\nnop\nnop\nnop");
+    }
   }
   return -1;
 }

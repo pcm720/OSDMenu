@@ -47,6 +47,7 @@ typedef struct launchPath {
 typedef struct {
   uint8_t flags;     // Flags
   launchPath *paths; // Launch paths
+  uint8_t isPSX;
   int8_t osdLanguage;
   int8_t osdScreenType;
 } Settings;

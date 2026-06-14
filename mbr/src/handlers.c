@@ -51,13 +51,16 @@ int parseGlobalFlags(int argc, char *argv[], LoadOptions *opts) {
         opts->dev9ShutdownType = ShutdownType_HDD;
       DPRINTF("DEV9 Shutdown Type: %d\n", opts->dev9ShutdownType);
       argc--;
+    } else if (!strcmp(argv[argc - 1], "-psxmode")) {
+      settings.isPSX = 0;
+      argc--;
+      DPRINTF("Disabling switching PSX into PS2 mode\n");
     } else
       break; // Exit to preserve application arguments
   }
 
   return argc;
 }
-
 
 // Handles the PSBBN Opt00000000 argument.
 // It seems this argument is only used to pass the mode option to the sceCdAutoAdjustCtrl call.
@@ -148,7 +151,7 @@ void handleDNAS(int argc, char *argv[]) {
       .argc = argc,
       .argv = &argv[1],
   };
-  loadELF(&opts);
+  executeELF(&opts);
 }
 
 // Starts the executable pointed to by argv[0]
@@ -193,6 +196,11 @@ int handleConfigPath(int argc, char *argv[]) {
       return -ENODEV;
 
     return startXOSD(argc, argv);
+  }
+
+  if (!strcmp(argv[0], "$OSDMENU")) {
+    // Start OSDMenu from XFROM
+    return startOSDMenu(argc, argv);
   }
 
   char *titleID = NULL;
@@ -255,7 +263,7 @@ start:
   LoadOptions opts = {0};
   opts.argc = parseGlobalFlags(argc, argv, &opts);
   opts.argv = argv;
-  return loadELF(&opts);
+  return executeELF(&opts);
 }
 
 // Starts HDD application using data from the partition attribute area header
@@ -290,6 +298,12 @@ int handleHDDApplication(int argc, char *argv[]) {
   if (!strcmp(lopts->argv[lopts->argc - 1], "-patinfo"))
     lopts->argc--; // Remove launcher argument from target ELF args
 
+  if (!strcmp(lopts->argv[lopts->argc - 1], "-psxmode")) {
+    DPRINTF("Disabling switching PSX into PS2 mode\n");
+    settings.isPSX = 0;
+    lopts->argc--;
+  }
+
   if (!strncmp(lopts->argv[0], "cdrom", 5)) {
     char *gsmArg = getOSDGSMArgument(titleID);
     free(titleID);
@@ -298,5 +312,5 @@ int handleHDDApplication(int argc, char *argv[]) {
   }
   free(titleID);
 
-  return loadELF(lopts);
+  return executeELF(lopts);
 }
