@@ -60,7 +60,7 @@ Other 2.20 ROMs might also work.
    ```
    Replace `ps2-0220jd-20060905.bin` with your ROM file name.
 2. Copy `osdsys.bin` to either `xfrom:/osdmenu/osdsys.bin` or `mc?:/SYS-CONF/osdsys.bin`
-3. Copy `OSDMENU.CNF` to either `xfrom:/osdmenu/OSDMENU.CNF` or `mc?:/SYS-CONF/osdsys.bin`
+3. Copy `OSDMENU.CNF` to either `xfrom:/osdmenu/OSDMENU.CNF` or `mc?:/SYS-CONF/OSDMENU.CNF`
 
 Additionally, for PSX users (optional):  
 

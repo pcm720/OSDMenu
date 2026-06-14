@@ -13,7 +13,7 @@ Supports running arbitrary paths from the HDD, memory cards and XFROM (only on P
 ### XFROM (PSX)
 
 1. Edit the [OSDMBR.CNF](../examples/OSDMBR.CNF) as you see fit and copy it to `xfrom:/osdmenu/OSDMBR.CNF`
-2. Replace the original `xfrom:/BIEXEC-SYSTEM/xosdmain.elf` with `XOSDMBR.ELF `
+2. Replace the original `xfrom:/BIEXEC-SYSTEM/xosdmain.elf` with `XOSDMBR.XLF`
 
 ## Configuration
 
