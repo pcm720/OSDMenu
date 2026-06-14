@@ -74,12 +74,16 @@ int handleCDROM(int argc, char *argv[]) {
 int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrvPath, int skipInit) {
   // Always reset IOP to a known state
   if (!skipInit) {
-    int res = 0;
-#ifdef APA
-    if (settings.deviceHint == Device_APA)
-      res = initPFS(HOSD_CONF_PARTITION, Device_CDROM);
-    else
+    int res = -1;
+#ifdef XFROM
+    if (res && (settings.deviceHint == Device_XFROM))
+      res = initModules(Device_XFROM | Device_CDROM);
 #endif
+#ifdef APA
+    if (res && (settings.deviceHint == Device_APA))
+      res = initPFS(HOSD_CONF_PARTITION, Device_CDROM);
+#endif
+    if (res)
       res = initModules(Device_CDROM);
     if (res) {
       msg("CDROM ERROR: Failed to initialize modules\n");
@@ -244,8 +248,12 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, char *dkwdrv
 char *getOSDGSMArgument(char *titleID) {
   DPRINTF("CDROM: Trying to load the eGSM config file\n");
   FILE *gsmConf = NULL;
+#ifdef XFROM
+  if (!gsmConf && (settings.deviceHint == Device_XFROM))
+    gsmConf = fopen("xfrom:" HOSDGSM_CONF_PATH, "r");
+#endif
 #ifdef APA
-  if (settings.deviceHint == Device_APA)
+  if (!gsmConf && (settings.deviceHint == Device_APA))
     // Check the internal HDD for the eGSM config file
     gsmConf = fopen(PFS_MOUNTPOINT HOSDGSM_CONF_PATH, "r");
 #endif

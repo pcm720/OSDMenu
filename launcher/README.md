@@ -59,6 +59,7 @@ stored in the Primary Volume Descriptor, based on the table from [TonyHax Intern
 For PS2 CDs/DVDs, the `cdrom` handler will look for the embedded Neutrino GSM setting in
 - `mc?:/SYS-CONF/OSDGSM.CNF`
 - `hdd0:__sysconf/osdmenu/OSDGSM.CNF` (only when running from HDD)  
+- `xfrom:/osdmenu/OSDGSM.CNF` (only when running from XFROM)  
 
 See [this](#osdgsmcnf) for more details.
 

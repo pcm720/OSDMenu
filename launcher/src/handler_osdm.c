@@ -65,6 +65,7 @@ int handleOSDM(int argc, char *argv[]) {
       strcat(cnfPath, HOSD_CONF_PATH);
     } else if (target == 2) {
       // Handle OSDMenu XFROM config
+      settings.deviceHint = Device_XFROM;
       if ((res = initModules(Device_Basic | Device_CDROM | Device_XFROM)))
         return res;
 

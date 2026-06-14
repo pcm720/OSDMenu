@@ -365,12 +365,18 @@ int parseGlobalFlags(int argc, char *argv[]) {
       settings.gsmArgument = strdup(valuePtr);
       DPRINTF("Applying eGSM options: %s\n", settings.gsmArgument);
       argc--;
+    } else if (!strcmp(argv[i], "-xosd")) {
+      settings.flags |= FLAG_BOOT_OSD;
+      settings.deviceHint = Device_XFROM;
+      DPRINTF("Setting OSD flag and applying XFROM hint\n");
     } else if (!strcmp(argv[i], "-osd")) {
       settings.flags |= FLAG_BOOT_OSD;
+      settings.deviceHint = Device_MemoryCard;
       DPRINTF("Setting OSD flag\n");
       argc--;
     } else if (!strcmp(argv[i], "-hosd")) {
       settings.flags |= FLAG_BOOT_HOSD;
+      settings.deviceHint = Device_APA;
       DPRINTF("Setting HOSD flag\n");
       argc--;
     } else if (!strcmp(argv[i], "-appid")) {
