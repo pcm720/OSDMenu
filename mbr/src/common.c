@@ -114,9 +114,7 @@ void fatalMsg(char *msg) {
   scr_printf("\t\nFatal error:\n\t%s\n", msg);
 
   // Delay
-  int ret = 0x20000000;
-  while (ret--)
-    asm("nop\nnop\nnop\nnop");
+  sleep(10);
 }
 
 int executeELF(LoadOptions *opts) {
