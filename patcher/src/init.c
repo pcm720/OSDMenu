@@ -142,9 +142,7 @@ int initModules() {
       return 0;
     }
 
-    ret = 0x01000000;
-    while (ret--)
-      asm("nop\nnop\nnop\nnop");
+    sleep(1);
   }
   return -1;
 }
