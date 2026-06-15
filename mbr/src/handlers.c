@@ -190,17 +190,19 @@ int handleConfigPath(int argc, char *argv[]) {
     return startHOSDSYS(argc, argv);
   }
 
-  if (!strcmp(argv[0], "$XOSD")) {
-    // Start XOSD
-    if (mountPFS(SYSTEM_PARTITION))
-      return -ENODEV;
+  if (settings.isPSX) {
+    if (!strcmp(argv[0], "$XOSD")) {
+      // Start XOSD
+      if (mountPFS(SYSTEM_PARTITION))
+        return -ENODEV;
 
-    return startXOSD(argc, argv);
-  }
+      return startXOSD(argc, argv);
+    }
 
-  if (!strcmp(argv[0], "$OSDMENU")) {
-    // Start OSDMenu from XFROM
-    return startOSDMenu(argc, argv);
+    if (!strcmp(argv[0], "$OSDMENU")) {
+      // Start OSDMenu from XFROM
+      return startOSDMenu(argc, argv);
+    }
   }
 
   char *titleID = NULL;
