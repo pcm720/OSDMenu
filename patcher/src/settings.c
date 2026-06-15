@@ -76,7 +76,7 @@ nextLine:
 int loadConfig(void) {
   // Load CNF at a fixed address, guaranteed not to be used by OSDMenu
   // because the memory range is limited to <0x100000 in the linker script
-  char *cnfPos = (void *)0x1200000;
+  char *cnfPos = (void *)0x1000000;
 
 #ifdef EMBED_CNF
   // Embedded config file.
