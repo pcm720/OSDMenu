@@ -191,6 +191,14 @@ int main(int argc, char *argv[]) {
   if (haveOSD < 0)
     haveOSD = checkFile("pfs0:/osd100/OSDSYS_A.XLF");
 
+  // MBROWS exists only on protokernel systems
+  int fd = fileXioOpen("rom0:MBROWS", FIO_O_RDONLY);
+  if (fd >= 0) {
+    // Apply kernel patches for early kernels
+    fileXioClose(fd);
+    InitOsd();
+  }
+
   if (haveOSD >= 0)
     launchOSDSYS(argc, argv);
 
