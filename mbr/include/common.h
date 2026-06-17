@@ -33,7 +33,6 @@ int startHOSDSYS(int argc, char *argv[]);
 int startXOSD(int argc, char *argv[]);
 
 // Starts OSDMenu from XFROM.
-// Assumes argv has space for the additional -mbrboot argument.
 int startOSDMenu(int argc, char *argv[]);
 
 // Attempts to launch PSBBN, XOSD, HOSDMenu or HOSDSYS. Falls back to OSDSYS

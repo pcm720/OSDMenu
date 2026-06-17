@@ -220,7 +220,7 @@ int handleConfigPath(int argc, char *argv[]) {
 
     argv[0] = SYSTEM_PARTITION ":pfs:" OSDBOOT_PFS_PATH;
 
-    if (settings.flags & (FLAG_ENABLE_GAMEID | FLAG_APP_GAMEID))
+    if ((settings.flags & FLAG_ENABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID))
       titleID = strdup("SCPN_601.60");
 
     goto start;
@@ -252,7 +252,7 @@ int handleConfigPath(int argc, char *argv[]) {
     return -ENOENT;
 
 start:
-  if (settings.flags & (FLAG_ENABLE_GAMEID | FLAG_APP_GAMEID)) {
+  if ((settings.flags & FLAG_ENABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID)) {
     if (!titleID)
       titleID = generateTitleID(argv[0]);
     if (titleID) {

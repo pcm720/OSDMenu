@@ -102,7 +102,7 @@ int loadConfig() {
         btn = TRIGGER_TYPE_DOWN;
       else if (!strncmp(optPtr, "left", 4))
         btn = TRIGGER_TYPE_LEFT;
-      else if (!strncmp(optPtr, "right", 4))
+      else if (!strncmp(optPtr, "right", 5))
         btn = TRIGGER_TYPE_RIGHT;
       else if (!strncmp(optPtr, "l1", 2))
         btn = TRIGGER_TYPE_L1;

@@ -44,7 +44,8 @@ Multiple paths and arguments are supported for every `boot_` entry.
     - `r2`
 3. `cdrom_skip_ps2logo` — enables or disables running discs via `rom0:PS2LOGO`
 4. `cdrom_disable_gameid` — disables or enables visual Game ID
-5. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs
+5. `cdrom_use_dkwdrv` — enables or disables launching DKWDRV for PS1 discs  
+   OSDMenu MBR will look for DKWDRV at `hdd0:__system:pfs:/osdmenu/DKWDRV.ELF` and `xfrom:/osdmenu/DKWDRV.ELF`
 6. `ps1drv_enable_fast` — will enable fast disc speed for PS1 discs when not using DKWDRV
 7. `ps1drv_enable_smooth` — will enable texture smoothing for PS1 discs when not using DKWDRV
 8. `ps1drv_use_ps1vn` — will run PS1DRV using the PS1DRV Video Mode Negator

@@ -14,7 +14,9 @@ int initModules();
 // Resets IOP before loading OSDSYS
 void resetModules();
 
+#ifdef HOSD
 // Inits SIF RPC and fileXio without rebooting the IOP. Assumes all modules are already loaded
 void shortInit();
+#endif
 
 #endif

@@ -38,17 +38,8 @@ int main(int argc, char *argv[]) {
   embedded_cnf_addr = (void *)(EXTRA_RELOC_ADDR + size_launcher_elf);
 #endif
 
-  int isPSX = 0;
-  if ((argc > 1) && !strcmp(argv[argc - 1], "-mbrboot")) {
-    // Assume MBR boot for PSX.
-    // OSDMenu MBR switches PSX into PS2 mode and pre-loads XFROM modules
-    shortInit();
-    argc--;
-    isPSX = 2;
-  } else
-    // Load needed modules
-    initModules();
-
+  // Load needed modules
+  initModules();
   // Set OSDMenu & OSDSYS default settings for configurable items
   initConfig();
 
@@ -61,15 +52,13 @@ int main(int argc, char *argv[]) {
     settings.mcSlot = 2;
 
   // Check for PSX
-  if (!isPSX)
-    isPSX = initPSX();
-  if (isPSX != 1) {
+  int isPSX = initPSX();
+  if (!isPSX) {
     // If not, read config file
     loadConfig();
     // Try to load OSDR
-    if (loadOSDR()) {
+    if (loadOSDR())
       Exit(-1);
-    }
   }
 
   // Unpack OSDSYS resource bundle
@@ -96,14 +85,15 @@ int main(int argc, char *argv[]) {
 #endif
 
   // MBROWS exists only on protokernel systems
-  int isProtokernel = fioOpen("rom0:MBROWS", FIO_O_RDONLY);
-  if (isProtokernel >= 0) {
+  int fd = fioOpen("rom0:MBROWS", FIO_O_RDONLY);
+  if (fd >= 0) {
+    fioClose(fd);
     // Apply kernel patches for early kernels
-    fioClose(isProtokernel);
     InitOsd();
-    isProtokernel = 1;
-  } else
-    isProtokernel = 0;
+    // If OSDR was not loaded, run OSDSYS from ROM
+    if (unpackRes)
+      launchProtokernelOSDSYS();
+  }
 
   if (!unpackRes) {
     // Use OSDSYS from OSDR
@@ -112,15 +102,11 @@ int main(int argc, char *argv[]) {
   }
 
   // Execute OSDSYS from ROM
-  if (isProtokernel)
-    launchProtokernelOSDSYS();
-  else {
-    // Relocate the embedded launcher to the memory unused by the OSD unpacker
-    memcpy((void *)EXTRA_RELOC_ADDR, (void *)launcher_elf, size_launcher_elf);
-    launcher_elf_addr = (void *)EXTRA_RELOC_ADDR;
+  // Relocate the embedded launcher to the memory unused by the OSD unpacker
+  memcpy((void *)EXTRA_RELOC_ADDR, (void *)launcher_elf, size_launcher_elf);
+  launcher_elf_addr = (void *)EXTRA_RELOC_ADDR;
 
-    launchOSDSYS(argc, argv);
-  }
+  launchOSDSYS(argc, argv);
 
   Exit(-1);
 }
@@ -190,14 +176,6 @@ int main(int argc, char *argv[]) {
   int haveOSD = checkFile("pfs0:/osd100/hosdsys.elf");
   if (haveOSD < 0)
     haveOSD = checkFile("pfs0:/osd100/OSDSYS_A.XLF");
-
-  // MBROWS exists only on protokernel systems
-  int fd = fileXioOpen("rom0:MBROWS", FIO_O_RDONLY);
-  if (fd >= 0) {
-    // Apply kernel patches for early kernels
-    fileXioClose(fd);
-    InitOsd();
-  }
 
   if (haveOSD >= 0)
     launchOSDSYS(argc, argv);

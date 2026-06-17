@@ -153,11 +153,14 @@ int startHOSDSYS(int argc, char *argv[]) {
       // Boot HOSDMenu
       argv[0] = HOSD_SYS_PARTITION ":pfs:" HOSD_PFS_PATH;
 
-      argv[argc] = strdup("-mbrboot");
+      if (!settings.isPSX) {
+        argv[argc] = strdup("-mbrboot");
+        argc++;
+      }
 
       LoadOptions opts = {
           .dev9ShutdownType = ShutdownType_None,
-          .argc = argc + 1,
+          .argc = argc,
           .argv = argv,
       };
       executeELF(&opts);
@@ -173,7 +176,7 @@ int startHOSDSYS(int argc, char *argv[]) {
       .argc = argc,
       .argv = argv,
   };
-  executeELF(&opts);
+  loadELF(&opts);
   return -ENOENT;
 }
 
@@ -229,15 +232,14 @@ int startXOSD(int argc, char *argv[]) {
 }
 
 // Starts OSDMenu from XFROM.
-// Assumes argv has space for the additional -mbrboot argument.
 int startOSDMenu(int argc, char *argv[]) {
   argv[0] = "xfrom:/osdmenu/osdmenu.elf";
-  argv[argc] = strdup("-mbrboot");
   LoadOptions opts = {
-      .argc = argc + 1,
+      .argc = argc,
       .argv = argv,
   };
-  return executeELF(&opts);
+  loadELF(&opts);
+  return -ENOENT;
 }
 
 // Attempts to launch PSBBN, XOSD, HOSDMenu or HOSDSYS. Falls back to OSDSYS

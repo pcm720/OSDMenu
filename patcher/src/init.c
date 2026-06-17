@@ -54,11 +54,6 @@ int initModules() {
   fioInit();
   return 0;
 }
-
-// Inits SIF RPC and fileXio without rebooting the IOP. Assumes all modules are already loaded
-void shortInit() {
-  sceSifInitRpc(0);
-}
 #else
 // HOSDMenu
 
