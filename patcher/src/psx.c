@@ -1,6 +1,6 @@
 #include "osdr.h"
-#include "settings.h"
 #include "psxinit.h"
+#include "settings.h"
 #include <loadfile.h>
 #include <ps2sdkapi.h>
 #define NEWLIB_PORT_AWARE
@@ -15,6 +15,7 @@ int initPSX() {
   fioClose(fd);
 
   // PSX
+  settings.patcherFlags |= FLAG_PSX;
 
 #ifndef HOSD
   // Load XFROM modules

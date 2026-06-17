@@ -27,6 +27,7 @@ typedef enum {
   FLAG_PS1DRV_USE_VN = (1 << 7),  // If set, run PS1DRV via the PS1DRV Video Mode Negator
   FLAG_APP_GAMEID = (1 << 8),     // Used to show OSDMenu game ID on the splash screen
   FLAG_CUSTOM_MENU = (1 << 9),    // Apply menu patches
+  FLAG_PSX = (1 << 10),           // Used to selectively apply patches on PSX
 } PatcherFlags;
 
 typedef enum {

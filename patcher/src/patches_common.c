@@ -147,7 +147,10 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   args[0] = "hdd0:__system:pfs:/osd100/hosdsys.elf";
 
   // Update IOP modules
-  patchHOSDModules();
+  if (!(settings.patcherFlags & FLAG_PSX))
+    // PSX doesn't work with the replacement atad module
+    // and currently doesn't need it
+    patchHOSDModules();
 
   // Patch-in support for hidden partitions
   patchBrowserHiddenPartitions();

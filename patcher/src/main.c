@@ -129,6 +129,9 @@ int main(int argc, char *argv[]) {
   memcpy((void *)(EXTRA_RELOC_ADDR + size_launcher_elf), (void *)legacy_ps2atad_irx, size_legacy_ps2atad_irx);
   legacy_ps2atad_irx_addr = (void *)(EXTRA_RELOC_ADDR + size_launcher_elf);
 
+  // Set FMCB & OSDSYS default settings for configurable items
+  initConfig();
+
   if ((argc > 1) && !strcmp(argv[argc - 1], "-mbrboot")) {
     // Skip the full init and just initialize fileXio if the last argument is -mbrboot
     shortInit();
@@ -140,9 +143,6 @@ int main(int argc, char *argv[]) {
       // Launch recovery payload on fail
       launchPayload(RECOVERY_PAYLOAD_PATH);
   }
-
-  // Set FMCB & OSDSYS default settings for configurable items
-  initConfig();
 
   if (fileXioMount("pfs0:", HOSD_CONF_PARTITION, 0))
     launchPayload(RECOVERY_PAYLOAD_PATH);
