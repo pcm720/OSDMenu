@@ -9,45 +9,35 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/ps2homebrew/ps2homebrew:main
     steps:
-    - name: Install cmake
-      run: |
-        apk add cmake
+      - name: Install cmake
+        run: |
+          apk add cmake
 
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Fetch full clone
-      run: |
-        git config --global --add safe.directory "$GITHUB_WORKSPACE"
-        git fetch --prune --unshallow
+      - name: Fetch full clone
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git fetch --prune --unshallow
 
-    - name: Compile project
-      id: make
-      env:
+      - name: Compile project
+        id: make
+        env:
           KELFSERVER_API_ADDRESS: ${{ secrets.KELFSERVER_API_ADDRESS }}
           KELFSERVER_API_KEY: ${{ secrets.KELFSERVER_API_KEY }}
-      run: |
-        cmake -B build -DRELEASE=ON
-        cmake --build build
+        run: |
+          cmake -B build -DRELEASE=ON
+          cmake --build build
 
-    - name: Fetch OSDMenu Configurator
-      run: |
-        apk add --no-cache curl jq unzip
-        RELEASE_JSON=$(curl -sL "https://api.github.com/repos/pcm720/OSDMenu-Configurator/releases/latest")
-        ASSET_URL=$(echo "$RELEASE_JSON" | jq -r '.assets[] | select(.name | test("^osdmenu-configurator-.*\\.zip$")) | .browser_download_url' | head -1)
-        curl -sL -o build/configurator.zip "$ASSET_URL"
-        mkdir -p build/release/configurator
-        unzip -q -o build/configurator.zip -d build/release/configurator
-        rm build/configurator.zip
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      if: steps.make.outcome == 'success'
-      with:
-        name: artifacts
-        path: |
-          build/release/**
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: steps.make.outcome == 'success'
+        with:
+          name: artifacts
+          path: |
+            build/release/**
 
   release:
     needs: [build]
@@ -55,39 +45,39 @@ jobs:
     permissions: write-all
     if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Fetch full clone
-      run: |
-        git config --global --add safe.directory "$GITHUB_WORKSPACE"
-        git fetch --prune --unshallow
+      - name: Fetch full clone
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git fetch --prune --unshallow
 
-    - name: Get git describe
-      run: |
-        echo "GIT_VERSION=$(git describe --always --dirty --tags --exclude nightly)" >> $GITHUB_ENV
+      - name: Get git describe
+        run: |
+          echo "GIT_VERSION=$(git describe --always --dirty --tags --exclude nightly)" >> $GITHUB_ENV
 
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
 
-    - name: Prepare release archive
-      run: |
-        cd artifacts
-        zip -r ../osdmenu-${{ env.GIT_VERSION }}.zip ./*
+      - name: Prepare release archive
+        run: |
+          cd artifacts
+          zip -r ../osdmenu-${{ env.GIT_VERSION }}.zip ./*
 
-    - uses: "marvinpinto/action-automatic-releases@latest"
-      if: github.ref == 'refs/heads/main'
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "nightly"
-        prerelease: true
-        title: "Nightly build"
-        files: |
-          osdmenu-${{ env.GIT_VERSION }}.zip
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        if: github.ref == 'refs/heads/main'
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "nightly"
+          prerelease: true
+          title: "Nightly build"
+          files: |
+            osdmenu-${{ env.GIT_VERSION }}.zip
 
-    - uses: "marvinpinto/action-automatic-releases@latest"
-      if: startsWith(github.ref, 'refs/tags/v')
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        draft: true
-        files: |
-          osdmenu-${{ env.GIT_VERSION }}.zip
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          draft: true
+          files: |
+            osdmenu-${{ env.GIT_VERSION }}.zip

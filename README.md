@@ -115,10 +115,9 @@ See the launcher [README](launcher/README.md) for more details.
 
 Comment out lines in config files by prefixing them with `#`.
 
-### OSDMenu Configurator
+### R3CONFIGURATOR
 
-You can edit OSDMenu config files directly on your PS2 with the [OSDMenu Configurator](https://github.com/pcm720/OSDMenu-Configurator).  
-OSDMenu release archive already includes a copy of the latest configurator. 
+You can edit OSDMenu config files directly on your PS2 with the [R3CONFIGURATOR](https://github.com/saildot4k/R3CONFIGURATOR/releases).  
 
 You can reuse an existing Free McBoot or Free HD Boot config file by renaming it to `OSDMENU.CNF` and placing it in the respective paths: `FREEMCB.CNF` → `mc?:/SYS-CONF/` for OSDMenu, `FREEHDB.CNF` → `hdd0:__sysconf:pfs:/osdmenu/` for HOSDMenu.  
 The configurator will import your custom menu entries, paths and compatible options and re-format the config for OSDMenu.
@@ -148,6 +147,6 @@ See the launcher [README](launcher/README.md) for more details.
 - CosmicScale for [RetroGEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher), [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) and extensive testing  
 - Ripto for creating OSDMenu Browser icons and Yornn for collecting all files required for the PSU package    
 - Alex Parrado for creating [SoftDev2 installer](https://github.com/parrado/SoftDev2)
-- [R3Z3N/Saildot4K](https://github.com/saildot4k) for testing OSDMenu with various modchips, Crystal Chip PBT script and suggestions on documentation and release packaging improvements
+- [R3Z3N/Saildot4K](https://github.com/saildot4k) for testing OSDMenu with various modchips, Crystal Chip PBT script, suggestions on documentation, release packaging improvements and R3CoR3CONFIGURATORnfigurator
 - l_oliveira for advices on fixing PS2LOGO for master discs
 - GhostTownUS- for testing OSDMenu and OSDMenu MBR on PSX
