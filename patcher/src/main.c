@@ -137,12 +137,15 @@ int main(int argc, char *argv[]) {
     shortInit();
     argc--;
   } else {
-    // Else, do the full init
-    initPSX();
     if (initModules())
       // Launch recovery payload on fail
       launchPayload(RECOVERY_PAYLOAD_PATH);
   }
+
+  int fd = checkFile("rom0:PSXVER");
+  if (fd >= 0)
+    // Assume the loader has switched PSX into PS2 mode
+    settings.patcherFlags |= FLAG_PSX;
 
   if (fileXioMount("pfs0:", HOSD_CONF_PARTITION, 0))
     launchPayload(RECOVERY_PAYLOAD_PATH);
