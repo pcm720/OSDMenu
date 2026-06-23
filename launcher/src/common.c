@@ -391,7 +391,7 @@ int parseGlobalFlags(int argc, char *argv[]) {
       settings.titleID = strdup(valuePtr);
       DPRINTF("Using custom title ID: %s\n", settings.titleID);
       argc--;
-    } else if (valuePtr && !strncmp(argv[i], "-dev9", 5)) {
+    } else if (valuePtr && !strncmp(argv[i], "-dev9=", 6)) {
       if (!strcmp(valuePtr, "NICHDD"))
         settings.dev9ShutdownType = ShutdownType_None;
       else if (!strcmp(valuePtr, "NIC"))
