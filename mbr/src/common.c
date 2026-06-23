@@ -176,7 +176,7 @@ int startHOSDSYS(int argc, char *argv[]) {
       .argc = argc,
       .argv = argv,
   };
-  loadELF(&opts);
+  executeELF(&opts);
   return -ENOENT;
 }
 
