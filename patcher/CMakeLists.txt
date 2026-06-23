@@ -7,18 +7,25 @@
 # Proceed at your own risk, and may the legal forces be ever in your favor.
 option(PATCHER_ENABLE_SPLASH "Enable Free McBoot splash screen" ON)
 if(NOT DEFINED PATCHER_HOSD)
-    set(PATCHER_HOSD OFF)
+  set(PATCHER_HOSD OFF)
 endif()
 
 # Set variant-specific variables based on PATCHER_HOSD
 if(PATCHER_HOSD)
-    set(PATCHER_BINARY_DIR "${CMAKE_BINARY_DIR}/hosdmenu")
-    set(patcher_unc_target "hosdmenu_unc")
-    set(patcher_target "hosdmenu")
+  set(PATCHER_BINARY_DIR "${CMAKE_BINARY_DIR}/hosdmenu")
+  set(patcher_unc_target "hosdmenu_unc")
+  set(patcher_target "hosdmenu")
 else()
-    set(PATCHER_BINARY_DIR "${CMAKE_BINARY_DIR}/osdmenu")
-    set(patcher_unc_target "osdmenu_unc")
-    set(patcher_target "osdmenu")
+  set(PATCHER_BINARY_DIR "${CMAKE_BINARY_DIR}/osdmenu")
+  set(patcher_unc_target "osdmenu_unc")
+  set(patcher_target "osdmenu")
+endif()
+
+if(ENABLE_PRINTF)
+  add_compile_definitions(ENABLE_PRINTF)
+  if (USE_EESIO)
+    add_compile_definitions(USE_EESIO)
+  endif()
 endif()
 
 set(PATCHER_CNF_FILE "" CACHE STRING "Path to embedded CNF file")
@@ -27,7 +34,7 @@ set(PATCHER_KELF_TYPE "fmcb" CACHE STRING "KELF type (fmcb, etc.)")
 # Get git version
 find_package(Git)
 if(GIT_FOUND)
-    execute_process(
+  execute_process(
         COMMAND ${GIT_EXECUTABLE} describe --always --dirty --tags --exclude nightly
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_VERSION
@@ -35,7 +42,7 @@ if(GIT_FOUND)
         ERROR_QUIET
     )
 else()
-    set(GIT_VERSION "unknown")
+  set(GIT_VERSION "unknown")
 endif()
 
 set(PATCHER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/patcher")
@@ -52,13 +59,16 @@ set(EE_SOURCES
     ${PATCHER_SOURCE_DIR}/src/patches_version.c
     ${PATCHER_SOURCE_DIR}/src/patches_ps1drv.c
     ${PATCHER_SOURCE_DIR}/src/patches_osd.c
+    ${PATCHER_SOURCE_DIR}/src/psx.c
+    ${PATCHER_SOURCE_DIR}/../common/src/dprintf.c
+    ${PATCHER_SOURCE_DIR}/../common/src/psxinit.c
 )
 
 # HOSDMenu build
 set(EE_LIBS)
 if(PATCHER_HOSD)
-    list(APPEND EE_LIBS fileXio)
-    set(IRX_FILES
+  list(APPEND EE_LIBS fileXio)
+  set(IRX_FILES
         iomanX.irx
         fileXio.irx
         ps2dev9.irx
@@ -67,37 +77,43 @@ if(PATCHER_HOSD)
         ps2fs.irx
         legacy_ps2atad.irx
     )
-    # Build the legacy atad module
-    add_custom_target(legacy_ps2atad
+  # Build the legacy atad module
+  add_custom_target(legacy_ps2atad
         COMMAND ${CMAKE_COMMAND} -E chdir "${PATCHER_SOURCE_DIR}/iop/atad" ${CMAKE_MAKE_PROGRAM}
         BYPRODUCTS "${PATCHER_SOURCE_DIR}/iop/atad/ps2atad.irx"
         COMMENT "Building legacy ps2atad"
     )
-    set(ps2atad_target "legacy_ps2atad")
+  set(ps2atad_target "legacy_ps2atad")
 else()
-    set(IRX_FILES)
+  set(IRX_FILES)
 endif()
 
 set(ELF_FILES launcher.elf)
 
 # Splash screen
 if(PATCHER_ENABLE_SPLASH)
-    list(APPEND EE_SOURCES ${PATCHER_SOURCE_DIR}/src/splash.c)
-    list(APPEND EE_LIBS dma)
+  list(APPEND EE_SOURCES ${PATCHER_SOURCE_DIR}/src/splash.c)
+  list(APPEND EE_LIBS dma)
+endif()
+
+# Self-contained version
+if(NOT PATCHER_HOSD)
+  list(APPEND EE_SOURCES ${PATCHER_SOURCE_DIR}/src/osdr.c)
+  list(APPEND EE_LIBS iopreboot)
 endif()
 
 # Process IRX files
 set(IRX_SOURCES)
 foreach(irx ${IRX_FILES})
-    get_filename_component(irx_name ${irx} NAME_WE)
-    string(REPLACE "-" "_" irx_name_clean ${irx_name})
+  get_filename_component(irx_name ${irx} NAME_WE)
+  string(REPLACE "-" "_" irx_name_clean ${irx_name})
 
-    if(irx_name STREQUAL "legacy_ps2atad")
-        # The old ps2atad is not a part of PS2SDK
-        set(ps2atad_irx_path "${PATCHER_SOURCE_DIR}/iop/atad/ps2atad.irx")
-        set(irx_source "${PATCHER_BINARY_DIR}/legacy_ps2atad_irx.c")
-        set(temp_file "${PATCHER_BINARY_DIR}/legacy_ps2atad_irx.c.tmp")
-        add_custom_command(
+  if(irx_name STREQUAL "legacy_ps2atad")
+    # The old ps2atad is not a part of PS2SDK
+    set(ps2atad_irx_path "${PATCHER_SOURCE_DIR}/iop/atad/ps2atad.irx")
+    set(irx_source "${PATCHER_BINARY_DIR}/legacy_ps2atad_irx.c")
+    set(temp_file "${PATCHER_BINARY_DIR}/legacy_ps2atad_irx.c.tmp")
+    add_custom_command(
             OUTPUT ${irx_source}
             COMMAND ${BIN2C} "${ps2atad_irx_path}" "${temp_file}" "legacy_ps2atad_irx"
             COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/patch_section.cmake" "${temp_file}" "${irx_source}" "._legacy_atad"
@@ -105,11 +121,11 @@ foreach(irx ${IRX_FILES})
             COMMENT "Converting IRX legacy_ps2atad.irx to C array with section ._legacy_atad"
             VERBATIM
         )
-    else()
-        irx_to_source("$ENV{PS2SDK}/iop/irx/${irx}" irx_source "${irx_name_clean}_irx" "._irx")
-    endif()
+  else()
+    irx_to_source("$ENV{PS2SDK}/iop/irx/${irx}" irx_source "${irx_name_clean}_irx" "._irx")
+  endif()
 
-    list(APPEND IRX_SOURCES ${irx_source})
+  list(APPEND IRX_SOURCES ${irx_source})
 endforeach()
 
 # Build launcher.elf
@@ -131,16 +147,16 @@ list(APPEND ELF_SOURCES ${launcher_source})
 
 # Add embedded CNF file
 if(NOT PATCHER_HOSD AND PATCHER_CNF_FILE)
-    get_filename_component(cnf_file "${PATCHER_CNF_FILE}" ABSOLUTE BASE_DIR "${CMAKE_SOURCE_DIR}")
-    if(NOT EXISTS "${cnf_file}")
-        message(FATAL_ERROR "CNF file not found: ${cnf_file}")
-    endif()
+  get_filename_component(cnf_file "${PATCHER_CNF_FILE}" ABSOLUTE BASE_DIR "${CMAKE_SOURCE_DIR}")
+  if(NOT EXISTS "${cnf_file}")
+    message(FATAL_ERROR "CNF file not found: ${cnf_file}")
+  endif()
 
-    get_filename_component(cnf_name "${cnf_file}" NAME)
-    set(cnf_source "${PATCHER_BINARY_DIR}/${cnf_name}.c")
-    set(cnf_temp "${PATCHER_BINARY_DIR}/${cnf_name}.c.tmp")
+  get_filename_component(cnf_name "${cnf_file}" NAME)
+  set(cnf_source "${PATCHER_BINARY_DIR}/${cnf_name}.c")
+  set(cnf_temp "${PATCHER_BINARY_DIR}/${cnf_name}.c.tmp")
 
-    add_custom_command(
+  add_custom_command(
         OUTPUT ${cnf_source}
         COMMAND ${BIN2C} "${cnf_file}" "${cnf_temp}" "embedded_cnf"
         COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/patch_section.cmake" "${cnf_temp}" "${cnf_source}" "._cnf"
@@ -148,14 +164,14 @@ if(NOT PATCHER_HOSD AND PATCHER_CNF_FILE)
         COMMENT "Converting CNF file to C array with section ._cnf"
         VERBATIM
     )
-    set(CNF_FILE ${cnf_source})
+  set(CNF_FILE ${cnf_source})
 endif()
 
 add_executable(${patcher_unc_target} ${EE_SOURCES} ${IRX_SOURCES} ${ELF_SOURCES} ${CNF_FILE})
 
 # Add dependencies on IOP modules
 if(PATCHER_HOSD)
-    add_dependencies(${patcher_unc_target} ${ps2atad_target})
+  add_dependencies(${patcher_unc_target} ${ps2atad_target})
 endif()
 target_include_directories(${patcher_unc_target} PRIVATE
     ${CMAKE_SOURCE_DIR}/common/include
@@ -174,13 +190,16 @@ target_compile_definitions(${patcher_unc_target} PRIVATE
     GIT_VERSION="${GIT_VERSION}"
 )
 if(PATCHER_HOSD)
-    target_compile_definitions(${patcher_unc_target} PRIVATE HOSD)
+  target_compile_definitions(${patcher_unc_target} PRIVATE HOSD)
 endif()
 if(NOT PATCHER_HOSD AND PATCHER_CNF_FILE)
-    target_compile_definitions(${patcher_unc_target} PRIVATE EMBED_CNF)
+  target_compile_definitions(${patcher_unc_target} PRIVATE EMBED_CNF)
+endif()
+if(NOT PATCHER_HOSD AND PATCHER_SELFCONTAINED)
+  target_compile_definitions(${patcher_unc_target} PRIVATE SELFCONTAINED)
 endif()
 if(PATCHER_ENABLE_SPLASH)
-    target_compile_definitions(${patcher_unc_target} PRIVATE ENABLE_SPLASH)
+  target_compile_definitions(${patcher_unc_target} PRIVATE ENABLE_SPLASH)
 endif()
 
 # Use custom linker script
@@ -189,6 +208,7 @@ target_link_options(${patcher_unc_target} PRIVATE
 )
 
 set(PATCHER_LINK_LIBS
+    libdebug.a
     patches
     dma
     cdvd
@@ -196,18 +216,20 @@ set(PATCHER_LINK_LIBS
     kernel
     pthread
     pthreadglue
+    iopreboot
+    z
 )
 # Add fileXio only for HOSDMenu build
 if(PATCHER_HOSD)
-    list(APPEND PATCHER_LINK_LIBS fileXio)
+  list(APPEND PATCHER_LINK_LIBS fileXio)
 endif()
 
 link_newlib_nano(${patcher_unc_target} ${PATCHER_LINK_LIBS})
 
 if(DEBUG)
-    set(patcher_link_flags "-Wl,--gc-sections")
+  set(patcher_link_flags "-Wl,--gc-sections -Wl,-Map,link.map")
 else()
-    set(patcher_link_flags "-Wl,--gc-sections -s")
+  set(patcher_link_flags "-Wl,--gc-sections -s")
 endif()
 set_target_properties(${patcher_unc_target} PROPERTIES
     LINK_FLAGS "${patcher_link_flags}"
@@ -226,7 +248,7 @@ set_target_properties(${patcher_target} PROPERTIES
 
 # Build OSDMenu KELF if environment variables are set
 if(NOT PATCHER_HOSD AND DEFINED ENV{KELFSERVER_API_ADDRESS} AND DEFINED ENV{KELFSERVER_API_KEY})
-    add_custom_command(
+  add_custom_command(
         TARGET ${patcher_target} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E env
             KELFSERVER_API_ADDRESS=$ENV{KELFSERVER_API_ADDRESS}
@@ -234,7 +256,7 @@ if(NOT PATCHER_HOSD AND DEFINED ENV{KELFSERVER_API_ADDRESS} AND DEFINED ENV{KELF
             ${PYTHON3} "${CMAKE_SOURCE_DIR}/utils/scripts/kelfsign.py" "${PATCHER_KELF_TYPE}" "${PATCHER_BINARY_DIR}/${patcher_target}.elf" "${PATCHER_BINARY_DIR}/OSDMENU.XLF"
         COMMENT "Creating KELF file"
     )
-    message(STATUS "OSDMenu KELF build enabled")
+  message(STATUS "OSDMenu KELF build enabled")
 endif()
 
 set_target_properties(${patcher_unc_target} PROPERTIES

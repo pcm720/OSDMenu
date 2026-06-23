@@ -6,13 +6,15 @@ Supports passing arbitrary arguments to an ELF and can also be used standalone a
 Supported paths are:
 - `mmce?:` — MMCE devices. Can be `mmce0`, `mmce1` or `mmce?`
 - `mc?:` — Memory Cards. Can be `mc0`, `mc1` or `mc?`
-- `mass:` and `usb:` — USB devices (supported via BDM)
-- `ata:` — internal exFAT-formatted HDD (supported via BDM)
+- `mass?:` and `usb?:` — USB devices (supported via BDM)
+- `ata?:` — internal exFAT-formatted HDD (supported via BDM)
 - `mx4sio:` — MX4SIO (supported via BDM)
 - `ilink:` — i.Link mass storage (supported via BDM, disabled in OSDMenu/HOSDMenu)
 - `udpbd:` — UDPBD (supported via BDM, disabled in OSDMenu/HOSDMenu)
-- `hdd0:` — internal APA-formatted HDD. Both `:pfs:` and `:PATINFO` paths are supported
-- `rom?:` — ROM binaries
+- `udpfs:` — UDPFS (disabled in OSDMenu/HOSDMenu)
+- `hdd?:` — internal APA-formatted HDD. Both `:pfs:` and `:PATINFO` paths are supported
+- `rom?:` — ROM binaries (`rom1:` and `rom2:` require ADDDRV and ADDROM2 modules in `rom0:`)
+- `xfrom:` — XFROM (PSX)
 - `cdrom` — CD/DVD discs
 - `osdm` — special path for OSDMenu patcher
 
@@ -23,7 +25,7 @@ Supports [OSDMenu-specific SYSTEM.CNF extensions](../mbr/README.md#systemcnf-ext
 
 The launcher supports the following global arguments:
 
-- `-gsm=<>` — runs the target ELF via the [embedded Neutrino GSM](../utils/egsm/).  
+- `-gsm=<options>` — runs the target ELF via the [embedded Neutrino GSM](../utils/egsm/).  
   See [this README](../utils/loader/README.md#egsm) for more information on the argument format.   
   Must always be the last argument. Does not apply to `rom?:` paths.
 - `-appid` — enables visual Game ID for applications. The ID is generated from the ELF name (up to 11 characters).
@@ -35,7 +37,7 @@ The launcher supports the following global arguments:
 
 ## Handlers
 
-### `udpbd` handler
+### `udpbd` and `udpfs` handlers
 
 Reads PS2 IP address from `mc?:/SYS-CONF/IPCONFIG.DAT`
 
@@ -57,11 +59,12 @@ stored in the Primary Volume Descriptor, based on the table from [TonyHax Intern
 For PS2 CDs/DVDs, the `cdrom` handler will look for the embedded Neutrino GSM setting in
 - `mc?:/SYS-CONF/OSDGSM.CNF`
 - `hdd0:__sysconf/osdmenu/OSDGSM.CNF` (only when running from HDD)  
+- `xfrom:/osdmenu/OSDGSM.CNF` (only when running from XFROM)  
 
 See [this](#osdgsmcnf) for more details.
 
 ### `osdm` handler
-When the launcher receives `osdm:d0:<idx>`, `osdm:d1:<idx>` or `osdm:d9:<idx>`  path as `argv[0]`, it reads `OSDMENU.CNF` from the respective memory card or the hard drive (`osdm:d9`),
+When the launcher receives `osdm:d0:<idx>`, `osdm:d1:<idx>`, `osdm:d2:<idx>`, or `osdm:d9:<idx>`  path as `argv[0]`, it reads `OSDMENU.CNF` from the respective memory card, XFROM (`osdm:d2`) or the hard drive (`osdm:d9`),
 searches for `path?_OSDSYS_ITEM_<idx>` and `arg_OSDSYS_ITEM_<idx>` entries and attempts to launch the ELF.
 
 Additionally, the launcher supports parsing the configuration from an arbitrary address when receiving `osdm:a<address>:<CNF file size>:<idx>` as `argv[0]`.
@@ -92,4 +95,4 @@ arg=-testarg2
 
 `boot` — path relative to the config file  
 `path` — absolute paths  
-`arg` — global launcher arguments or arguments that will be passed to the ELF file 
+`arg` — global launcher arguments or arguments that will be passed to the ELF file

@@ -9,6 +9,7 @@
 PatcherSettings settings;
 
 // Defined in common/defaults.h
+char xfromConfigPath[] = "xfrom:" HOSD_CONF_PATH;
 #ifndef HOSD
 char cnfPath[] = CONF_PATH;
 #else
@@ -75,7 +76,7 @@ nextLine:
 int loadConfig(void) {
   // Load CNF at a fixed address, guaranteed not to be used by OSDMenu
   // because the memory range is limited to <0x100000 in the linker script
-  char *cnfPos = (void *)0x100000;
+  char *cnfPos = (void *)0x1000000;
 
 #ifdef EMBED_CNF
   // Embedded config file.
@@ -85,13 +86,19 @@ int loadConfig(void) {
 #else
 // Read config from the HDD or one of the memory cards
 #ifndef HOSD
-
   if (settings.mcSlot == 1)
     cnfPath[2] = '1';
   else
     cnfPath[2] = '0';
 
-  int fd = fioOpen(cnfPath, FIO_O_RDONLY);
+  // Try XFROM first
+  int fd = fioOpen(xfromConfigPath, FIO_O_RDONLY);
+  if (fd >= 0)
+    // XFROM device number is 2
+    settings.mcSlot = 2;
+  else
+    // Try to open config from MC
+    fd = fioOpen(cnfPath, FIO_O_RDONLY);
   if (fd < 0) {
     // If CNF doesn't exist on boot MC, try the other slot
     if (settings.mcSlot == 1)
@@ -100,10 +107,11 @@ int loadConfig(void) {
       cnfPath[2] = '1';
     if ((fd = fioOpen(cnfPath, FIO_O_RDONLY)) < 0)
       return -1;
+
+    // Change mcSlot to point to the device contaning the config file
+    settings.mcSlot = cnfPath[2] - '0';
   }
 
-  // Change mcSlot to point to the memory card contaning the config file
-  settings.mcSlot = cnfPath[2] - '0';
 #else
   int fd = fioOpen(cnfPath, FIO_O_RDONLY);
   if (fd < 0)
@@ -241,6 +249,14 @@ int loadConfig(void) {
 
       continue;
     }
+    if (!strcmp(name, "OSDSYS_boot")) {
+      if (!strcmp(value, "opening"))
+        settings.boot = OSD_BOOT_OPENING;
+      else if (!strcmp(value, "clock"))
+        settings.boot = OSD_BOOT_CLOCK;
+      else if (!strcmp(value, "browser"))
+        settings.boot = OSD_BOOT_BROWSER;
+    }
     if (!strcmp(name, "OSDSYS_custom_menu")) {
       if (atoi(value))
         settings.patcherFlags |= FLAG_CUSTOM_MENU;
@@ -260,20 +276,6 @@ int loadConfig(void) {
         settings.patcherFlags |= FLAG_SKIP_DISC;
       else
         settings.patcherFlags &= ~(FLAG_SKIP_DISC);
-      continue;
-    }
-    if (!strcmp(name, "OSDSYS_Skip_Logo")) {
-      if (atoi(value))
-        settings.patcherFlags |= FLAG_SKIP_SCE_LOGO;
-      else
-        settings.patcherFlags &= ~(FLAG_SKIP_SCE_LOGO);
-      continue;
-    }
-    if (!strcmp(name, "OSDSYS_Inner_Browser")) {
-      if (atoi(value))
-        settings.patcherFlags |= FLAG_BOOT_BROWSER;
-      else
-        settings.patcherFlags &= ~(FLAG_BOOT_BROWSER);
       continue;
     }
     if (!strcmp(name, "cdrom_skip_ps2logo")) {
@@ -327,6 +329,8 @@ int loadConfig(void) {
     }
   }
 
+  // Clean up
+  memset(cnfPos, 0, cnfSize);
   return 0;
 }
 
@@ -343,9 +347,10 @@ void initVariables() {
 
 // Loads defaults
 void initConfig(void) {
-  settings.patcherFlags = FLAG_CUSTOM_MENU | FLAG_SCROLL_MENU | FLAG_SKIP_SCE_LOGO | FLAG_SKIP_DISC;
+  settings.patcherFlags = FLAG_CUSTOM_MENU | FLAG_SCROLL_MENU | FLAG_SKIP_DISC;
   settings.videoMode = 0;
   settings.region = OSD_REGION_DEFAULT;
+  settings.boot = OSD_BOOT_DEFAULT;
   settings.menuX = 320;
   settings.menuY = 110;
   settings.enterX = 30;

@@ -273,8 +273,13 @@ int loadEmbeddedELF(int argc, char *argv[]) {
   }
 
   int entry = loadELF(elfMem);
-  if (entry < 0)
-    return -1;
+  if (entry < 0) {
+    // Assume the ELF is a raw payload with entrypoint at 0x100000
+    entry = 0x100000;
+    memcpy((void*)entry, (void*)elfMem, elfSize);
+    FlushCache(0);
+    FlushCache(2);
+  }
 
   if (eGSMFlags)
     enableGSM(eGSMFlags);

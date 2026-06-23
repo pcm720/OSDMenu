@@ -82,7 +82,7 @@ void launchItem(char *item) {
         strcat(argv[argc - 1], settings.dkwdrvPath);
       }
 #else // HOSD DKWDRV path is fixed
-      argv[argc++] = "-dkwdrv=" HOSD_DKWDRV_PATH;
+      argv[argc++] = "-dkwdrv";
 #endif
     } else {
       // Get OSD config for PS1DRV
@@ -94,7 +94,10 @@ void launchItem(char *item) {
     }
   }
 #ifndef HOSD
-  argv[argc++] = "-osd";
+  if (settings.mcSlot == 2)
+    argv[argc++] = "-xosd";
+  else
+    argv[argc++] = "-osd";
 #else
   argv[argc++] = "-hosd";
 #endif

@@ -5,7 +5,7 @@
 #include <debug.h>
 #include <stdint.h>
 
-#define BDM_MOUNTPOINT "mass0:"
+#define USB_MOUNTPOINT "mass0:"
 #define PFS_MOUNTPOINT "pfs0:"
 #define DELAY_ATTEMPTS 20
 
@@ -27,7 +27,10 @@ typedef enum {
   Device_CDROM = (1 << 9),
   Device_ROM = (1 << 10),
   //
-  Device_Debug = (1 << 11),
+  Device_UDPFS = (1 << 11),
+  //
+  Device_XFROM = (1 << 12),
+  Device_Optional = (1 << 13), // Marks that the module is not required for the launcher to work properly
 } DeviceType;
 
 typedef enum {
@@ -40,10 +43,11 @@ typedef enum {
 // Defines global launcher options
 typedef struct {
   uint8_t flags;                 // Whether the launcher was started from OSDMenu
-  DeviceType deviceHint;         // The device the launcher has been launched from. Only HDD and memory cards are supported
+  DeviceType deviceHint;         // The device the launcher has been launched from. Only HDD, XFROM and memory cards are supported
   int mcHint;                    // Memory card number when the deviceHint is Device_MemoryCard
   char *gsmArgument;             // eGSM argument
   char *titleID;                 // Custom title ID
+  char *dkwdrvPath;              // Custom DKWDRV path
   ShutdownType dev9ShutdownType; // DEV9 Shutdown type override
 } launcherOptions;
 

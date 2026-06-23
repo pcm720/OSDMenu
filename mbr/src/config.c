@@ -18,23 +18,38 @@ int loadConfig(void);
 void initConfig(void);
 
 char configPath[] = "pfs0:" HOSDMBR_CONF_PATH;
+char xfromConfigPath[] = "xfrom:" HOSDMBR_CONF_PATH;
 
 int loadConfig() {
   // Init default values
   settings.flags = FLAG_ENABLE_GAMEID;
   settings.paths = NULL;
+  settings.isPSX = 0;
   settings.osdLanguage = -1;
   settings.osdScreenType = -1;
 
-  // Mount the config partition
-  if (mountPFS(HOSD_CONF_PARTITION))
-    return -ENODEV;
+  int fd = open("rom0:PSXVER", O_RDONLY);
+  if (fd >= 0) {
+    DPRINTF("Running on PSX\n");
+    close(fd);
+    settings.isPSX = 1;
+  }
 
   // Open the config file
-  FILE *file = fopen(configPath, "rb");
+  DPRINTF("Loading config from XFROM\n");
+  FILE *file = fopen(xfromConfigPath, "rb");
   if (!file) {
-    umountPFS();
-    return -ENOENT;
+    DPRINTF("Loading config from HDD\n");
+    // Mount the config partition
+    if (mountPFS(HOSD_CONF_PARTITION))
+      return -ENODEV;
+
+    // Open the config file
+    file = fopen(configPath, "rb");
+    if (!file) {
+      umountPFS();
+      return -ENOENT;
+    }
   }
 
   launchPath *currentPath = NULL;
@@ -71,6 +86,8 @@ int loadConfig() {
         btn = TRIGGER_TYPE_AUTO;
       else if (!strncmp(optPtr, "start", 5))
         btn = TRIGGER_TYPE_START;
+      else if (!strncmp(optPtr, "select", 6))
+        btn = TRIGGER_TYPE_SELECT;
       else if (!strncmp(optPtr, "triangle", 8))
         btn = TRIGGER_TYPE_TRIANGLE;
       else if (!strncmp(optPtr, "circle", 6))
@@ -79,6 +96,22 @@ int loadConfig() {
         btn = TRIGGER_TYPE_CROSS;
       else if (!strncmp(optPtr, "square", 6))
         btn = TRIGGER_TYPE_SQUARE;
+      else if (!strncmp(optPtr, "up", 2))
+        btn = TRIGGER_TYPE_UP;
+      else if (!strncmp(optPtr, "down", 4))
+        btn = TRIGGER_TYPE_DOWN;
+      else if (!strncmp(optPtr, "left", 4))
+        btn = TRIGGER_TYPE_LEFT;
+      else if (!strncmp(optPtr, "right", 5))
+        btn = TRIGGER_TYPE_RIGHT;
+      else if (!strncmp(optPtr, "l1", 2))
+        btn = TRIGGER_TYPE_L1;
+      else if (!strncmp(optPtr, "l2", 2))
+        btn = TRIGGER_TYPE_L2;
+      else if (!strncmp(optPtr, "r1", 2))
+        btn = TRIGGER_TYPE_R1;
+      else if (!strncmp(optPtr, "r2", 2))
+        btn = TRIGGER_TYPE_R2;
       else
         continue;
 
@@ -229,14 +262,18 @@ char *getOSDGSMArgument(const char *titleID) {
   if (!titleID)
     return NULL;
 
-  DPRINTF("Trying to load the eGSM config file\n");
-  if (mountPFS(HOSD_CONF_PARTITION))
-    return NULL;
-
-  FILE *gsmConf = fopen("pfs0:" HOSDGSM_CONF_PATH, "r");
+  DPRINTF("Loading eGSM config file from XFROM\n");
+  FILE *gsmConf = fopen("xfrom:" HOSDGSM_CONF_PATH, "r");
   if (!gsmConf) {
-    umountPFS();
-    return NULL;
+    DPRINTF("Loading eGSM config file from HDD\n");
+    if (mountPFS(HOSD_CONF_PARTITION))
+      return NULL;
+
+    gsmConf = fopen("pfs0:" HOSDGSM_CONF_PATH, "r");
+    if (!gsmConf) {
+      umountPFS();
+      return NULL;
+    }
   }
 
   char *defaultArg = NULL;

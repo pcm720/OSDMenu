@@ -1,3 +1,4 @@
+#include "common.h"
 #include "cnf.h"
 #include "dprintf.h"
 #include "game_id.h"
@@ -71,6 +72,24 @@ int tryFile(char *filepath) {
   return 0;
 }
 
+// Launches ELF from any generic device without path normalization and delays
+int handleGenericPath(DeviceType device, int argc, char *argv[]) {
+  if ((argv[0] == 0) || (strlen(argv[0]) < 5)) {
+    msg("Generic: invalid argument\n");
+    return -EINVAL;
+  }
+
+  // Initialize device modules
+  int res = initModules(device);
+  if (res)
+    return res;
+
+  if (tryFile(argv[0]))
+    return -ENOENT;
+
+  return LoadELFFromFile(argc, argv);
+}
+
 // Attempts to launch ELF from device and path in path
 int launchPath(int argc, char *argv[]) {
   int ret = 0;
@@ -108,6 +127,11 @@ int launchPath(int argc, char *argv[]) {
     ret = handleBDM(Device_UDPBD, argc, argv);
     break;
 #endif
+#ifdef UDPFS
+  case Device_UDPFS:
+    ret = handleUDPFS(argc, argv);
+    break;
+#endif
 #ifdef APA
   case Device_APA:
     if (strstr(argv[0], ":PATINFO"))
@@ -121,8 +145,13 @@ int launchPath(int argc, char *argv[]) {
     ret = handleCDROM(argc, argv);
     break;
 #endif
+#ifdef XFROM
+  case Device_XFROM:
+    ret = handleGenericPath(Device_XFROM, argc, argv);
+    break;
+#endif
   case Device_ROM:
-    execROMPath(argc, argv);
+    ret = execROMPath(argc, argv);
     break;
   default:
     return -ENODEV;
@@ -159,6 +188,10 @@ DeviceType guessDeviceType(char *path) {
   } else if (!strncmp("udpbd", path, 5)) {
     return Device_UDPBD;
 #endif
+#ifdef UDPFS
+  } else if (!strncmp("udpfs", path, 5)) {
+    return Device_UDPFS;
+#endif
 #ifdef APA
   } else if (!strncmp("hdd", path, 3)) {
     return Device_APA;
@@ -166,6 +199,10 @@ DeviceType guessDeviceType(char *path) {
 #ifdef CDROM
   } else if (!strncmp("cdrom", path, 5)) {
     return Device_CDROM;
+#endif
+#ifdef XFROM
+  } else if (!strncmp("xfrom", path, 5)) {
+    return Device_XFROM;
 #endif
   } else if (!strncmp("rom", path, 3))
     return Device_ROM;
@@ -195,15 +232,18 @@ char *normalizePath(char *path, DeviceType type) {
   case Device_MemoryCard:
   case Device_MMCE:
   case Device_CDROM:
-    strncat(pathbuffer, path, PATH_MAX - 6);
-    break;
-  // BDM
-  case Device_USB:
+  case Device_UDPFS:
   case Device_ATA:
   case Device_MX4SIO:
   case Device_iLink:
   case Device_UDPBD:
-    char devNumber = path[4];
+    strncat(pathbuffer, path, PATH_MAX - 6);
+    break;
+  // BDM USB
+  case Device_USB:
+    char devNumber = path[3]; // usb
+    if (devNumber == 's')     // mass
+      devNumber = path[4];
     // Get relative ELF path from argv[0]
     path = strchr(path, ':');
     if (!path)
@@ -211,13 +251,13 @@ char *normalizePath(char *path, DeviceType type) {
 
     path++;
 
-    strcpy(pathbuffer, BDM_MOUNTPOINT);
-    if ((devNumber > '0') && (devNumber <= '9'))
+    strcpy(pathbuffer, USB_MOUNTPOINT);
+    if (((devNumber > '0') && (devNumber <= '9')) || (devNumber == '?'))
       pathbuffer[4] = devNumber;
 
     if (path[0] != '/')
       strcat(pathbuffer, "/");
-    strncat(pathbuffer, path, PATH_MAX - sizeof(BDM_MOUNTPOINT) - 1);
+    strncat(pathbuffer, path, PATH_MAX - sizeof(USB_MOUNTPOINT) - 1);
     break;
   default:
     return NULL;
@@ -325,12 +365,18 @@ int parseGlobalFlags(int argc, char *argv[]) {
       settings.gsmArgument = strdup(valuePtr);
       DPRINTF("Applying eGSM options: %s\n", settings.gsmArgument);
       argc--;
+    } else if (!strcmp(argv[i], "-xosd")) {
+      settings.flags |= FLAG_BOOT_OSD;
+      settings.deviceHint = Device_XFROM;
+      DPRINTF("Setting OSD flag and applying XFROM hint\n");
     } else if (!strcmp(argv[i], "-osd")) {
       settings.flags |= FLAG_BOOT_OSD;
+      settings.deviceHint = Device_MemoryCard;
       DPRINTF("Setting OSD flag\n");
       argc--;
     } else if (!strcmp(argv[i], "-hosd")) {
       settings.flags |= FLAG_BOOT_HOSD;
+      settings.deviceHint = Device_APA;
       DPRINTF("Setting HOSD flag\n");
       argc--;
     } else if (!strcmp(argv[i], "-appid")) {
@@ -345,7 +391,7 @@ int parseGlobalFlags(int argc, char *argv[]) {
       settings.titleID = strdup(valuePtr);
       DPRINTF("Using custom title ID: %s\n", settings.titleID);
       argc--;
-    } else if (valuePtr && !strncmp(argv[i], "-dev9", 5)) {
+    } else if (valuePtr && !strncmp(argv[i], "-dev9=", 6)) {
       if (!strcmp(valuePtr, "NICHDD"))
         settings.dev9ShutdownType = ShutdownType_None;
       else if (!strcmp(valuePtr, "NIC"))

@@ -6,17 +6,17 @@
 #include "handlers.h"
 #include "hdd.h"
 #include "init.h"
+#include <fcntl.h>
 #include <kernel.h>
 #include <libpad.h>
 #include <ps2sdkapi.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-// Placeholder entrypoint function for the PS2SDK crt0, to be placed at 0x100000.
-// Jumps to the actual entrypoint (__start)
+// Placeholder entrypoint function for the PS2SDK crt0, to be placed at
+// 0x100000. Jumps to the actual entrypoint (__start)
 __attribute__((weak)) void __start();
 __attribute__((noreturn)) void __entrypoint() {
   asm volatile("# Jump to crt0 __start \n"
@@ -38,7 +38,7 @@ TriggerType readPad();
 int main(int argc, char *argv[]) {
   // Initialize IOP modules
   int res = 0;
-  if ((res = initModules())) {
+  if ((res = initModules(Target_Default))) {
     fatalMsg("Failed to initialize IOP modules");
     char *args[] = {"BootError"};
     ExecOSD(1, args);
@@ -56,12 +56,14 @@ int main(int argc, char *argv[]) {
       res = isFsckRequired();
       if (res != 0) {
         if (res < 0)
-          fatalMsg("Failed to launch the fsck utility to check the hard drive for errors");
+          fatalMsg("Failed to launch the fsck utility to check the hard drive "
+                   "for errors");
         else {
           // Run fsck
           runFsck();
           // Fail to OSD
-          fatalMsg("Failed to launch the fsck utility to check the hard drive for errors");
+          fatalMsg("Failed to launch the fsck utility to check the hard drive "
+                   "for errors");
         }
 
         // Fail to OSDSYS
@@ -77,7 +79,8 @@ int main(int argc, char *argv[]) {
 
   initializeOSDConfig();
 
-  // Handle OSD arguments when there are any additional arguments when running as rom0:MBRBOOT or rom0:HDDBOOT
+  // Handle OSD arguments when there are any additional arguments when running
+  // as rom0:MBRBOOT or rom0:HDDBOOT
   if ((argc > 1) && (!strcmp(argv[0], "rom0:MBRBOOT") || !strcmp(argv[0], "rom0:HDDBOOT")) && (strlen(argv[1]) > 0))
     return handleOSDArgs(argc, argv);
 
@@ -98,33 +101,35 @@ int main(int argc, char *argv[]) {
     DPRINTF("Found an entry for trigger %d: argc is %d\n", lpath->trigger, lpath->argCount);
 
     // Assemble argv
-    char **args = malloc(lpath->argCount + 2); // Reserve two more for argv[0] and possible HOSDMenu -mbrboot flag
+    char **args = malloc(sizeof(char **) * (lpath->argCount + 2)); // Reserve two more for argv[0] and
+                                                                   // possible HOSDMenu -mbrboot flag
+    args[0] = strdup(lstr->str);
+    argIdx = 1; // Reused as argc
     if (lpath->argCount > 0) {
       linkedStr *arg = lpath->args;
-      argIdx = 1;
       while (arg != NULL) {
-        DPRINTF("argv[%d]: %s\n", argIdx, arg->str);
-        args[argIdx++] = arg->str;
+        args[argIdx++] = strdup(arg->str);
         arg = arg->next;
       }
     }
 
     // Try all defined paths
     while (lstr != NULL) {
-      DPRINTF("Trying path %s\n", lstr->str);
-      args[0] = lstr->str;
-
-      argIdx = handleConfigPath(lpath->argCount + 1, args);
-      DPRINTF("Failed to start: %d\n", argIdx);
-
+      DPRINTF("Trying path %s\n", args[0]);
+      res = handleConfigPath(argIdx, args);
+      DPRINTF("Failed to start: %d\n", res);
       lstr = lstr->next;
     }
 
+    for (int i = 0; i < argIdx; i++)
+      free(args[i]);
     free(args);
+
     lpath = lpath->next;
   }
 
-  // Fallback to loading HOSDMenu/HOSDSYS/PSBBN, skipping the HDD Update check to prevent boot loops
+  // Fallback to loading HOSDMenu/HOSDSYS/PSBBN, skipping the HDD Update check
+  // to prevent boot loops
   DPRINTF("All paths were tried, falling back to OSD\n");
   char *args[] = {"SkipHdd"};
   execOSD(1, args);
@@ -132,65 +137,116 @@ int main(int argc, char *argv[]) {
 
 // Initiailizes the pad library and returns the button pressed
 TriggerType readPad() {
-  static char padBuf[256] __attribute__((aligned(64)));
+  static char pad1Buf[256] __attribute__((aligned(64)));
+  static char pad2Buf[256] __attribute__((aligned(64)));
   TriggerType t = TRIGGER_TYPE_AUTO;
   struct padButtonStatus buttons;
   uint32_t paddata = 0;
 
-  if (padInit(0) != 1) {
-    DPRINTF("Failed to init libpad\n");
+  int res = padInit(0);
+  if (res != 1)
     return t;
-  }
 
   int retries = 10;
   while (retries--) {
-    if (padPortOpen(0, 0, padBuf) != 0)
-      goto next;
+    res = padPortOpen(0, 0, pad1Buf) | padPortOpen(1, 0, pad2Buf);
+    if (res != 0)
+      goto ready;
   }
-  DPRINTF("Failed to open the pad port\n");
   padEnd();
   return t;
 
-next:
-  int padState = 0;
-  while ((padState = padGetState(0, 0))) {
-    if ((padState == PAD_STATE_STABLE) || (padState == PAD_STATE_FINDCTP1))
-      break;
-    if (padState == PAD_STATE_DISCONN) {
-      DPRINTF("Pad is disconnected\n");
-      padPortClose(0, 0);
-      padEnd();
-      return t;
+ready:
+  for (int i = 0; i < 2; i++) {
+    retries = 5;
+    while ((res = padGetState(i, 0))) {
+      switch (res) {
+      case PAD_STATE_DISCONN:
+      case PAD_STATE_STABLE:
+      case PAD_STATE_FINDCTP1:
+        goto next;
+      case PAD_STATE_ERROR:
+        // Some PSX consoles have issues initializing the pad instantly
+        // Spamming padGetState without any delay results in padRead always returning 0
+        if (retries == 0)
+          goto next;
+        retries--;
+        sleep(1);
+      default:
+        continue;
+      }
     }
+  next:
   }
 
   retries = 10;
   while (retries--) {
-    if (padRead(0, 0, &buttons) != 0) {
-      paddata = (0xffff ^ buttons.btns) & ~paddata;
-      if (paddata & PAD_START) {
-        t = TRIGGER_TYPE_START;
-        break;
-      }
-      if (paddata & PAD_TRIANGLE) {
-        t = TRIGGER_TYPE_TRIANGLE;
-        break;
-      }
-      if (paddata & PAD_CIRCLE) {
-        t = TRIGGER_TYPE_CIRCLE;
-        break;
-      }
-      if (paddata & PAD_CROSS) {
-        t = TRIGGER_TYPE_CROSS;
-        break;
-      }
-      if (paddata & PAD_SQUARE) {
-        t = TRIGGER_TYPE_SQUARE;
-        break;
+    for (int i = 0; i < 2; i++) {
+      if ((res = padRead(i, 0, &buttons)) != 0) {
+        paddata = (0xffff ^ buttons.btns) & ~paddata;
+        if (paddata & PAD_START) {
+          t = TRIGGER_TYPE_START;
+          goto exit;
+        }
+        if (paddata & PAD_SELECT) {
+          t = TRIGGER_TYPE_SELECT;
+          goto exit;
+        }
+        if (paddata & PAD_TRIANGLE) {
+          t = TRIGGER_TYPE_TRIANGLE;
+          goto exit;
+        }
+        if (paddata & PAD_CIRCLE) {
+          t = TRIGGER_TYPE_CIRCLE;
+          goto exit;
+        }
+        if (paddata & PAD_CROSS) {
+          t = TRIGGER_TYPE_CROSS;
+          goto exit;
+        }
+        if (paddata & PAD_SQUARE) {
+          t = TRIGGER_TYPE_SQUARE;
+          goto exit;
+        }
+        if (paddata & PAD_UP) {
+          t = TRIGGER_TYPE_UP;
+          goto exit;
+        }
+        if (paddata & PAD_DOWN) {
+          t = TRIGGER_TYPE_DOWN;
+          goto exit;
+        }
+        if (paddata & PAD_LEFT) {
+          t = TRIGGER_TYPE_LEFT;
+          goto exit;
+        }
+        if (paddata & PAD_RIGHT) {
+          t = TRIGGER_TYPE_RIGHT;
+          goto exit;
+        }
+        if (paddata & PAD_L1) {
+          t = TRIGGER_TYPE_L1;
+          goto exit;
+        }
+        if (paddata & PAD_L2) {
+          t = TRIGGER_TYPE_L2;
+          goto exit;
+        }
+        if (paddata & PAD_R1) {
+          t = TRIGGER_TYPE_R1;
+          goto exit;
+        }
+        if (paddata & PAD_R2) {
+          t = TRIGGER_TYPE_R2;
+          goto exit;
+        }
       }
     }
   }
+
+exit:
   padPortClose(0, 0);
+  padPortClose(1, 0);
   padEnd();
   return t;
 }

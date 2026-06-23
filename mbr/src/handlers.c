@@ -21,6 +21,47 @@
 #include <string.h>
 #include <unistd.h>
 
+// Parses the path argv for global flags.
+// Returns the new argc
+int parseGlobalFlags(int argc, char *argv[], LoadOptions *opts) {
+  if (argc < 2)
+    return argc;
+
+  char *valuePtr = NULL;
+  for (int i = argc - 1; i > 0; i--) {
+    // Find the start of the value
+    valuePtr = strchr(argv[i], '=');
+    if (valuePtr) {
+      // Trim whitespace and terminate the value
+      do {
+        valuePtr++;
+      } while (isspace((int)*valuePtr));
+      valuePtr[strcspn(valuePtr, "\r\n")] = '\0';
+    }
+
+    if (valuePtr && !strncmp(argv[i], "-gsm=", 5)) {
+      // eGSM argument
+      opts->eGSM = strdup(valuePtr);
+      DPRINTF("Applying eGSM options: %s\n", opts->eGSM);
+      argc--;
+    } else if (valuePtr && !strncmp(argv[i], "-dev9", 5)) {
+      if (!strcmp(valuePtr, "NICHDD"))
+        opts->dev9ShutdownType = ShutdownType_None;
+      else if (!strcmp(valuePtr, "NIC"))
+        opts->dev9ShutdownType = ShutdownType_HDD;
+      DPRINTF("DEV9 Shutdown Type: %d\n", opts->dev9ShutdownType);
+      argc--;
+    } else if (!strcmp(argv[argc - 1], "-psxmode")) {
+      settings.isPSX = 0;
+      argc--;
+      DPRINTF("Disabling switching PSX into PS2 mode\n");
+    } else
+      break; // Exit to preserve application arguments
+  }
+
+  return argc;
+}
+
 // Handles the PSBBN Opt00000000 argument.
 // It seems this argument is only used to pass the mode option to the sceCdAutoAdjustCtrl call.
 void handleOpt(char *arg) {
@@ -110,16 +151,19 @@ void handleDNAS(int argc, char *argv[]) {
       .argc = argc,
       .argv = &argv[1],
   };
-  loadELF(&opts);
+  executeELF(&opts);
 }
 
 // Starts the executable pointed to by argv[0]
 // Supports the following paths:
 // $HOSDSYS — will run HOSDMenu or HDD-OSD. Make sure argv has space for the additional -mbrboot argument.
 // $PSBBN — will run PSBBN without encrypting the arguments
-// hdd0:<partition path>:PATINFO — will boot from HDD partition attribute area
-// hdd0:<partition path>:pfs:<PFS path> — ELF from the HDD
+// $XOSD — will run xosdmain.elf
+// hdd?:<partition path>:PATINFO — will boot from HDD partition attribute area
+// hdd?:<partition path>:pfs:<PFS path> — ELF from the HDD
+// ata?:<partition path>:pfs:<PFS path> — ELF from the exFAT
 // mc?: — ELF from the memory card
+// xfrom: — ELF from the XFROM
 // cdrom — CD/DVD
 // dvd — DVD Player
 int handleConfigPath(int argc, char *argv[]) {
@@ -146,6 +190,21 @@ int handleConfigPath(int argc, char *argv[]) {
     return startHOSDSYS(argc, argv);
   }
 
+  if (settings.isPSX) {
+    if (!strcmp(argv[0], "$XOSD")) {
+      // Start XOSD
+      if (mountPFS(SYSTEM_PARTITION))
+        return -ENODEV;
+
+      return startXOSD(argc, argv);
+    }
+
+    if (!strcmp(argv[0], "$OSDMENU")) {
+      // Start OSDMenu from XFROM
+      return startOSDMenu(argc, argv);
+    }
+  }
+
   char *titleID = NULL;
   if (!strcmp(argv[0], "$PSBBN")) {
     // Start PSBBN osdboot.elf
@@ -161,7 +220,7 @@ int handleConfigPath(int argc, char *argv[]) {
 
     argv[0] = SYSTEM_PARTITION ":pfs:" OSDBOOT_PFS_PATH;
 
-    if (settings.flags & (FLAG_ENABLE_GAMEID | FLAG_APP_GAMEID))
+    if ((settings.flags & FLAG_ENABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID))
       titleID = strdup("SCPN_601.60");
 
     goto start;
@@ -175,7 +234,7 @@ int handleConfigPath(int argc, char *argv[]) {
     goto start;
   }
 
-  if (!strncmp(argv[0], "hdd0:", 5)) {
+  if (!strncmp(argv[0], "hdd", 3)) {
     // Run executable from the HDD
     if (strstr(argv[0], "PATINFO"))
       // Handle PATINFO
@@ -188,19 +247,12 @@ int handleConfigPath(int argc, char *argv[]) {
     goto start;
   }
 
-  if (!strncmp(argv[0], "ata:", 4)) {
-    // Replace ata: with mass0:
-    char *nargv = malloc(strlen(argv[0]) + 7);
-    sprintf(nargv, "mass0%s", &argv[0][3]);
-    argv[0] = nargv;
-  }
-
   // Fallback to just checking if file exists and attempting to execute it
   if (checkFile(argv[0]) < 0)
     return -ENOENT;
 
 start:
-  if (settings.flags & (FLAG_ENABLE_GAMEID | FLAG_APP_GAMEID)) {
+  if ((settings.flags & FLAG_ENABLE_GAMEID) && (settings.flags & FLAG_APP_GAMEID)) {
     if (!titleID)
       titleID = generateTitleID(argv[0]);
     if (titleID) {
@@ -211,9 +263,9 @@ start:
   }
 
   LoadOptions opts = {0};
-  opts.argc = argc;
+  opts.argc = parseGlobalFlags(argc, argv, &opts);
   opts.argv = argv;
-  return loadELF(&opts);
+  return executeELF(&opts);
 }
 
 // Starts HDD application using data from the partition attribute area header
@@ -233,13 +285,7 @@ int handleHDDApplication(int argc, char *argv[]) {
   if (strstr(lopts->argv[0], ":pfs:") && checkPFSPath(lopts->argv[0]))
     return -ENOENT;
 
-  if (!strncmp(lopts->argv[0], "ata:", 4)) {
-    // Replace ata: with mass0: and check if target ELF exists
-    char *nargv = malloc(strlen(lopts->argv[0]) + 7);
-    sprintf(nargv, "mass0%s", &lopts->argv[0][3]);
-    free(lopts->argv[0]);
-    lopts->argv[0] = nargv;
-
+  if (!strncmp(lopts->argv[0], "ata", 3)) {
     if (checkFile(lopts->argv[0]) < 0)
       return -ENOENT;
   }
@@ -254,6 +300,12 @@ int handleHDDApplication(int argc, char *argv[]) {
   if (!strcmp(lopts->argv[lopts->argc - 1], "-patinfo"))
     lopts->argc--; // Remove launcher argument from target ELF args
 
+  if (!strcmp(lopts->argv[lopts->argc - 1], "-psxmode")) {
+    DPRINTF("Disabling switching PSX into PS2 mode\n");
+    settings.isPSX = 0;
+    lopts->argc--;
+  }
+
   if (!strncmp(lopts->argv[0], "cdrom", 5)) {
     char *gsmArg = getOSDGSMArgument(titleID);
     free(titleID);
@@ -262,5 +314,5 @@ int handleHDDApplication(int argc, char *argv[]) {
   }
   free(titleID);
 
-  return loadELF(lopts);
+  return executeELF(lopts);
 }

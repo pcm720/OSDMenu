@@ -29,6 +29,8 @@ int main(int argc, char *argv[]) {
     settings.mcHint = 1;
   if (!strncmp(argv[0], "pfs", 3) || !strncmp(argv[0], "hdd", 3))
     settings.deviceHint = Device_APA;
+  if (!strncmp(argv[0], "xfrom", 5))
+    settings.deviceHint = Device_XFROM;
 
   // Process global options
   argc = parseGlobalFlags(argc, argv);

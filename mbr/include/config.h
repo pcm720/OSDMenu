@@ -20,10 +20,19 @@ typedef enum {
 typedef enum {
   TRIGGER_TYPE_AUTO = -1,
   TRIGGER_TYPE_START = 1,
+  TRIGGER_TYPE_SELECT,
   TRIGGER_TYPE_TRIANGLE,
   TRIGGER_TYPE_CIRCLE,
   TRIGGER_TYPE_CROSS,
   TRIGGER_TYPE_SQUARE,
+  TRIGGER_TYPE_UP,
+  TRIGGER_TYPE_DOWN,
+  TRIGGER_TYPE_LEFT,
+  TRIGGER_TYPE_RIGHT,
+  TRIGGER_TYPE_L1,
+  TRIGGER_TYPE_L2,
+  TRIGGER_TYPE_R1,
+  TRIGGER_TYPE_R2,
 } TriggerType;
 
 typedef struct launchPath {
@@ -38,6 +47,7 @@ typedef struct launchPath {
 typedef struct {
   uint8_t flags;     // Flags
   launchPath *paths; // Launch paths
+  uint8_t isPSX;
   int8_t osdLanguage;
   int8_t osdScreenType;
 } Settings;

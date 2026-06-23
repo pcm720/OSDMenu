@@ -1,17 +1,23 @@
+#include "common.h"
 #include "config.h"
 #include "crypto.h"
 #include "defaults.h"
 #include "dprintf.h"
+#include "errno.h"
 #include "game_id.h"
 #include "hdd.h"
-#include "history.h"
+#include "init.h"
+#include "libsecr.h"
 #include "loader.h"
+#include "psxinit.h"
 #include <debug.h>
 #include <fcntl.h>
 #include <kernel.h>
 #include <ps2sdkapi.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static int isScreenInited = 0;
 
@@ -56,9 +62,9 @@ int checkPFSPath(char *path) {
   if (pfsPath) {
     pfsPath = pfsPath + 5;
   } else {
-    char *pfsPath = strchr(path, '/');
-    if (pfsPath)
-      pfsPath = pfsPath;
+    char *pathSep = strchr(path, '/');
+    if (pathSep)
+      pfsPath = pathSep;
   }
   if (!pfsPath) {
     umountPFS();
@@ -108,9 +114,19 @@ void fatalMsg(char *msg) {
   scr_printf("\t\nFatal error:\n\t%s\n", msg);
 
   // Delay
-  int ret = 0x20000000;
-  while (ret--)
-    asm("nop\nnop\nnop\nnop");
+  sleep(10);
+}
+
+int executeELF(LoadOptions *opts) {
+  if (settings.isPSX) {
+    // Switch PSX into PS2 mode
+    switchPSX();
+    if (!strncmp(opts->argv[0], "xfrom", 4))
+      initModules(Target_XFROM);
+    else
+      initModules(Target_HDD);
+  }
+  return loadELF(opts);
 }
 
 // Starts HOSDMenu or HDD-OSD.
@@ -137,14 +153,17 @@ int startHOSDSYS(int argc, char *argv[]) {
       // Boot HOSDMenu
       argv[0] = HOSD_SYS_PARTITION ":pfs:" HOSD_PFS_PATH;
 
-      argv[argc] = strdup("-mbrboot");
+      if (!settings.isPSX) {
+        argv[argc] = strdup("-mbrboot");
+        argc++;
+      }
 
       LoadOptions opts = {
           .dev9ShutdownType = ShutdownType_None,
-          .argc = argc + 1,
+          .argc = argc,
           .argv = argv,
       };
-      loadELF(&opts);
+      executeELF(&opts);
       return -ENOENT;
     }
   }
@@ -157,11 +176,73 @@ int startHOSDSYS(int argc, char *argv[]) {
       .argc = argc,
       .argv = argv,
   };
+  executeELF(&opts);
+  return -ENOENT;
+}
+
+// Starts XOSD.
+// Assumes the system partition is already mounted.
+// Will unmount the partition on success.
+#define XOSDMAIN_ELF_MEM_ADDR 0x1000000
+int startXOSD(int argc, char *argv[]) {
+  int fd = open("pfs0:" XOSD_PFS_PATH, O_RDONLY);
+  if (fd < 0)
+    return -ENOENT;
+
+  int size = lseek(fd, 0, SEEK_END);
+  if (size < 0) {
+    close(fd);
+    return -ENOENT;
+  }
+  lseek(fd, 0, SEEK_SET);
+
+  char *dst = (void *)XOSDMAIN_ELF_MEM_ADDR;
+  DPRINTF("XOSD: reading ELF into memory buffer of size %x @ 0x%x\n", size, dst);
+  int res = read(fd, dst, size);
+  close(fd);
+  if (res != size) {
+    DPRINTF("XOSD: unexpected size: read %d bytes out of %d\n", res, size);
+    return -ENOENT;
+  }
+
+  if (!(res = SecrInit())) {
+    DPRINTF("XOSD: failed to init libsecr: %d\n", res);
+    return res;
+  }
+  char *newdst = NULL;
+  if (!(newdst = SecrDiskBootFile(dst))) {
+    DPRINTF("XOSD: failed to decrypt\n");
+    return -EINVAL;
+  }
+  size = (size - (newdst - dst));
+  DPRINTF("XOSD: decrypted successfully @ 0x%x with size %x\n", newdst, size);
+  SecrDeinit();
+
+  umountPFS();
+
+  argv[0] = "rom0:HDDBOOT";
+  LoadOptions opts = {
+      .elfMem = newdst,
+      .elfSize = size,
+      .argc = argc,
+      .argv = argv,
+  };
   loadELF(&opts);
   return -ENOENT;
 }
 
-// Attempts to launch PSBBN, HOSDMenu or HOSDSYS. Falls back to OSDSYS
+// Starts OSDMenu from XFROM.
+int startOSDMenu(int argc, char *argv[]) {
+  argv[0] = "xfrom:/osdmenu/osdmenu.elf";
+  LoadOptions opts = {
+      .argc = argc,
+      .argv = argv,
+  };
+  loadELF(&opts);
+  return -ENOENT;
+}
+
+// Attempts to launch PSBBN, XOSD, HOSDMenu or HOSDSYS. Falls back to OSDSYS
 void execOSD(int argc, char *argv[]) {
   if (mountPFS(SYSTEM_PARTITION)) {
     ExecOSD(argc, argv);
@@ -191,9 +272,12 @@ void execOSD(int argc, char *argv[]) {
         .argc = nargc,
         .argv = nargv,
     };
-    loadELF(&opts);
+    executeELF(&opts);
     return;
   }
+
+  if (settings.isPSX)
+    startXOSD(nargc, nargv); // Will fail on non-PSX
 
   startHOSDSYS(nargc, nargv);
 

@@ -36,11 +36,11 @@ KELF (XLF) files are automatically built when the following environment variable
 - `RELEASE` — build the release package in `release/` directory (requires KELF variables,  default: `OFF`)
 - `DEBUG` — keep debug symbols in uncompressed binaries (default: `OFF`)
 - `ENABLE_PRINTF` — enable printf debugging output (applies to both launcher and MBR, default: `OFF`)
-- `UDPTTY_IP` — UDPTTY IP address (default: `192.168.1.6`)
+- `USE_EESIO` — print debugging output to EE SIO (applies to both launcher and MBR, default: `OFF`)
 
 Example:
 ```bash
-cmake -B build -DENABLE_PRINTF=ON -DUDPTTY_IP=192.168.1.7 -DDEBUG=ON
+cmake -B build -DENABLE_PRINTF=ON -DDEBUG=ON
 ```
 
 ### Patcher options
@@ -67,3 +67,4 @@ Note that by disabling the Free McBoot splash screen, you're violating the [Free
 - `LAUNCHER_CDROM` — support for loading PS1 and PS2 CDs/DVDs (default: `ON`)
 - `LAUNCHER_ILINK` — support for loading ELFs from iLink (default: `OFF`)
 - `LAUNCHER_UDPBD` — support for loading ELFs from UDPBD (default: `OFF`)
+- `LAUNCHER_UDPFS` — support for loading ELFs from UDPFS (default: `OFF`)

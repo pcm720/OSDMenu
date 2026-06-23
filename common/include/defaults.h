@@ -20,6 +20,10 @@
 #define DKWDRV_PATH "mc0:/BOOT/DKWDRV.ELF"
 #endif
 
+#ifndef XFROM_DKWDRV_PATH
+#define XFROM_DKWDRV_PATH "xfrom:/osdmenu/DKWDRV.ELF"
+#endif
+
 //
 // HOSDMenu paths
 //
@@ -31,7 +35,7 @@
 #define HOSD_SYS_PARTITION "hdd0:__system"
 
 // Path relative to HOSD_SYS_PARTITION root
-#ifndef HOSDMBR_CONF_PATH
+#ifndef HOSD_PFS_PATH
 #define HOSD_PFS_PATH "/osdmenu/hosdmenu.elf"
 #endif
 
@@ -50,9 +54,13 @@
 #define HOSDGSM_CONF_PATH "/osdmenu/OSDGSM.CNF"
 #endif
 
-// Full path to DKWDRV, including the partition
+// Path relative to HOSD_SYS_PARTITION root
 #ifndef HOSD_DKWDRV_PATH
-#define HOSD_DKWDRV_PATH HOSD_SYS_PARTITION ":pfs:/osdmenu/DKWDRV.ELF"
+#define HOSD_DKWDRV_PATH "/osdmenu/DKWDRV.ELF"
+#endif
+// Full path to DKWDRV, including the partition
+#ifndef HOSD_FULL_DKWDRV_PATH
+#define HOSD_FULL_DKWDRV_PATH HOSD_SYS_PARTITION ":pfs:" HOSD_DKWDRV_PATH
 #endif
 
 //
@@ -66,7 +74,20 @@
 #define HOSDSYS_PFS_PATH_1 "/osd100/hosdsys.elf"
 #define HOSDSYS_PFS_PATH_2 "/osd100/OSDSYS_A.XLF"
 
+// XOSD
+#define XOSD_PFS_PATH "/BIEXEC-SYSTEM/xosdmain.elf"
+
 // PSBBN launcher path
 #define OSDBOOT_PFS_PATH "/p2lboot/osdboot.elf"
+
+//
+// OSDSYS resource file paths
+//
+#ifndef OSDR_PATH
+#define OSDR_PATH "mc0:/SYS-CONF/osdsys.bin"
+#endif
+#ifndef XFROM_OSDR_PATH
+#define XFROM_OSDR_PATH "xfrom:/osdmenu/osdsys.bin"
+#endif
 
 #endif

@@ -23,6 +23,7 @@ Note:
     For example:
     - If specifying `IE`, `argv[argc-2]` is treated as the IOPRP path, and `argv[argc-3]` as the ELF path.
     - With `EI`, `argv[argc-2]` is treated as the ELF memory location, and `argv[argc-3]` as the IOPRP path.
+  - `E` argument supports `__mbr`-style payloads. If the data at the specified memory location does not start with a valid ELF header, it is treated as a raw binary payload: the entire payload is copied to `0x100000` and executed.
 
 The syntax for specifying a memory location is `mem:<8-char address in HEX>:<8-char file size in HEX>`
 

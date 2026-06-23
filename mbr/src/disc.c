@@ -6,7 +6,9 @@
 #include "game_id.h"
 #include "hdd.h"
 #include "history.h"
+#include "init.h"
 #include "loader.h"
+#include "psxinit.h"
 #include <ctype.h>
 #include <fcntl.h>
 #include <kernel.h>
@@ -33,6 +35,11 @@ void handlePS2Disc(char *bootPath, char *eGSMArgument);
 
 // Boots PS1/PS2 game CD/DVD
 int startGameDisc() {
+  if (settings.isPSX) {
+    switchPSX();
+    initModules(Target_Default);
+  }
+
   if (!sceCdInit(SCECdINIT)) {
     bootFail("CDROM ERROR: Failed to initialize libcdvd\n");
     return -ENODEV;
@@ -130,17 +137,25 @@ int startGameDisc() {
 void handlePS1Disc(char *titleID, char *titleVersion) {
   char **argv = malloc(2 * sizeof(char *));
   if (settings.flags & FLAG_USE_DKWDRV) {
-    // Mount the partition and make sure DKWDRV ELF exists
-    mountPFS(HOSD_DKWDRV_PATH);
-    char *elfPath = (strstr(HOSD_DKWDRV_PATH, ":pfs")) + 1;
-    int res = checkFile(elfPath);
-    umountPFS();
+    // Check XFROM for DKWDRV
+    int res = checkFile(XFROM_DKWDRV_PATH);
+    if (res >= 0) {
+      argv[0] = XFROM_DKWDRV_PATH;
+    } else {
+      // Check HDD for DKWDRV
+      // Mount the partition and make sure DKWDRV ELF exists
+      mountPFS(HOSD_FULL_DKWDRV_PATH);
+      char *elfPath = (strstr(HOSD_FULL_DKWDRV_PATH, ":pfs")) + 1;
+      res = checkFile(elfPath);
+      umountPFS();
+      if (res >= 0)
+        argv[0] = HOSD_FULL_DKWDRV_PATH;
+    }
     // If the ELF exists, boot the disc via DKWDRV
     if (res >= 0) {
       DPRINTF("Starting DKWDRV\n");
       free(titleID);
       free(titleVersion);
-      argv[0] = HOSD_DKWDRV_PATH;
       LoadOptions opts = {
           .argc = 1,
           .argv = argv,
@@ -241,6 +256,11 @@ static inline int setDVDPlayerDir(void) {
 
 // Starts the DVD Player from a memory card or ROM
 int startDVDVideo() {
+  if (settings.isPSX) {
+    switchPSX();
+    initModules(Target_Default);
+  }
+
   char *argv[4];
 
   // Check memory cards for DVD Player update first

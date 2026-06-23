@@ -1,3 +1,4 @@
+#include "init.h"
 #include <fcntl.h>
 #include <iopcontrol.h>
 #include <iopheap.h>
@@ -20,12 +21,14 @@
   extern unsigned char mod##_irx[] __attribute__((aligned(16)));                                                                                     \
   extern uint32_t size_##mod##_irx
 
-#define IRX_LOAD(mod, argLen, argStr)                                                                                                                \
+#define IRX_LOAD(mod, argLen, argStr, canFail)                                                                                                       \
   ret = SifExecModuleBuffer(mod##_irx, size_##mod##_irx, argLen, argStr, &iopret);                                                                   \
-  if (ret < 0)                                                                                                                                       \
-    return -1;                                                                                                                                       \
-  if (iopret == 1)                                                                                                                                   \
-    return -1;
+  if (!canFail) {                                                                                                                                    \
+    if (ret < 0)                                                                                                                                     \
+      return -1;                                                                                                                                     \
+    if (iopret == 1)                                                                                                                                 \
+      return -1;                                                                                                                                     \
+  }
 
 IRX_DEFINE(iomanX);
 IRX_DEFINE(secrsif);
@@ -36,10 +39,6 @@ IRX_DEFINE(bdmfs_fatfs);
 IRX_DEFINE(ata_bd);
 IRX_DEFINE(ps2hdd_osd);
 IRX_DEFINE(ps2fs);
-#ifdef ENABLE_PRINTF
-IRX_DEFINE(smap_udptty);
-const char udpbd_ip[] = "ip=" UDPTTYIP;
-#endif
 
 // ps2hdd module arguments. Up to 4 descriptors, 20 buffers
 static char ps2hddArguments[] = "-o"
@@ -62,8 +61,11 @@ char ps2fsArguments[] = "-m"
                         "\0"
                         "40";
 
+// Used to prevent patching FileIO twice
+static int reinit = 0;
+
 // Loads IOP modules
-int initModules(void) {
+int initModules(TargetDevice device) {
   sceSifInitRpc(0);
   while (!SifIopReset("", 0)) {
   };
@@ -75,24 +77,32 @@ int initModules(void) {
   // Apply patches required to load executables from EE RAM
   sbv_patch_enable_lmb();
   sbv_patch_disable_prefix_check();
-  sbv_patch_fileio();
+  if (!reinit) {
+    sbv_patch_fileio();
+    reinit = 1;
+  }
 
   int ret = 0;
   int iopret = 0;
-  IRX_LOAD(iomanX, 0, NULL)
-  IRX_LOAD(fileXio, 0, NULL)
-  IRX_LOAD(secrsif, 0, NULL)
-  IRX_LOAD(ps2dev9, 0, NULL)
-#ifdef ENABLE_PRINTF
-  IRX_LOAD(smap_udptty, sizeof(udpbd_ip), udpbd_ip)
-  sleep(20);
-#endif
-  IRX_LOAD(bdm, 0, NULL)
-  IRX_LOAD(bdmfs_fatfs, 0, NULL)
-  IRX_LOAD(ata_bd, 0, NULL)
-  sleep(1); // Delay to prevent ps2hdd module from hanging
-  IRX_LOAD(ps2hdd_osd, sizeof(ps2hddArguments), ps2hddArguments)
-  IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments)
+  IRX_LOAD(iomanX, 0, NULL, 0)
+  IRX_LOAD(fileXio, 0, NULL, 0)
+  IRX_LOAD(secrsif, 0, NULL, 0)
+  IRX_LOAD(ps2dev9, 0, NULL, 0)
+  if ((device == Target_Default) || (device == Target_XFROM)) {
+    // Load XFROM modules
+    SifLoadModule("rom0:PFLASH", 0, NULL);
+    SifLoadModule("rom0:PXFROMMAN", 0, NULL);
+  }
+  if ((device == Target_Default) || (device == Target_HDD)) {
+    // BDM + APA modules
+    IRX_LOAD(bdm, 0, NULL, 0)
+    IRX_LOAD(bdmfs_fatfs, 0, NULL, 0)
+    IRX_LOAD(ata_bd, 0, NULL, 0)
+    sleep(1); // Delay to prevent ps2hdd module from hanging
+    IRX_LOAD(ps2hdd_osd, sizeof(ps2hddArguments), ps2hddArguments, 0)
+    IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments, 0)
+  }
+  // SIO2 device modules
   if ((ret = SifLoadModule("rom0:SIO2MAN", 0, NULL)) < 0)
     return ret;
   if ((ret = SifLoadModule("rom0:MCMAN", 0, NULL)) < 0)
@@ -101,19 +111,20 @@ int initModules(void) {
     return ret;
   if ((ret = SifLoadModule("rom0:PADMAN", 0, NULL)) < 0)
     return ret;
+  // rom1 module
   SifLoadModule("rom0:ADDDRV", 0, NULL); // Can fail on earlier systems
 
-  // Wait for IOP to initialize device drivers
-  for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {
-    ret = open("hdd0:", O_RDONLY | O_DIRECTORY);
-    if (ret >= 0) {
-      close(ret);
-      return 0;
-    }
+  if ((device == Target_Default) || (device == Target_HDD)) {
+    // Wait for IOP to initialize device drivers
+    for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {
+      ret = open("hdd0:", O_RDONLY | O_DIRECTORY);
+      if (ret >= 0) {
+        close(ret);
+        return 0;
+      }
 
-    ret = 0x01000000;
-    while (ret--)
-      asm("nop\nnop\nnop\nnop");
+      sleep(1);
+    }
   }
   return -1;
 }

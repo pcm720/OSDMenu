@@ -16,12 +16,13 @@
 ENTRY(__start);
 
 MEMORY {
-	bram	: ORIGIN = 0x0a8000, LENGTH = 0x38000  /* 0x0a8000 - 0x100000: BIOS unused memory, restricted to 0xe0000 to avoid areas used by some modchips */
-	osdram	: ORIGIN = 0x100000, LENGTH = 0x100000 /* 0x100000 - 0x200000: user memory region, temporarily used to load the launcher, embedded CNF file and IRX modules */
+	bram	 : ORIGIN = 0x0a8000, LENGTH = 0x38000  /* 0x0a8000 - 0x100000: BIOS unused memory, restricted to 0xe0000 to avoid areas used by some modchips */
+	osdram	 : ORIGIN = 0x100000, LENGTH = 0x100000 /* 0x100000 - 0x200000: user memory region, temporarily used to load the launcher, embedded CNF file and IRX modules */
 }
 
 PHDRS {
   text PT_LOAD;
+  res PT_LOAD;
 }
 
 SECTIONS {
@@ -110,7 +111,7 @@ SECTIONS {
 		*(._legacy_atad)
 		*(._irx)
 		*(._cnf)
-	} >osdram
+	} >osdram :res
 
 	.spad 0x70000000: {
 		*(.spad)

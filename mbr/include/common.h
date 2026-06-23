@@ -1,6 +1,8 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#include "loader.h"
+
 // Returns >=0 if file exists
 int checkFile(char *path);
 
@@ -17,13 +19,24 @@ void msg(const char *str, ...);
 // Displays the fatal error message on the screen
 void fatalMsg(char *str);
 
+// A small helper function that executes the embedded loader while handling MBR cleanup
+int executeELF(LoadOptions *opts);
+
 // Starts HOSDMenu or HDD-OSD.
 // Assumes the system partition is already mounted and argv has space for the additional -mbrboot argument.
 // Will unmount the partition.
 int startHOSDSYS(int argc, char *argv[]);
 
-// Attempts to launch PSBBN, HOSDMenu or HOSDSYS. Falls back to OSDSYS
-int execOSD(int argc, char *argv[]);
+// Starts PSX XOSD.
+// Assumes the system partition is already mounted.
+// Will unmount the partition on success.
+int startXOSD(int argc, char *argv[]);
+
+// Starts OSDMenu from XFROM.
+int startOSDMenu(int argc, char *argv[]);
+
+// Attempts to launch PSBBN, XOSD, HOSDMenu or HOSDSYS. Falls back to OSDSYS
+void execOSD(int argc, char *argv[]);
 
 // Shuts down HDD, dev9 and exits to OSD with arguments
 void bootFailWithArgs(char *msg, int argc, char *argv[]);
