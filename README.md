@@ -147,6 +147,6 @@ See the launcher [README](launcher/README.md) for more details.
 - CosmicScale for [RetroGEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher), [PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch) and extensive testing  
 - Ripto for creating OSDMenu Browser icons and Yornn for collecting all files required for the PSU package    
 - Alex Parrado for creating [SoftDev2 installer](https://github.com/parrado/SoftDev2)
-- [R3Z3N/Saildot4K](https://github.com/saildot4k) for testing OSDMenu with various modchips, Crystal Chip PBT script, suggestions on documentation, release packaging improvements and R3CoR3CONFIGURATORnfigurator
+- [R3Z3N/Saildot4K](https://github.com/saildot4k) for testing OSDMenu with various modchips, Crystal Chip PBT script, suggestions on documentation, release packaging improvements and R3CONFIGURATOR
 - l_oliveira for advices on fixing PS2LOGO for master discs
 - GhostTownUS- for testing OSDMenu and OSDMenu MBR on PSX
