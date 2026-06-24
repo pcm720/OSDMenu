@@ -60,6 +60,7 @@ set(EE_SOURCES
     ${PATCHER_SOURCE_DIR}/src/patches_ps1drv.c
     ${PATCHER_SOURCE_DIR}/src/patches_osd.c
     ${PATCHER_SOURCE_DIR}/src/psx.c
+    ${PATCHER_SOURCE_DIR}/src/decompress.c
     ${PATCHER_SOURCE_DIR}/../common/src/dprintf.c
     ${PATCHER_SOURCE_DIR}/../common/src/psxinit.c
 )

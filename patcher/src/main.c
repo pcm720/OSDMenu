@@ -1,5 +1,4 @@
 #include "defaults.h"
-#include "gs.h"
 #include "init.h"
 #include "launcher.h"
 #include "osdr.h"
@@ -30,14 +29,6 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 #ifndef HOSD
 // OSDMenu
 int main(int argc, char *argv[]) {
-  // Clear memory while avoiding the embedded data in the OSD memory region
-  memset((void *)EXTRA_SECTION_END, 0, USER_MEM_END_ADDR - EXTRA_SECTION_END);
-#ifdef EMBED_CNF
-  // Relocate the CNF file to the memory unused by the OSD code
-  memcpy((void *)(EXTRA_RELOC_ADDR + size_launcher_elf), (void *)embedded_cnf, size_embedded_cnf);
-  embedded_cnf_addr = (void *)(EXTRA_RELOC_ADDR + size_launcher_elf);
-#endif
-
   // Load needed modules
   initModules();
   // Set OSDMenu & OSDSYS default settings for configurable items
@@ -56,6 +47,7 @@ int main(int argc, char *argv[]) {
   if (!isPSX) {
     // If not, read config file
     loadConfig();
+    showSplash();
     // Try to load OSDR
     loadOSDR();
   }
@@ -66,22 +58,6 @@ int main(int argc, char *argv[]) {
     // Critical error for PSX
     Exit(-1);
 
-  GSVideoMode vmode = GS_MODE_NTSC; // Use NTSC by default
-
-  // Respect preferred mode
-  if (!settings.videoMode) {
-    // If mode is not set, read console region from ROM
-    if (settings.romver[4] == 'E')
-      vmode = GS_MODE_PAL;
-  } else if (settings.videoMode == GS_MODE_PAL)
-    vmode = GS_MODE_PAL;
-
-#ifdef ENABLE_SPLASH
-  gsDisplaySplash(vmode);
-#else
-  gsInit(vmode);
-  gsClearScreen();
-#endif
 
   // MBROWS exists only on protokernel systems
   int fd = fioOpen("rom0:MBROWS", FIO_O_RDONLY);
@@ -101,10 +77,6 @@ int main(int argc, char *argv[]) {
   }
 
   // Execute OSDSYS from ROM
-  // Relocate the embedded launcher to the memory unused by the OSD unpacker
-  memcpy((void *)EXTRA_RELOC_ADDR, (void *)launcher_elf, size_launcher_elf);
-  launcher_elf_addr = (void *)EXTRA_RELOC_ADDR;
-
   launchOSDSYS(argc, argv);
 
   Exit(-1);
@@ -157,22 +129,7 @@ int main(int argc, char *argv[]) {
   if (fileXioMount("pfs0:", HOSD_SYS_PARTITION, 0))
     launchPayload(RECOVERY_PAYLOAD_PATH);
 
-  GSVideoMode vmode = GS_MODE_NTSC; // Use NTSC by default
-
-  // Respect preferred mode
-  if (!settings.videoMode) {
-    // If mode is not set, read console region from ROM
-    if (settings.romver[4] == 'E')
-      vmode = GS_MODE_PAL;
-  } else if (settings.videoMode == GS_MODE_PAL)
-    vmode = GS_MODE_PAL;
-
-#ifdef ENABLE_SPLASH
-  gsDisplaySplash(vmode);
-#else
-  gsInit(vmode);
-  gsClearScreen();
-#endif
+  showSplash();
 
   // Check if HDD OSD executable exists
   int haveOSD = checkFile("pfs0:/osd100/hosdsys.elf");

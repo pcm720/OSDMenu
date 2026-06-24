@@ -1,3 +1,4 @@
+#include "decompress.h"
 #include "defaults.h"
 #include "init.h"
 #include "launcher.h"
@@ -9,6 +10,9 @@
 #include <loadfile.h>
 #include <stdlib.h>
 #include <string.h>
+#define NEWLIB_PORT_AWARE
+#include <fileio.h>
+#include <io_common.h>
 
 // OSDSYS deinit functions
 static void (*osdsysDeinit)(uint32_t flags) = NULL;
@@ -177,15 +181,29 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   Exit(-1);
 }
 
-// Loads OSDSYS from ROM and handles the patching
+// Loads OSDSYS/HDD-OSD from ROM or HDD and handles the patching
 void launchOSDSYS(int argc, char *argv[]) {
+#ifndef HOSD
+  // Decompress OSDSYS and execute
+  void *rdbuf = (void *)0x1000000;
+  int fd = fioOpen("rom0:OSDSYS", FIO_O_RDONLY);
+  if (fd < 0)
+    return;
+  int size = fioLseek(fd, 0, FIO_SEEK_END);
+  if (size <= 0)
+    return;
+  fioLseek(fd, 0, FIO_SEEK_SET);
+  if (fioRead(fd, rdbuf, size) != size)
+    return;
+  fioClose(fd);
+
+  decompressOSDSYS((void *)0x200000, rdbuf, size);
+  patchExecuteOSDSYS((void *)0x200000, NULL, argc, argv);
+  Exit(-1);
+#else
+  // For HDD-OSD, let the IOP decrypt the KELF and patch the unpacker
   uint8_t *ptr;
   t_ExecData exec;
-
-#ifndef HOSD
-  if (SifLoadElf("rom0:OSDSYS", &exec) || (exec.epc < 0))
-    return;
-#else
   if (SifLoadElfEncrypted("pfs0:/osd100/hosdsys.elf", &exec) || (exec.epc < 0))
     if (SifLoadElfEncrypted("pfs0:/osd100/OSDSYS_A.XLF", &exec) || (exec.epc < 0))
       if (SifLoadElf("pfs0:/osd100/hosdsys.elf", &exec) || (exec.epc < 0))
@@ -193,7 +211,6 @@ void launchOSDSYS(int argc, char *argv[]) {
           return;
 
   fileXioUmount("pfs0:");
-#endif
 
   // Find the ExecPS2 function in the unpacker starting from 0x100000.
   ptr = findPatternWithMask((uint8_t *)0x100000, 0x1000, (uint8_t *)patternExecPS2, (uint8_t *)patternExecPS2_mask, sizeof(patternExecPS2));
@@ -213,6 +230,7 @@ void launchOSDSYS(int argc, char *argv[]) {
   // call the patchExecuteOSDSYS() function after unpacking.
   ExecPS2((void *)exec.epc, (void *)exec.gp, argc, argv);
   Exit(-1);
+#endif
 }
 
 #ifdef HOSD

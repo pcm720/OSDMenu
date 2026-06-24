@@ -46,7 +46,9 @@ int handleMenuEntry(int selected) {
   char item[28] = {0};
 #ifdef EMBED_CNF
   // osdm:a<8-char address>:<8-char CNF size>:<3-char idx>
-  sprintf(item, "osdm:a%08lX:%08lX:%d", (uint32_t)embedded_cnf_addr, (uint32_t)size_embedded_cnf, idx);
+  // Relocate the CNF file to the memory unused by the launcher code
+  memcpy((void *)(EXTRA_RELOC_ADDR + size_launcher_elf), (void *)embedded_cnf, size_embedded_cnf);
+  sprintf(item, "osdm:a%08lX:%08lX:%d", (uint32_t)(EXTRA_RELOC_ADDR + size_launcher_elf), (uint32_t)size_embedded_cnf, idx);
 #else
   // osdm:d<1-char slot>:<3-char idx>
 #ifndef HOSD

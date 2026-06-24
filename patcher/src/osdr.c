@@ -98,7 +98,6 @@ int loadOSDR() {
   fioLseek(fd, 0, FIO_SEEK_SET);
   fioRead(fd, (void *)OSDR_MEM, size);
   fioClose(fd);
-  fioExit();
   return 0;
 }
 

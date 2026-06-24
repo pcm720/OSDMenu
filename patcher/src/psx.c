@@ -1,6 +1,7 @@
 #include "osdr.h"
 #include "psxinit.h"
 #include "settings.h"
+#include "splash.h"
 #include <loadfile.h>
 #include <ps2sdkapi.h>
 #define NEWLIB_PORT_AWARE
@@ -25,6 +26,7 @@ int initPSX() {
 
   // Read config file
   loadConfig();
+  showSplash();
   // Load OSDR into memory
   if ((fd = loadOSDR()))
     return 1; // Indicate that the console is PSX

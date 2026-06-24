@@ -6,15 +6,6 @@
 // FMCB 1.8 patterns
 //
 
-// ExecPS2 pattern for patching OSDSYS unpacker on newer PS2 with compressed OSDSYS
-static uint32_t patternExecPS2[] = {
-    0x24030007, // li v1, 7
-    0x0000000c, // syscall
-    0x03e00008, // jr ra
-    0x00000000  // nop
-};
-static uint32_t patternExecPS2_mask[] = {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
-
 //
 // The following two patterns are introduced in FMCB 1.9 and found by reverse-engineering FMCB 1.9 code
 //
@@ -64,6 +55,15 @@ static uint32_t patternProtokernelSifLoadModule_mask[] = {
 //
 // HDD-OSD patterns
 //
+
+// ExecPS2 pattern for patching OSDSYS unpacker on newer PS2 with compressed OSDSYS
+static uint32_t patternExecPS2[] = {
+    0x24030007, // li v1, 7
+    0x0000000c, // syscall
+    0x03e00008, // jr ra
+    0x00000000  // nop
+};
+static uint32_t patternExecPS2_mask[] = {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
 
 static uint32_t patternSCERemove[] = {
     0x27bdfff0, // addiu sp,sp,0xFFF0

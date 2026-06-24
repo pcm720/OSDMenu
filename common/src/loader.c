@@ -1,5 +1,6 @@
 #include "loader.h"
 #include "dprintf.h"
+#include <elf.h>
 #include <errno.h>
 #include <iopcontrol.h>
 #include <kernel.h>
@@ -15,46 +16,14 @@
 extern uint8_t loader_elf[];
 extern int size_loader_elf;
 
-typedef struct {
-  uint8_t ident[16]; // struct definition for ELF object header
-  uint16_t type;
-  uint16_t machine;
-  uint32_t version;
-  uint32_t entry;
-  uint32_t phoff;
-  uint32_t shoff;
-  uint32_t flags;
-  uint16_t ehsize;
-  uint16_t phentsize;
-  uint16_t phnum;
-  uint16_t shentsize;
-  uint16_t shnum;
-  uint16_t shstrndx;
-} elf_header_t;
-
-typedef struct {
-  uint32_t type; // struct definition for ELF program section header
-  uint32_t offset;
-  void *vaddr;
-  uint32_t paddr;
-  uint32_t filesz;
-  uint32_t memsz;
-  uint32_t flags;
-  uint32_t align;
-} elf_pheader_t;
-
-// ELF-loading stuff
-#define ELF_MAGIC 0x464c457f
-#define ELF_PT_LOAD 1
-
 static char loaderArg[11] = "-la=\0\0\0\0\0\0\0";
 static char elfMemArg[22] = {0};
 static char ioprpMemArg[22] = {0};
 
 // Loads and executes the embedded loader with provided arguments
 int executeLoader(int argc, char *argv[]) {
-  elf_header_t *eh;
-  elf_pheader_t *eph;
+  Elf32_Ehdr *eh;
+  Elf32_Phdr *eph;
   void *pdata;
   int i;
 
@@ -62,25 +31,25 @@ int executeLoader(int argc, char *argv[]) {
   for (i = 0; i < argc; i++)
     DPRINTF("argv[%d] = %s\n", i, argv[i]);
 
-  eh = (elf_header_t *)loader_elf;
-  if (_lw((uint32_t)&eh->ident) != ELF_MAGIC)
+  eh = (Elf32_Ehdr *)loader_elf;
+  if (memcmp(&eh->e_ident[0], ELFMAG, SELFMAG))
     __builtin_trap();
 
-  eph = (elf_pheader_t *)(loader_elf + eh->phoff);
+  eph = (Elf32_Phdr *)(loader_elf + eh->e_phoff);
 
   // Scan through the ELF's program headers and copy them into RAM
-  for (i = 0; i < eh->phnum; i++) {
-    if (eph[i].type != ELF_PT_LOAD)
+  for (i = 0; i < eh->e_phnum; i++) {
+    if (eph[i].p_type != PT_LOAD)
       continue;
 
-    pdata = (void *)(loader_elf + eph[i].offset);
-    memcpy(eph[i].vaddr, pdata, eph[i].filesz);
+    pdata = (void *)(loader_elf + eph[i].p_offset);
+    memcpy((void *)eph[i].p_vaddr, pdata, eph[i].p_filesz);
   }
 
   FlushCache(0);
   FlushCache(2);
 
-  return ExecPS2((void *)eh->entry, NULL, argc, argv);
+  return ExecPS2((void *)eh->e_entry, NULL, argc, argv);
 }
 
 // Loads ELF from file specified in argv[0]
