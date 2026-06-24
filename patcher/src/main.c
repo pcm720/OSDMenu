@@ -57,8 +57,7 @@ int main(int argc, char *argv[]) {
     // If not, read config file
     loadConfig();
     // Try to load OSDR
-    if (loadOSDR())
-      Exit(-1);
+    loadOSDR();
   }
 
   // Unpack OSDSYS resource bundle
