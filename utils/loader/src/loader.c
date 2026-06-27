@@ -12,6 +12,7 @@
 
 #include "egsm_api.h"
 #include "ps2logo.h"
+#include <elf.h>
 #include <iopcontrol.h>
 #include <iopcontrol_special.h>
 #include <kernel.h>
@@ -39,36 +40,6 @@ PS2_DISABLE_AUTOSTART_PTHREAD();
 #define USER_MEM_END_ADDR 0x2000000
 
 typedef enum { ShutdownType_None, ShutdownType_HDD, ShutdownType_All } ShutdownType;
-
-#define ELF_MAGIC 0x464c457f
-#define ELF_PT_LOAD 1
-typedef struct {
-  uint8_t ident[16]; // struct definition for ELF object header
-  uint16_t type;
-  uint16_t machine;
-  uint32_t version;
-  uint32_t entry;
-  uint32_t phoff;
-  uint32_t shoff;
-  uint32_t flags;
-  uint16_t ehsize;
-  uint16_t phentsize;
-  uint16_t phnum;
-  uint16_t shentsize;
-  uint16_t shnum;
-  uint16_t shstrndx;
-} elf_header_t;
-
-typedef struct {
-  uint32_t type; // struct definition for ELF program section header
-  uint32_t offset;
-  void *vaddr;
-  uint32_t paddr;
-  uint32_t filesz;
-  uint32_t memsz;
-  uint32_t flags;
-  uint32_t align;
-} elf_pheader_t;
 
 // Global flags used by load functions
 // Whether IOP reset should be done before loading the ELF
@@ -214,32 +185,32 @@ int main(int argc, char *argv[]) {
   return loadELFFromFile(argc, argv);
 }
 
-// Loads the ELF sections into memory
+// Loads ELF sections into memory
 // Returns the entrypoint address on success
 int loadELF(int elfMem) {
-  elf_header_t *eh;
-  elf_pheader_t *eph;
+  Elf32_Ehdr *eh;
+  Elf32_Phdr *eph;
   void *pdata;
   int i;
 
-  eh = (elf_header_t *)elfMem;
-  if (_lw((uint32_t)&eh->ident) != ELF_MAGIC)
-    return -1;
+  eh = (Elf32_Ehdr *)elfMem;
+  if (memcmp(&eh->e_ident[0], ELFMAG, SELFMAG))
+    __builtin_trap();
 
-  eph = (elf_pheader_t *)(elfMem + eh->phoff);
+  eph = (Elf32_Phdr *)(elfMem + eh->e_phoff);
 
   // Scan through the ELF's program headers and copy them into RAM
-  for (i = 0; i < eh->phnum; i++) {
-    if (eph[i].type != ELF_PT_LOAD)
+  for (i = 0; i < eh->e_phnum; i++) {
+    if (eph[i].p_type != PT_LOAD)
       continue;
 
-    pdata = (void *)(elfMem + eph[i].offset);
-    memcpy(eph[i].vaddr, pdata, eph[i].filesz);
+    pdata = (void *)(elfMem + eph[i].p_offset);
+    memcpy((void *)eph[i].p_vaddr, pdata, eph[i].p_filesz);
   }
 
   FlushCache(0);
   FlushCache(2);
-  return eh->entry;
+  return eh->e_entry;
 }
 
 // Loads and executes the ELF elfPath points to.
@@ -276,7 +247,7 @@ int loadEmbeddedELF(int argc, char *argv[]) {
   if (entry < 0) {
     // Assume the ELF is a raw payload with entrypoint at 0x100000
     entry = 0x100000;
-    memcpy((void*)entry, (void*)elfMem, elfSize);
+    memcpy((void *)entry, (void *)elfMem, elfSize);
     FlushCache(0);
     FlushCache(2);
   }
