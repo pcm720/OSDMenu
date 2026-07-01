@@ -63,6 +63,7 @@ set(EE_SOURCES
     ${PATCHER_SOURCE_DIR}/src/decompress.c
     ${PATCHER_SOURCE_DIR}/../common/src/dprintf.c
     ${PATCHER_SOURCE_DIR}/../common/src/psxinit.c
+    ${PATCHER_SOURCE_DIR}/src/splash.c
 )
 
 # HOSDMenu build
@@ -90,12 +91,6 @@ else()
 endif()
 
 set(ELF_FILES launcher.elf)
-
-# Splash screen
-if(PATCHER_ENABLE_SPLASH)
-  list(APPEND EE_SOURCES ${PATCHER_SOURCE_DIR}/src/splash.c)
-  list(APPEND EE_LIBS dma)
-endif()
 
 # Self-contained version
 if(NOT PATCHER_HOSD)

@@ -146,11 +146,11 @@ int main(int argc, char *argv[]) {
 
 // Returns >=0 if file exists
 int checkFile(char *path) {
-  int res = open(path, O_RDONLY);
+  int res = fioOpen(path, FIO_O_RDONLY);
   if (res < 0) {
     return -1;
   }
-  close(res);
+  fioClose(res);
   return res;
 }
 #endif

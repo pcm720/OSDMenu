@@ -115,12 +115,9 @@ int initModules() {
   int ret = 0;
   int iopret = 0;
   // Apply patches required to load executables from EE RAM
-  if ((ret = sbv_patch_enable_lmb()))
-    return ret;
-  if ((ret = sbv_patch_disable_prefix_check()))
-    return ret;
-  if ((ret = sbv_patch_fileio()))
-    return ret;
+  sbv_patch_enable_lmb();
+  sbv_patch_disable_prefix_check();
+  sbv_patch_fileio();
 
   IRX_LOAD(iomanX, 0, NULL)
   IRX_LOAD(fileXio, 0, NULL)
@@ -130,10 +127,11 @@ int initModules() {
   IRX_LOAD(ps2fs, sizeof(ps2fsArguments), ps2fsArguments)
 
   // Wait for IOP to initialize device drivers
+  fileXioInit();
   for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {
-    ret = open("hdd0:", O_DIRECTORY | O_RDONLY);
+    ret = fileXioOpen("hdd0:", FIO_O_DIROPEN | FIO_O_RDONLY);
     if (ret >= 0) {
-      close(ret);
+      fileXioClose(ret);
       return 0;
     }
 
