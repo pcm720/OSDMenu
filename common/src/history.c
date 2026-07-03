@@ -82,6 +82,7 @@ int createSystemDataDir() {
 }
 
 // Adds title ID to the history file on both mc0 and mc1
+// Requires libcdvd to be initialized first
 int updateHistoryFile(const char *titleID) {
   // Refuse to write entry if title ID is less than expected
   if ((titleID == NULL) || (strlen(titleID) < 11)) {
@@ -92,15 +93,8 @@ int updateHistoryFile(const char *titleID) {
   if (initSystemDataDir())
     return -ENOENT;
 
-  // Initialize libcdvd to get timestamp
-  if (!sceCdInit(SCECdINoD)) {
-    DPRINTF("ERROR: Failed to init libcdvd\n");
-    return -ENODEV;
-  }
-
   if (mcInit(MC_TYPE_XMC) && mcInit(MC_TYPE_MC)) {
     DPRINTF("ERROR: Failed to initialize libmc\n");
-    sceCdInit(SCECdEXIT);
     return -ENODEV;
   }
 
@@ -157,7 +151,6 @@ int updateHistoryFile(const char *titleID) {
   }
   // Clean up
   mcReset();
-  sceCdInit(SCECdEXIT);
   return 0;
 }
 

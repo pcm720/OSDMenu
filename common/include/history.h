@@ -3,6 +3,7 @@
 #define _HISTORY_H_
 
 // Adds title ID to the history file on both mc0 and mc1
+// Requires libcdvd to be initialized first
 int updateHistoryFile(const char *titleID);
 
 #endif

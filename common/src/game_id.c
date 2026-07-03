@@ -1,10 +1,10 @@
+#include "dprintf.h"
 #include "history.h"
-#include <ctype.h>
 #include <dmaKit.h>
 #include <gsKit.h>
 #include <kernel.h>
+#include <libcdvd.h>
 #include <stdint.h>
-#include <stdio.h>
 
 //
 // GameID code based on https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher
@@ -105,7 +105,13 @@ void updateLaunchHistory(char *titleID, int showAppID) {
     return;
   }
 
-  updateHistoryFile(titleID);
+  // Initialize libcdvd
+  if (sceCdInit(SCECdINoD)) {
+    updateHistoryFile(titleID);
+    sceCdInit(SCECdEXIT);
+  } else
+    DPRINTF("ERROR: Failed to init libcdvd\n");
+
   gsDisplayGameID(titleID);
   return;
 }
