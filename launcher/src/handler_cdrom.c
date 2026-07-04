@@ -229,8 +229,9 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, int useDKWDR
       free(bootPath);
       free(titleID);
       free(titleVersion);
-      char *argv[] = {settings.dkwdrvPath};
-      launchPath(1, argv);
+      settings.flags |= FLAG_SKIP_ARGV;
+      char *argv[] = {settings.dkwdrvPath, "rom0:PS1DRV"};
+      launchPath(2, argv);
     } else {
       char *argv[] = {titleID, titleVersion};
 

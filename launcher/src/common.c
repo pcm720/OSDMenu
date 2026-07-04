@@ -387,6 +387,10 @@ int parseGlobalFlags(int argc, char *argv[]) {
       settings.flags |= FLAG_BOOT_PATINFO;
       DPRINTF("Setting PATINFO flag\n");
       argc--;
+    } else if (!strcmp(argv[argc - 1], "-skip_argv0")) {
+      settings.flags |= FLAG_SKIP_ARGV;
+      argc--;
+      DPRINTF("Will not pass argv[0] to the target ELF\n");
     } else if (valuePtr && !strncmp(argv[i], "-titleid=", 9)) {
       settings.titleID = strdup(valuePtr);
       DPRINTF("Using custom title ID: %s\n", settings.titleID);
@@ -423,6 +427,8 @@ int LoadELFFromFile(int argc, char *argv[]) {
       .argv = argv,
       .dev9ShutdownType = settings.dev9ShutdownType,
   };
+  if (settings.flags & FLAG_SKIP_ARGV)
+    opts.skipArgv0 = 1;
   if (settings.gsmArgument)
     opts.eGSM = settings.gsmArgument;
 
