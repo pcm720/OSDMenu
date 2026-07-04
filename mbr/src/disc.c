@@ -156,9 +156,11 @@ void handlePS1Disc(char *titleID, char *titleVersion) {
       DPRINTF("Starting DKWDRV\n");
       free(titleID);
       free(titleVersion);
+      argv[1] = "rom0:PS1DRV";
       LoadOptions opts = {
-          .argc = 1,
+          .argc = 2,
           .argv = argv,
+          .skipArgv0 = 1,
       };
       loadELF(&opts);
       return;
