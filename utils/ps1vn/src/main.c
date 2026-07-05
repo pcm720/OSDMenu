@@ -97,9 +97,9 @@ int main(int argc, char *argv[]) {
 static int parseROMVER(void) {
   // Determine console region
   char romver[16] = {0};
-  int fd = open("rom0:ROMVER", O_RDONLY);
-  read(fd, romver, sizeof(romver));
-  close(fd);
+  int fd = fioOpen("rom0:ROMVER", O_RDONLY);
+  fioRead(fd, romver, sizeof(romver));
+  fioClose(fd);
 
   switch (romver[4]) {
   case 'C':

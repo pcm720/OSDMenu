@@ -71,7 +71,7 @@ void launchItem(char *item) {
     // Handle CDROM
     argv[argc++] = item;
     argv[argc++] = (settings.patcherFlags & FLAG_SKIP_PS2_LOGO) ? "-nologo" : "";
-    argv[argc++] = (!(settings.patcherFlags & FLAG_DISABLE_GAMEID)) ? "" : "-nogameid";
+    argv[argc++] = (settings.patcherFlags & FLAG_DISABLE_GAMEID) ? "-nogameid" : "";
     if (settings.patcherFlags & FLAG_USE_DKWDRV) {
 #ifndef HOSD
       if (settings.dkwdrvPath[0] == '\0')
