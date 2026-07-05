@@ -62,6 +62,7 @@ int handleCDROM(int argc, char *argv[]) {
       dkwdrvPath = strchr(arg, '=');
       if (dkwdrvPath) {
         dkwdrvPath++;
+        settings.dkwdrvPath = strdup(dkwdrvPath);
       }
     }
   }
@@ -89,7 +90,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, int useDKWDR
     }
   }
 
-  if (!settings.dkwdrvPath) {
+  if (useDKWDRV && !settings.dkwdrvPath) {
     // If DKWDRV path is not set, check all supported paths.
     // Check HDD first
     int fd = -1;

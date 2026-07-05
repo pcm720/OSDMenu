@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
   settings.mcHint = 0;
   settings.gsmArgument = NULL;
   settings.titleID = NULL;
+  settings.dkwdrvPath = NULL;
   settings.dev9ShutdownType = ShutdownType_All;
 
   // Try to guess the device type using argv[0]

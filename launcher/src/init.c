@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define NEWLIB_PORT_AWARE
+#include "fileXio_rpc.h"
 
 // Macros for loading embedded IOP modules
 #define IRX_DEFINE(mod)                                                                                                                              \
@@ -258,6 +260,7 @@ int initModules(DeviceType device) {
     }
   }
 
+  fileXioInit();
   currentDevice = device;
   return 0;
 }
