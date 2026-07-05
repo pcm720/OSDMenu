@@ -114,6 +114,7 @@ int initModules(TargetDevice device) {
   // rom1 module
   SifLoadModule("rom0:ADDDRV", 0, NULL); // Can fail on earlier systems
 
+  fileXioInit();
   if ((device == Target_Default) || (device == Target_HDD)) {
     // Wait for IOP to initialize device drivers
     for (int attempts = 0; attempts < DELAY_ATTEMPTS; attempts++) {
