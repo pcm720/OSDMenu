@@ -102,7 +102,7 @@ void patchPS2LOGO(uint32_t epc) {
   if (fd < 0)
     return;
   fileXioRead(fd, &syscnf, sizeof(syscnf));
-  close(fd);
+  fileXioClose(fd);
 
   // Find VMODE string
   char *vmode = strstr(syscnf, "VMODE");

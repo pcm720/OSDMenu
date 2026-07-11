@@ -115,6 +115,7 @@ int main(int argc, char *argv[]) {
 
   // Init SIF RPC
   sceSifInitRpc(0);
+  fileXioInit();
 
   // Parse loader argument if argv[argc-1] starts with "-la"
   if (!strncmp(argv[argc - 1], "-la=", 4)) {
@@ -332,6 +333,9 @@ int loadELFFromFile(int argc, char *argv[]) {
 
 // Attempts to reboot IOP with IOPRP image
 int loadIOPRP(char *ioprpPath) {
+#ifdef DISABLE_IOPRP
+  return -1;
+#else
   int res = 0;
   int size = 0;
   if (!strncmp(ioprpPath, "mem:", 4)) {
@@ -390,6 +394,7 @@ int loadIOPRP(char *ioprpPath) {
   // Clear the memory
   memset(mem, 0, size);
   return 0;
+#endif
 }
 
 // Mounts the partition specified in path

@@ -27,6 +27,8 @@ Note:
 
 The syntax for specifying a memory location is `mem:<8-char address in HEX>:<8-char file size in HEX>`
 
+Note that IOPRP support is not guaranteed to work and disabled by default in loader builds used by OSDMenu.
+
 ### PS2LOGO patching
 
 When argv[0] is `rom0:PS2LOGO`, the loader gets the target video mode from the disc's `SYSTEM.CNF` and patches `PS2LOGO` to always use the disc region instead of the console region, removing logo checksum check

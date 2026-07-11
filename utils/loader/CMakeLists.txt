@@ -1,11 +1,18 @@
 # Embeddable ELF loader
 
+option(DISABLE_IOPRP "Disable support for loading IOPRP images" ON)
+
 set(SOURCES
     src/loader.c
     src/ps2logo.c
     src/egsm/egsm.c
     src/egsm/ee_exception_l2.S
 )
+
+if(DISABLE_IOPRP)
+  message(NOTICE "ELF Loader IOPRP support will be disabled")
+  add_compile_definitions(DISABLE_IOPRP)
+endif()
 
 add_executable(loader ${SOURCES})
 target_include_directories(loader PRIVATE
