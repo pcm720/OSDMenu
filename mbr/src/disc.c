@@ -72,8 +72,9 @@ int startGameDisc() {
 
   // Make sure the disc is a valid PS1/PS2 disc
   discType = sceCdGetDiskType();
-  if (!(discType >= SCECdPSCD || discType <= SCECdPS2DVD)) {
+  if (!(discType >= SCECdPSCD && discType <= SCECdPS2DVD)) {
     bootFail("CDROM ERROR: Unsupported disc type\n");
+    sceCdInit(SCECdEXIT);
     return -EINVAL;
   }
 
@@ -83,6 +84,7 @@ int startGameDisc() {
   if (discType < 0 || (!opts.bootPath && discType != ExecType_PS1)) {
     freeSystemCNFOptions(&opts);
     bootFail("CDROM ERROR: Failed to parse SYSTEM.CNF\n");
+    sceCdInit(SCECdEXIT);
     return -ENOENT;
   }
 
