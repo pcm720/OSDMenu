@@ -1,11 +1,13 @@
 #include "cnf.h"
 #include "common.h"
+#include "debug.h"
 #include "defaults.h"
 #include "dprintf.h"
 #include "game_id.h"
 #include "handlers.h"
 #include "history.h"
 #include "init.h"
+#include "libcdvd-common.h"
 #include "loader.h"
 #include <ctype.h>
 #include <fcntl.h>
@@ -166,8 +168,9 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, int useDKWDR
 
   // Make sure the disc is a valid PS1/PS2 disc
   discType = sceCdGetDiskType();
-  if (!(discType >= SCECdPSCD || discType <= SCECdPS2DVD)) {
+  if (!(discType >= SCECdPSCD && discType <= SCECdPS2DVD)) {
     msg("CDROM ERROR: Unsupported disc type\n");
+    sceCdInit(SCECdEXIT);
     return -EINVAL;
   }
 
@@ -177,6 +180,7 @@ int startCDROM(int displayGameID, int skipPS2LOGO, int ps1drvFlags, int useDKWDR
   if (discType < 0 || (!opts.bootPath && discType != ExecType_PS1)) {
     freeSystemCNFOptions(&opts);
     msg("CDROM ERROR: Failed to parse SYSTEM.CNF\n");
+    sceCdInit(SCECdEXIT);
     return -ENOENT;
   }
 
