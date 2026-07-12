@@ -108,7 +108,7 @@ void patchExecuteOSDSYS(void *epc, void *gp, int argc, char *argv[]) {
   if (argc > 1)
     // Passthrough the original arguments
     for (int i = 1; i < argc; i++) {
-      args[n++] = strdup(argv[i]);
+      args[n++] = argv[i];
       if (!strncmp(argv[i], "Boot", 4))
         hasBootArg = 1;
     }
