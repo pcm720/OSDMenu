@@ -1,6 +1,5 @@
 #include "cnf.h"
 #include "common.h"
-#include "debug.h"
 #include "defaults.h"
 #include "dprintf.h"
 #include "game_id.h"
@@ -360,21 +359,8 @@ char *getOSDGSMArgument(char *titleID) {
 // breaks the CD/DVD loading when the disc is already inserted on boot.
 // This works around the issue by cycling the tray
 void applyOSDCdQuirk() {
-  uint8_t outBuffer[5] = {0};
+  DPRINTF("CDROM OSD Quirk: cycling the tray\n");
   uint32_t status;
-  if (!sceCdMV(outBuffer, (u32 *)&status) || (status & 0x80)) {
-    DPRINTF("CDROM OSD Quirk: Failed to get the MechaCon version\n");
-    return;
-  }
-
-  int mv = (outBuffer[0] << 8) | outBuffer[1];
-  DPRINTF("CDROM OSD Quirk: MechaCon version is %04x", mv);
-  if (mv >= 0x0600) {
-    DPRINTF("\n");
-    return;
-  }
-
-  DPRINTF(", cycling the tray\n");
   int res = 0;
   // Open the tray
   do {
