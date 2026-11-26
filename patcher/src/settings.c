@@ -34,7 +34,7 @@ nextLine:
 
   pName = pToken;      // Current pos is potential name
   if (*pToken < 'A') { // If line is a comment line
-    while ((*pToken != '\r') && (*pToken != '\n') && (*pToken > '\0'))
+    while ((*pToken != '\r') && (*pToken != '\n') && (*pToken != '\0'))
       pToken += 1; // Seek line end
     goto nextLine; // Go back to try next line
   }
