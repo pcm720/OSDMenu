@@ -97,7 +97,7 @@ See the launcher [README](launcher/README.md) for more details.
 - No ESR support
 - No support for launching ELFs by holding a gamepad button
 - ELF paths are not checked by the patcher, so every named entry from FMCB config file is displayed in hacked OSDSYS menu
-- Support for launching applications from MMCE, MX4SIO and APA- and exFAT-formatted HDDs
+- Support for launching applications from MMCE, MX4SIO, APA- and exFAT-formatted HDDs, UDPFS and XFROM
 - CD/DVD support was extended to support skipping PS2LOGO, mounting VMCs on MMCE devices, showing visual GameID for PixelFX devices and booting DKWDRV for PS1 discs
 - Enhanced support for MechaPwn-patched systems:
   - PS2LOGO is patched to always use the disc region

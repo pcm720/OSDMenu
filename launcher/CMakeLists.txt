@@ -10,7 +10,7 @@ option(LAUNCHER_APA "Support for loading ELFs from APA-formatted HDD" ON)
 option(LAUNCHER_CDROM "Support for loading PS1 and PS2 CDs/DVDs" ON)
 option(LAUNCHER_ILINK "Support for loading ELFs from iLink" OFF)
 option(LAUNCHER_UDPBD "Support for loading ELFs from UDPBD" OFF)
-option(LAUNCHER_UDPFS "Support for loading ELFs from UDPFS" OFF)
+option(LAUNCHER_UDPFS "Support for loading ELFs from UDPFS" ON)
 option(LAUNCHER_XFROM "Support for loading ELFs from XFROM" ON)
 
 # Base sources

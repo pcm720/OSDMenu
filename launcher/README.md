@@ -11,7 +11,7 @@ Supported paths are:
 - `mx4sio:` — MX4SIO (supported via BDM)
 - `ilink:` — i.Link mass storage (supported via BDM, disabled in OSDMenu/HOSDMenu)
 - `udpbd:` — UDPBD (supported via BDM, disabled in OSDMenu/HOSDMenu)
-- `udpfs:` — UDPFS (disabled in OSDMenu/HOSDMenu)
+- `udpfs:` — UDPFS
 - `hdd?:` — internal APA-formatted HDD. Both `:pfs:` and `:PATINFO` paths are supported
 - `rom?:` — ROM binaries (`rom1:` and `rom2:` require ADDDRV and ADDROM2 modules in `rom0:`)
 - `xfrom:` — XFROM (PSX)
