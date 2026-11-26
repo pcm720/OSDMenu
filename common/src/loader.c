@@ -108,6 +108,10 @@ int loadELF(LoadOptions *options) {
     int argvOffset = argc;
     argc += options->argc;
 
+    // GSM argument
+    if (options->eGSM)
+      argv[argc - (argvOffset--)] = options->eGSM;
+
     // ELF argument
     if (elfMemArg[0] != '\0')
       argv[argc - (argvOffset--)] = elfMemArg;
@@ -117,10 +121,6 @@ int loadELF(LoadOptions *options) {
       argv[argc - (argvOffset--)] = ioprpMemArg;
     else if (options->ioprpPath)
       argv[argc - (argvOffset--)] = options->ioprpPath;
-
-    // GSM argument
-    if (options->eGSM)
-      argv[argc - (argvOffset--)] = options->eGSM;
 
     // Loader arguments
     argv[argc - argvOffset] = loaderArg;
