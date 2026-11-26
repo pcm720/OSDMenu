@@ -42,6 +42,8 @@ int main(int argc, char *argv[]) {
   };
   while (!SifIopSync()) {
   };
+  // Re-init RPC after IOP reset
+  sceSifInitRpc(0);
   fioInit();
 
   // Erase the region where the packed ELF will be loaded to.
@@ -58,7 +60,7 @@ int main(int argc, char *argv[]) {
     // Negate video mode: if region == Europe, set video mode to NTSC. Otherwise, PAL.
     selectedVMode = (consoleRegion == CONSOLE_REGION_EUROPE) ? 2 : 3;
     // Since the disc's region cannot be determined, make an assumption based on the selected video mode.
-    discRegion = selectedVMode == 3 ? 'E' : 'J';
+    discRegion = (selectedVMode == 3) ? DISC_REGION_EUROPE : DISC_REGION_JAPAN;
   }
 
   FlushCache(0);
@@ -97,7 +99,7 @@ int main(int argc, char *argv[]) {
 static int parseROMVER(void) {
   // Determine console region
   char romver[16] = {0};
-  int fd = fioOpen("rom0:ROMVER", O_RDONLY);
+  int fd = fioOpen("rom0:ROMVER", FIO_O_RDONLY);
   fioRead(fd, romver, sizeof(romver));
   fioClose(fd);
 
