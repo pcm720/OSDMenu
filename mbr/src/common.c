@@ -197,7 +197,7 @@ int startXOSD(int argc, char *argv[]) {
   lseek(fd, 0, SEEK_SET);
 
   char *dst = (void *)XOSDMAIN_ELF_MEM_ADDR;
-  DPRINTF("XOSD: reading ELF into memory buffer of size %x @ 0x%x\n", size, dst);
+  DPRINTF("XOSD: reading ELF into memory buffer of size %x @ 0x%x\n", size, (unsigned int)dst);
   int res = read(fd, dst, size);
   close(fd);
   if (res != size) {
@@ -215,7 +215,7 @@ int startXOSD(int argc, char *argv[]) {
     return -EINVAL;
   }
   size = (size - (newdst - dst));
-  DPRINTF("XOSD: decrypted successfully @ 0x%x with size %x\n", newdst, size);
+  DPRINTF("XOSD: decrypted successfully @ 0x%x with size %x\n", (unsigned int)newdst, size);
   SecrDeinit();
 
   umountPFS();
